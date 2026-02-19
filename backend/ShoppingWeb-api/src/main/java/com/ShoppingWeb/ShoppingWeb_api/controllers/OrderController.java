@@ -2,6 +2,8 @@ package com.ShoppingWeb.ShoppingWeb_api.controllers;
 
 import com.ShoppingWeb.ShoppingWeb_api.Entity.Order;
 import com.ShoppingWeb.ShoppingWeb_api.Repository.OrderRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,8 +34,14 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseBody putOrder(@PathVariable Long id, @RequestBody Order order){
+    public ResponseEntity<Order> putOrder(@PathVariable Long id, @RequestBody Order order){
+        boolean exist = orderRepository.existsById(id);
 
+        orderRepository.save(order);
+
+        return (exist) ?
+                new ResponseEntity<Order>(order, HttpStatus.OK) :
+                new ResponseEntity<Order>(order, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
