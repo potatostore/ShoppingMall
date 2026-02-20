@@ -24,7 +24,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public Order getOrder(@PathVariable Long id){
+    public Order getOrder(@PathVariable Integer id){
         return orderRepository.findById(id).orElse(null);
     }
 
@@ -34,7 +34,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Order> putOrder(@PathVariable Long id, @RequestBody Order order){
+    public ResponseEntity<Order> putOrder(@PathVariable Integer id, @RequestBody Order order){
         boolean exist = orderRepository.existsById(id);
 
         orderRepository.save(order);
@@ -45,7 +45,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteOrder(@PathVariable Long id){
+    public void deleteOrder(@PathVariable Integer id){
         orderRepository.deleteById(id);
     }
 }

@@ -1,32 +1,28 @@
 package com.ShoppingWeb.ShoppingWeb_api.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.util.Date;
 
 @Entity
 @Getter
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Integer id;
     private String name;
     private String email;
     private String password;
     private int age;
+    @Column(name = "phone_number")
     private String phoneNumber;
     private Date birthday;
+    @Column(name = "created_at")
     private Date createdAt;
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

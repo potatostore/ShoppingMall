@@ -23,7 +23,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id){
+    public User getUser(@PathVariable Integer id){
         return userRepository.findById(id).orElse(null);
     }
 
@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> putUser(@PathVariable Long id, @RequestBody User user){
+    public ResponseEntity<User> putUser(@PathVariable Integer id, @RequestBody User user){
         boolean exist = userRepository.existsById(id);
 
         userRepository.save(user);
@@ -43,7 +43,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id){
+    public void deleteUser(@PathVariable Integer id){
         userRepository.deleteById(id);
     }
 }

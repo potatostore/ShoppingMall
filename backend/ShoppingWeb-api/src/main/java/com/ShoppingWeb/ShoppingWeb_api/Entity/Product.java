@@ -1,24 +1,22 @@
 package com.ShoppingWeb.ShoppingWeb_api.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Entity
+@Table(name = "product")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Integer id;
     @Setter
     private String name;
     @Setter
     private int price;
 
-    public void setId(long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 }
