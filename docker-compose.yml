@@ -1,7 +1,7 @@
 services:
   db:
     image: mysql:8.0
-    container_name: mall-db
+    container_name: shopping-mall-db
     ports: 
       - "3306:3306"
     environment:
@@ -13,6 +13,8 @@ services:
   backend:
     build: ./backend
     container_name: mall-backend
+    volumes:
+      - ./backend/shopping-mall-api:/app
     ports:
       - "8080:8080"
     depends_on:
@@ -21,11 +23,16 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/mall_db?serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-
+      
   frontend:
-    build: ./frontend
-    container_name: mall-frontend
+    build:
+      context: ./frontend
     ports:
       - "3000:3000"
-    stdin_open: true
-    tty: true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - WATCHPACK_POLLING=true
+    #depends_on:
+      #- backend
