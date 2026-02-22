@@ -1,4 +1,4 @@
-FROM amazoncorretto:17-alpine-jdk
+FROM amazoncorretto:21-alpine-jdk AS build
 WORKDIR /app
 COPY shopping-mall-api/gradlew .
 COPY shopping-mall-api/gradle gradle
