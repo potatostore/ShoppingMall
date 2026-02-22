@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Entity
-@Table(name = "product")
+@Entity(name = "${mallDB.product.url}")
+@Table(name = "${mallDB.product.url}")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

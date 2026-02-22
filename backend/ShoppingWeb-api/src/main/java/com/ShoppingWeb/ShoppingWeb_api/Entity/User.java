@@ -5,9 +5,9 @@ import lombok.Getter;
 
 import java.util.Date;
 
-@Entity
 @Getter
-@Table(name = "users")
+@Entity(name = "${mallDB.user.url}")
+@Table(name = "${mallDB.user.url}")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

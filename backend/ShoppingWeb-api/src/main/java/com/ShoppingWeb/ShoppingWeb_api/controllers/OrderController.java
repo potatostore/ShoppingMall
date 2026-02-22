@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/${mallDB.order.url}")
 public class OrderController {
     private final OrderRepository orderRepository;
 

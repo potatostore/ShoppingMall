@@ -8,8 +8,8 @@ import javax.naming.Name;
 import java.util.Date;
 
 @Getter
-@Entity
-@Table(name = "orders")
+@Entity(name = "${mallDB.order.url}")
+@Table(name = "${mallDB.order.url}")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

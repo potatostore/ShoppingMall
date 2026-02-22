@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/${mallDB.user.url}")
 public class UserController {
     private final UserRepository userRepository;
 
