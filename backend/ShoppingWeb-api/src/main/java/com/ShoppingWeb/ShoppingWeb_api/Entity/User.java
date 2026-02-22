@@ -1,13 +1,14 @@
 package com.ShoppingWeb.ShoppingWeb_api.Entity;
 
+import com.ShoppingWeb.ShoppingWeb_api.TableNames;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.util.Date;
 
 @Getter
-@Entity(name = "${mallDB.user.url}")
-@Table(name = "${mallDB.user.url}")
+@Entity(name = TableNames.userTableName)
+@Table(name = TableNames.userTableName)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

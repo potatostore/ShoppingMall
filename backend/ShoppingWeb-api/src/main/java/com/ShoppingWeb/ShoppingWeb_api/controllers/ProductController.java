@@ -2,6 +2,7 @@ package com.ShoppingWeb.ShoppingWeb_api.controllers;
 
 import com.ShoppingWeb.ShoppingWeb_api.Entity.Product;
 import com.ShoppingWeb.ShoppingWeb_api.Repository.ProductRepository;
+import com.ShoppingWeb.ShoppingWeb_api.TableNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/${mallDB.product.url}")
+@RequestMapping("/" + TableNames.productTableName)
 public class ProductController {
     private final ProductRepository productRepository;
 

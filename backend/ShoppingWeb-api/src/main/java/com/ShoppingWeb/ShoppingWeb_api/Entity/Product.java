@@ -1,12 +1,13 @@
 package com.ShoppingWeb.ShoppingWeb_api.Entity;
 
+import com.ShoppingWeb.ShoppingWeb_api.TableNames;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Entity(name = "${mallDB.product.url}")
-@Table(name = "${mallDB.product.url}")
+@Entity(name = TableNames.productTableName)
+@Table(name = TableNames.productTableName)
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

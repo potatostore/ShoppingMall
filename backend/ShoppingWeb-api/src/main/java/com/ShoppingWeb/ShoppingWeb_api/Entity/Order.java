@@ -1,5 +1,6 @@
 package com.ShoppingWeb.ShoppingWeb_api.Entity;
 
+import com.ShoppingWeb.ShoppingWeb_api.TableNames;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.SQLUpdates;
@@ -8,8 +9,8 @@ import javax.naming.Name;
 import java.util.Date;
 
 @Getter
-@Entity(name = "${mallDB.order.url}")
-@Table(name = "${mallDB.order.url}")
+@Entity(name = TableNames.orderTableName)
+@Table(name = TableNames.orderTableName)
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

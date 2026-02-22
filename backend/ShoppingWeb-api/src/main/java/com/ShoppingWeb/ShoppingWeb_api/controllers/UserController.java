@@ -2,6 +2,7 @@ package com.ShoppingWeb.ShoppingWeb_api.controllers;
 
 import com.ShoppingWeb.ShoppingWeb_api.Entity.User;
 import com.ShoppingWeb.ShoppingWeb_api.Repository.UserRepository;
+import com.ShoppingWeb.ShoppingWeb_api.TableNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/${mallDB.user.url}")
+@RequestMapping("/" + TableNames.userTableName)
 public class UserController {
     private final UserRepository userRepository;
 
