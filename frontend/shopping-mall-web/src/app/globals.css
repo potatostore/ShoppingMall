@@ -24,3 +24,13 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.signin-text-input-id{
+  width: 100px;
+  height: 20px;
+}
+
+.signin-text-input-password{
+  width: 100px;
+  height: 20px;
+}
