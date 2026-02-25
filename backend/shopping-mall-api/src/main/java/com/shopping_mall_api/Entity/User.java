@@ -15,13 +15,13 @@ public class User {
     private Integer id;
     private String name;
     private String email;
+    private String logInId;
     private String password;
-    private int age;
-    @Column(name = "phone_number")
+    @Column(name = "phoneNumber")
     private String phoneNumber;
-    private Date birthday;
-    @Column(name = "created_at")
-    private Date createdAt;
+    private String birthday;
+    @Column(name = "createdAt")
+    private String createdAt;
 
     public void setId(Integer id) {
         this.id = id;
@@ -35,23 +35,23 @@ public class User {
         this.email = email;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setLogInId(String logInId){
+        this.logInId = logInId;
     }
 
-    public void setAge(int age) {
-        this.age = age;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public void setBirthday(Date birthday) {
+    public void setBirthday(String birthday) {
         this.birthday = birthday;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 }
