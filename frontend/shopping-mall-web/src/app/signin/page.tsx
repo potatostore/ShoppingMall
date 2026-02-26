@@ -2,25 +2,49 @@
 
 import { useState } from "react";
 
-export default function signUpPage(){
-    const [name, setName] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
-    const [logInId, setId] = useState<string>('');
-    const [password, setPassword] = useState<string>('')
-    const [phoneNumber, setPhoneNumber] = useState<string>('');
-    const [birthday, setBirthday] = useState<string>('');
+export default function signinPage(){
+    // state : signIn, signUp, findId, findPassword
+    const [state, setState] = useState<string>('signIn');
+
+    // state === signIn(default)
+    const [signInId, setSignInId] = useState<string>('');
+    const [signInPassword, setSignInPassword] = useState<string>('');
+
+    // state === signUp
+    const [signUpName, setSignUpName] = useState<string>('');
+    const [signUpEmail, setSignUpEmail] = useState<string>('');
+    const [signUpId, setSignUpId] = useState<string>('');
+    const [signUpPassword, setSignUpPassword] = useState<string>('')
+    const [signUpPhoneNumber, setSignUpPhoneNumber] = useState<string>('');
+    const [signUpBirthday, setSignUpBirthday] = useState<string>('');
+
+    // state === findId
+    const [findIdName, setFindIdName] = setState<string>('');
+    const [findIdPhoneNumber, setFindIdPhoneNumber] = setState<string>('');
+
+    const handleSignIn = async () => {
+
+    }
+
+    const handleFindId = async () => {
+
+    }
+
+    const handleFindPassword = async () => [
+
+    ]
 
     const handleSignUp = async () => {
-        const createdAt = new Date().toISOString();
+        const signUpCreatedAt = new Date().toISOString();
 
         const signUpData = {
-            name,
-            email,
-            logInId,
-            password,
-            phoneNumber,
-            birthday,
-            createdAt
+            signUpName,
+            signUpEmail,
+            signUpId,
+            signUpPassword,
+            signUpPhoneNumber,
+            signUpBirthday,
+            signUpCreatedAt
         };
 
         console.log(signUpData);
@@ -44,42 +68,91 @@ export default function signUpPage(){
             console.error('통신 에러 발생', error);
         }
     }
+
+    const convert2SignUp = () => {
+        setState('signUp');
+    }
+
+    const convert2FindId = () => {
+        setState('findId');
+    }
+
+    const convert2FindPassword = () => {
+        setState('findPassword');
+    }
     
     return(
         <div>
             <h1>회원가입</h1>
-            <input 
-                type="text" 
-                placeholder="ID"
-                value={logInId} 
-                onChange={(e) => {setId(e.target.value)}}></input>
-            <input 
-                type="text" 
-                placeholder="Password"
-                value={password}
-                onChange={(e) => {setPassword(e.target.value)}}></input> 
-            <input
-                type="text"
-                placeholder="email"
-                value={email}
-                onChange={(e) => {setEmail(e.target.value)}}></input>
-            <input
-                type="text"
-                placeholder="name"
-                value={name}
-                onChange={(e) => {setName(e.target.value)}}></input>
-            <input
-                type="text"
-                placeholder="PhoneNumber"
-                value={phoneNumber}
-                onChange={(e) => {setPhoneNumber(e.target.value)}}></input>
-             <input
-                type="date"
-                placeholder="Birthday"
-                value={birthday}
-                onChange={(e) => {setBirthday(e.target.value)}}></input>
+            <div>
+                <input 
+                    type="text"
+                    placeholder="ID"
+                    value={signInId}
+                    onChange={(e) => {setSignInId(e.target.value)}}></input>
+                <input 
+                    type="text"
+                    placeholder="Password"
+                    value={signInPassword}
+                    onChange={(e) => {setSignInPassword(e.target.value)}}></input>
+                <button onClick={handleSignIn}>로그인</button>
+                <button onClick={convert2SignUp}>회원가입</button>
+                <button onClick={convert2FindId}>ID찾기</button>
+                <button onClick={convert2FindPassword}>비밀번호찾기</button>
+            </div>
+            {(state === 'signUp') && (
+                <div>
+                    <input 
+                        type="text" 
+                        placeholder="ID"
+                        value={signUpId} 
+                        onChange={(e) => {setSignUpId(e.target.value)}}></input>
+                    <input 
+                        type="text" 
+                        placeholder="Password"
+                        value={signUpPassword}
+                        onChange={(e) => {setSignUpPassword(e.target.value)}}></input> 
+                    <input
+                        type="text"
+                        placeholder="email"
+                        value={signUpEmail}
+                        onChange={(e) => {setSignUpEmail(e.target.value)}}></input>
+                    <input
+                        type="text"
+                        placeholder="name"
+                        value={signUpEmail}
+                        onChange={(e) => {setSignUpName(e.target.value)}}></input>
+                    <input
+                        type="text"
+                        placeholder="PhoneNumber"
+                        value={signUpEmail}
+                        onChange={(e) => {setSignUpPhoneNumber(e.target.value)}}></input>
+                    <input
+                        type="date"
+                        placeholder="Birthday"
+                        value={signUpBirthday}
+                        onChange={(e) => {setSignUpBirthday(e.target.value)}}></input>
 
-            <button onClick={handleSignUp}>회원가입</button>
+                    <button onClick={handleSignUp}>회원가입</button>
+                </div>
+            )}
+            {(state === 'findId') && (
+                <div>
+                    <input 
+                        type="text"
+                        placeholder="이름"
+                        value={findIdName}
+                        onChange={(e) => {setFindIdName(e.target.value)}}></input>
+                    <input  
+                        type="text"
+                        placeholder=""
+                </div>
+            )}
+            {(state === 'findPassWord')}{
+                <div>
+
+                </div>
+            }
         </div>
     );
 }
