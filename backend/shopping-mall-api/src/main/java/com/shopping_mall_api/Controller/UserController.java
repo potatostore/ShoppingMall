@@ -1,4 +1,4 @@
-package com.shopping_mall_api.controllers;
+package com.shopping_mall_api.Controller;
 
 import com.shopping_mall_api.Entity.User;
 import com.shopping_mall_api.Repository.UserRepository;
@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.lang.model.util.Elements;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -25,9 +24,9 @@ public class UserController {
         return userRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public User getUser(@PathVariable Integer id){
-        return userRepository.findById(id).orElse(null);
+    @GetMapping("/{logInId}")
+    public User getUser(@PathVariable String logInId){
+        return userRepository.findByLogInid(logInId).orElse(null);
     }
 
     @PostMapping

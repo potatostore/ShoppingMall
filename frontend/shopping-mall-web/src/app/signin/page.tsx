@@ -19,20 +19,39 @@ export default function signinPage(){
     const [signUpBirthday, setSignUpBirthday] = useState<string>('');
 
     // state === findId
-    const [findIdName, setFindIdName] = setState<string>('');
-    const [findIdPhoneNumber, setFindIdPhoneNumber] = setState<string>('');
+    const [findIdName, setFindIdName] = useState<string>('');
+    const [findIdPhoneNumber, setFindIdPhoneNumber] = useState<string>('');
+
+    // state === findPassword
+    const [findPasswordId, setFindPasswordId] = useState<string>('');
 
     const handleSignIn = async () => {
+        const signInData = {
+            signInId,
+            signInPassword
+        };
 
+        console.log(signInData);
+        try{
+            const response = await fetch('http://localhost:8080/users/' + signInId,{
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(signInData)
+            });
+
+            if(response.ok){
+                const result = await response.json();
+                alert('로그인 성공!');
+                console.log('서버응답 : ' + result);
+            } else{
+                alert('실패');
+            }
+        } catch(error){
+            console.log('통신 오류');
+        }
     }
-
-    const handleFindId = async () => {
-
-    }
-
-    const handleFindPassword = async () => [
-
-    ]
 
     const handleSignUp = async () => {
         const signUpCreatedAt = new Date().toISOString();
@@ -69,6 +88,14 @@ export default function signinPage(){
         }
     }
 
+    const handleFindId = async () => {
+
+    }
+
+    const handleFindPassword = async () => {
+        
+    }
+
     const convert2SignUp = () => {
         setState('signUp');
     }
@@ -83,7 +110,7 @@ export default function signinPage(){
     
     return(
         <div>
-            <h1>회원가입</h1>
+            <h1>로그인</h1>
             <div>
                 <input 
                     type="text"
@@ -120,12 +147,12 @@ export default function signinPage(){
                     <input
                         type="text"
                         placeholder="name"
-                        value={signUpEmail}
+                        value={signUpName}
                         onChange={(e) => {setSignUpName(e.target.value)}}></input>
                     <input
                         type="text"
                         placeholder="PhoneNumber"
-                        value={signUpEmail}
+                        value={signUpPhoneNumber}
                         onChange={(e) => {setSignUpPhoneNumber(e.target.value)}}></input>
                     <input
                         type="date"
@@ -143,16 +170,22 @@ export default function signinPage(){
                         placeholder="이름"
                         value={findIdName}
                         onChange={(e) => {setFindIdName(e.target.value)}}></input>
-                    <input  
+                    <input
                         type="text"
-                        placeholder=""
+                        placeholder="전화번호"
+                        value={findIdPhoneNumber}
+                        onChange={(e) => {setFindIdPhoneNumber(e.target.value)}}></input>
                 </div>
             )}
-            {(state === 'findPassWord')}{
+            {(state === 'findPassword') && (
                 <div>
-
+                    <input
+                        type="text"
+                        placeholder="Id"
+                        value={findPasswordId}
+                        onChange={(e) => {setFindPasswordId(e.target.value)}}></input>
                 </div>
-            }
+            )}
         </div>
     );
 }

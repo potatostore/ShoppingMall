@@ -1,4 +1,4 @@
-package com.shopping_mall_api.controllers;
+package com.shopping_mall_api.Controller;
 
 import com.shopping_mall_api.Entity.Order;
 import com.shopping_mall_api.Repository.OrderRepository;
@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/" + TableNames.orderTableName)
