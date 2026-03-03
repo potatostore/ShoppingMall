@@ -10,10 +10,9 @@ import lombok.Getter;
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Integer id;
     private String logInId;
     private String password;
     private String name;
-    private
 }
 

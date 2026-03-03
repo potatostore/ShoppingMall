@@ -10,6 +10,6 @@ import lombok.Getter;
 public class OrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Integer id;
 
 }
