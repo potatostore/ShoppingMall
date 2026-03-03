@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function signinPage(){
     // state : signIn, signUp, findId, findPassword
@@ -106,6 +106,10 @@ export default function signinPage(){
 
     const convert2FindPassword = () => {
         setState('findPassword');
+    }
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        return e.target.value;
     }
     
     return(

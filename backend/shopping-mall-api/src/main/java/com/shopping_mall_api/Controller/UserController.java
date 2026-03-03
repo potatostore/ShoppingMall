@@ -24,9 +24,9 @@ public class UserController {
         return userRepository.findAll();
     }
 
-    @GetMapping("/{logInId}")
-    public User getUser(@PathVariable String logInId){
-        return userRepository.findByLogInid(logInId).orElse(null);
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Integer id){
+        return userRepository.findById(id).orElse(null);
     }
 
     @PostMapping
