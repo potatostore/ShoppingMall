@@ -3,6 +3,7 @@ package com.shopping_mall_api.Controller;
 import com.shopping_mall_api.Entity.OrderDetail;
 import com.shopping_mall_api.Repository.OrderDetailRepository;
 import com.shopping_mall_api.TableNames;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,13 +29,19 @@ public class OrderDetailController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderDetail> postOrderDetail(@RequestBody OrderDetail orderDetail){
-        orderDetailRepository.save(orderDetail);
+    public OrderDetail postOrderDetail(@RequestBody OrderDetail orderDetail){
+        return orderDetailRepository.save(orderDetail);
     }
 
     @PutMapping("{id}")
     public ResponseEntity<OrderDetail> putOrderDetail(@PathVariable Integer id, @RequestBody OrderDetail orderDetail){
+        boolean exist = orderDetailRepository.existsById(id);
 
+        orderDetailRepository.save(orderDetail);
+
+        return (exist) ?
+                new ResponseEntity<OrderDetail>(orderDetail, HttpStatus.OK) :
+                new ResponseEntity<OrderDetail>(orderDetail, HttpStatus.CREATED);
     }
 
     @DeleteMapping("{id}")

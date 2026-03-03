@@ -32,9 +32,10 @@ export default function signinPage(){
         };
 
         console.log(signInData);
+
         try{
-            const response = await fetch('http://localhost:8080/users/' + signInId,{
-                method: 'GET',
+            const response = await fetch('http://localhost:8080/users/signin',{
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -89,11 +90,44 @@ export default function signinPage(){
     }
 
     const handleFindId = async () => {
+        const findIdData = {
+            findIdName, 
+            findIdPhoneNumber
+        };
 
+        console.log(findIdData);
+
+        try{
+            const response = await fetch('http://localhost:8080/users',{
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(findIdData)
+            });
+
+            if(response.ok){
+                const result = await response.json();
+                alert('ID : ' + result.id);
+                console.log('ID : ' + result.id);
+            }
+        } catch(error){
+            alert('통신 오류 발생');
+        }
     }
 
     const handleFindPassword = async () => {
-        
+        const findPasswordData = {
+            findPasswordId
+        };
+
+        console.log(findPasswordData);
+
+        try{
+            
+        } catch(error){
+            alert('통신 오류');
+        }
     }
 
     const convert2SignUp = () => {
@@ -189,3 +223,4 @@ export default function signinPage(){
         </div>
     );
 }
+

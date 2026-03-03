@@ -3,6 +3,7 @@ package com.shopping_mall_api.Controller;
 import com.shopping_mall_api.Entity.Employee;
 import com.shopping_mall_api.Repository.EmployeeRepository;
 import com.shopping_mall_api.TableNames;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,17 +29,23 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public ResponseEntity<Employee> postEmployee(@RequestBody Employee employee){
-
+    public Employee postEmployee(@RequestBody Employee employee){
+        return employeeRepository.save(employee);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<Employee> putEmployee(@PathVariable Integer id, @RequestBody Employee employee) {
+        boolean exist = employeeRepository.existsById(id);
 
+        employeeRepository.save(employee);
+
+        return (exist) ?
+                new ResponseEntity<Employee>(employee, HttpStatus.OK) :
+                new ResponseEntity<Employee>(employee, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    public void deletemapping(@PathVariable Integer id){
-
+    public void deleteEmployee(@PathVariable Integer id){
+        employeeRepository.deleteById(id);
     }
 }
