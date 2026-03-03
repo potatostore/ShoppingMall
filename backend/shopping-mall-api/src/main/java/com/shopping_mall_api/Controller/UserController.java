@@ -1,7 +1,9 @@
 package com.shopping_mall_api.Controller;
 
+import com.shopping_mall_api.DataTransferObject.SignIn;
 import com.shopping_mall_api.Entity.User;
 import com.shopping_mall_api.Repository.UserRepository;
+import com.shopping_mall_api.Service.UserService;
 import com.shopping_mall_api.TableNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,11 @@ import java.util.List;
 @RequestMapping("/" + TableNames.userTableName)
 public class UserController {
     private final UserRepository userRepository;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository){
+    public UserController(UserRepository userRepository, UserService userService){
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -32,6 +36,11 @@ public class UserController {
     @PostMapping
     public User postUser(@RequestBody User user){
         return userRepository.save(user);
+    }
+
+    @PostMapping("/signin")
+    public SignIn signInUser(@RequestBody SignIn signin){
+        
     }
 
     @PutMapping("/{id}")
