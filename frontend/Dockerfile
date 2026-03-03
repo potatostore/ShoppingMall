@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY shopping-mall-web/package.json shopping-mall-web/package-lock.json ./
 RUN npm cache clean --force && npm install
