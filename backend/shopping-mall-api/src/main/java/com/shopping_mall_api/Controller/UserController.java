@@ -1,9 +1,11 @@
 package com.shopping_mall_api.Controller;
 
-import com.shopping_mall_api.DataTransferObject.SignIn;
+import com.shopping_mall_api.DataTransferObject.SignInData;
+import com.shopping_mall_api.DataTransferObject.SignUpData;
 import com.shopping_mall_api.Entity.User;
 import com.shopping_mall_api.Repository.UserRepository;
 import com.shopping_mall_api.Service.UserService;
+import com.shopping_mall_api.Status.SignInStatus;
 import com.shopping_mall_api.TableNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,15 +35,18 @@ public class UserController {
         return userRepository.findById(id).orElse(null);
     }
 
-    @PostMapping
-    public User postUser(@RequestBody User user){
-        return userRepository.save(user);
+    @PostMapping("/signup")
+    public ResponseEntity<SignUpData> postUser(@RequestBody SignUpData signUpData){
+        SignInStatus status
     }
 
     @PostMapping("/signin")
-    public SignIn signInUser(@RequestBody SignIn signin){
-        
+    public ResponseEntity<SignInData> signInUser(@RequestBody SignInData signInData){
+        HttpStatus.
     }
+
+    @PostMapping("/findbyid")
+    public ResponseEntity<>
 
     @PutMapping("/{id}")
     public ResponseEntity<User> putUser(@PathVariable Integer id, @RequestBody User user){

@@ -3,7 +3,7 @@ package com.shopping_mall_api.DataTransferObject;
 import lombok.Getter;
 
 @Getter
-public class SignIn {
+public class SignInData {
     private String signInId;
     private String signInPassword;
 
