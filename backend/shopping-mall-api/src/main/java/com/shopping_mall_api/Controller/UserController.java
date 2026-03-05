@@ -12,6 +12,7 @@ import com.shopping_mall_api.Status.FindPasswordStatus;
 import com.shopping_mall_api.Status.SignInStatus;
 import com.shopping_mall_api.Status.SignUpStatus;
 import com.shopping_mall_api.TableNames;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,11 +42,18 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<SignUpData> signUpUser(@RequestBody SignUpData signUpData){
+    public ResponseEntity<String> signUpUser(@RequestBody SignUpData signUpData){
         SignUpStatus status = userService.signUp(signUpData);
 
         switch(status){
-            case
+            case SUCCESS:
+                return new ResponseEntity<String>(status.getMessage(), HttpStatus.OK);
+                break;
+            case DUPLICATE_ID:
+                return new ResponseEntity<String>(status.getMessage(), HttpStatus.CONFLICT);
+                break;
+            case INVALID_DATA:
+                return new ResponseEntity<String>(status.getMessage(), HttpStatus.)
         }
     }
 
