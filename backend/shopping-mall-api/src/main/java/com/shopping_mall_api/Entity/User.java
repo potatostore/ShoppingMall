@@ -4,8 +4,6 @@ import com.shopping_mall_api.TableNames;
 import jakarta.persistence.*;
 import lombok.Getter;
 
-import java.util.Date;
-
 @Getter
 @Entity(name = TableNames.userTableName)
 @Table(name = TableNames.userTableName)
@@ -15,8 +13,8 @@ public class User {
     private Integer id;
     private String name;
     private String email;
-    private String logInId;
-    private String password;
+    private String signInId;
+    private String signInPassword;
     @Column(name = "phoneNumber")
     private String phoneNumber;
     private String birthday;
@@ -36,11 +34,11 @@ public class User {
     }
 
     public void setLogInId(String logInId){
-        this.logInId = logInId;
+        this.signInId = logInId;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setSignInpassword(String signInpassword) {
+        this.signInPassword = signInpassword;
     }
 
     public void setPhoneNumber(String phoneNumber) {

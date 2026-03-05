@@ -1,11 +1,16 @@
 package com.shopping_mall_api.Controller;
 
+import com.shopping_mall_api.DataTransferObject.FindIdData;
+import com.shopping_mall_api.DataTransferObject.FindPasswordData;
 import com.shopping_mall_api.DataTransferObject.SignInData;
 import com.shopping_mall_api.DataTransferObject.SignUpData;
 import com.shopping_mall_api.Entity.User;
 import com.shopping_mall_api.Repository.UserRepository;
 import com.shopping_mall_api.Service.UserService;
+import com.shopping_mall_api.Status.FindIdStatus;
+import com.shopping_mall_api.Status.FindPasswordStatus;
 import com.shopping_mall_api.Status.SignInStatus;
+import com.shopping_mall_api.Status.SignUpStatus;
 import com.shopping_mall_api.TableNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,17 +41,29 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<SignUpData> postUser(@RequestBody SignUpData signUpData){
-        SignInStatus status
+    public ResponseEntity<SignUpData> signUpUser(@RequestBody SignUpData signUpData){
+        SignUpStatus status = userService.signUp(signUpData);
+
+        switch(status){
+            case
+        }
     }
 
     @PostMapping("/signin")
     public ResponseEntity<SignInData> signInUser(@RequestBody SignInData signInData){
-        HttpStatus.
+        SignInStatus status = null;
+
     }
 
-    @PostMapping("/findbyid")
-    public ResponseEntity<>
+    @PostMapping("/findid")
+    public ResponseEntity<FindIdData> FindIdUser(@RequestBody FindIdData findIdData){
+        FindIdStatus status = null;
+    }
+
+    @PostMapping("/findpassword")
+    public ResponseEntity<FindPasswordData> FindPasswordUser(@RequestBody FindPasswordData findPasswordData){
+        FindPasswordStatus status = null;
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<User> putUser(@PathVariable Integer id, @RequestBody User user){
