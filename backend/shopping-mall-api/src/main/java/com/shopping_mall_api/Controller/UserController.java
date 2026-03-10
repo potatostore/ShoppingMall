@@ -41,7 +41,7 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<SignUpData> signUpUser(@RequestBody SignUpData signUpData){
+    public ResponseEntity<SignUpData> postUser(@RequestBody SignUpData signUpData){
         SignUpStatus status = userService.signUp(signUpData);
 
         switch(status){
@@ -50,7 +50,7 @@ public class UserController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<SignInData> signInUser(@RequestBody SignInData signInData){
+    public ResponseEntity<SignInData> postUser(@RequestBody SignInData signInData){
         SignInStatus status = null;
 
     }

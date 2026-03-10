@@ -20,6 +20,11 @@ public class User {
     private String birthday;
     @Column(name = "createdAt")
     private String createdAt;
+    private Integer likeTableId;
+    private Integer previousSearchTableId;
+    private Integer cartTableId;
+    private Integer problemOrderTableId;
+    private Integer recentWatchingTableId;
 
     public void setId(Integer id) {
         this.id = id;
