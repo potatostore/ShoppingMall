@@ -25,13 +25,33 @@ export default function signinPage(){
     // state === findPassword
     const [findPasswordId, setFindPasswordId] = useState<string>('');
 
+    const handleSignIn_Kakao = async () => {
+        const signIn_KakaoData = {
+
+        };
+
+        try {
+            
+        }
+    }
+
+    const handleSignIn_Google = async () => {
+        const signIn_GoogleData = {
+
+        };
+
+        try {
+
+        } catch(error){
+
+        }
+    }
+
     const handleSignIn = async () => {
         const signInData = {
             signInId,
             signInPassword
         };
-
-        console.log(signInData);
 
         try{
             const response = await fetch('http://localhost:8080/users/signin',{
@@ -87,6 +107,14 @@ export default function signinPage(){
         } catch(error){
             console.error('통신 에러 발생', error);
         }
+    }
+
+    const handleSignUp_Kakao = async () => {
+
+    }
+
+    const handleSignUP_Google = async () => {
+        
     }
 
     const handleFindId = async () => {
