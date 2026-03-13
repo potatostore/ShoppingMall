@@ -32,6 +32,8 @@ export default function signinPage(){
 
         try {
             
+        } catch(error){
+            
         }
     }
 
@@ -189,6 +191,7 @@ export default function signinPage(){
                     value={signInPassword}
                     onChange={(e) => {setSignInPassword(e.target.value)}}></input>
                 <button onClick={handleSignIn}>로그인</button>
+                <button onClick={handleSignIn_Kakao}>카카오로 로그인</button>
                 <button onClick={convert2SignUp}>회원가입</button>
                 <button onClick={convert2FindId}>ID찾기</button>
                 <button onClick={convert2FindPassword}>비밀번호찾기</button>

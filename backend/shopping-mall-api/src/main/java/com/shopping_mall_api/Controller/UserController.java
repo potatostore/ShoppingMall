@@ -40,6 +40,22 @@ public class UserController {
         return userRepository.findById(id).orElse(null);
     }
 
+    @PostMapping("/signin")
+    public ResponseEntity<SignInData> postUser(@RequestBody SignInData signInData){
+        SignInStatus status = userService.signIn(signInData);
+
+        switch(status){
+            case SignInStatus.SUCCESS:
+                break;
+            case SignInStatus.FAILURE:
+                break;
+            case SignInStatus.LOCKED:
+                break;
+            default:
+                break;
+        }
+    }
+
     @PostMapping("/signup")
     public ResponseEntity<SignUpData> postUser(@RequestBody SignUpData signUpData){
         SignUpStatus status = userService.signUp(signUpData);
@@ -47,12 +63,6 @@ public class UserController {
         switch(status){
             case
         }
-    }
-
-    @PostMapping("/signin")
-    public ResponseEntity<SignInData> postUser(@RequestBody SignInData signInData){
-        SignInStatus status = null;
-
     }
 
     @PostMapping("/findid")

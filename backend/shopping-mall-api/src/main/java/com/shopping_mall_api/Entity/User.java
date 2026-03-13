@@ -25,6 +25,7 @@ public class User {
     private Integer cartTableId;
     private Integer problemOrderTableId;
     private Integer recentWatchingTableId;
+    private boolean locked;
 
     public void setId(Integer id) {
         this.id = id;
@@ -56,5 +57,9 @@ public class User {
 
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }
