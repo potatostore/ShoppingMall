@@ -42,19 +42,24 @@ public class UserController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<SignInData> postUser(@RequestBody SignInData signInData){
+    public ResponseEntity<SignInData> signInUser(@RequestBody SignInData signInData){
         SignInStatus status = userService.signIn(signInData);
 
         switch(status){
             case SignInStatus.SUCCESS:
-                break;
+                return new ResponseEntity<SignInData>(signInData, HttpStatus.OK);
             case SignInStatus.FAILURE:
-                break;
+                return new ResponseEntity<SignInData>(signInData, HttpStatus.CONFLICT);
             case SignInStatus.LOCKED:
-                break;
+                return new ResponseEntity<SignInData>(signInData, HttpStatus.LOCKED);
             default:
-                break;
+                return new ResponseEntity<SignInData>(signInData, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @PostMapping("/signinkakao")
+    public ResponseEntity<SignInData> signInKakaoUser(@RequestBody String authCode){
+
     }
 
     @PostMapping("/signup")
@@ -66,9 +71,8 @@ public class UserController {
         }
     }
 
-    @PostMapping("/signin")
-    public ResponseEntity<SignInData> signInUser(@RequestBody SignInData signInData){
-        SignInStatus status = null;
+    @PostMapping("/signupkakao")
+    public ResponseEntity<SignUpData> signUpKakaoUser(@RequestBody String authCode){
 
     }
 

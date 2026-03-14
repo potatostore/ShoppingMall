@@ -2,9 +2,9 @@ package com.shopping_mall_api.Entity;
 
 import com.shopping_mall_api.TableNames;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @Entity(name = TableNames.employeeTableName)
 @Table(name = TableNames.employeeTableName)
 public class Employee {

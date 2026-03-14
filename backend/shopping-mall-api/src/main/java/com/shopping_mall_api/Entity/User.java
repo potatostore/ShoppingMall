@@ -2,9 +2,9 @@ package com.shopping_mall_api.Entity;
 
 import com.shopping_mall_api.TableNames;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @Entity(name = TableNames.userTableName)
 @Table(name = TableNames.userTableName)
 public class User {
@@ -26,40 +26,4 @@ public class User {
     private Integer problemOrderTableId;
     private Integer recentWatchingTableId;
     private boolean locked;
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setLogInId(String logInId){
-        this.signInId = logInId;
-    }
-
-    public void setSignInpassword(String signInpassword) {
-        this.signInPassword = signInpassword;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public void setBirthday(String birthday) {
-        this.birthday = birthday;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setLocked(boolean locked) {
-        this.locked = locked;
-    }
 }

@@ -2,13 +2,11 @@ package com.shopping_mall_api.Entity;
 
 import com.shopping_mall_api.TableNames;
 import jakarta.persistence.*;
-import lombok.Getter;
-import org.hibernate.annotations.SQLUpdates;
+import lombok.Data;
 
-import javax.naming.Name;
 import java.util.Date;
 
-@Getter
+@Data
 @Entity(name = TableNames.orderTableName)
 @Table(name = TableNames.orderTableName)
 public class Order {
