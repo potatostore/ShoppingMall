@@ -58,23 +58,18 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-<<<<<<< HEAD
-    public ResponseEntity<String> signUpUser(@RequestBody SignUpData signUpData){
-=======
-    public ResponseEntity<SignUpData> postUser(@RequestBody SignUpData signUpData){
->>>>>>> 1aaf144895d596f042adeff7baa5d7e1370cec95
+    public ResponseEntity<SignUpData> signUpUser(@RequestBody SignUpData signUpData){
         SignUpStatus status = userService.signUp(signUpData);
 
         switch(status){
-            case SUCCESS:
-                return new ResponseEntity<String>(status.getMessage(), HttpStatus.OK);
-                break;
-            case DUPLICATE_ID:
-                return new ResponseEntity<String>(status.getMessage(), HttpStatus.CONFLICT);
-                break;
-            case INVALID_DATA:
-                return new ResponseEntity<String>(status.getMessage(), HttpStatus.)
+            case
         }
+    }
+
+    @PostMapping("/signin")
+    public ResponseEntity<SignInData> signInUser(@RequestBody SignInData signInData){
+        SignInStatus status = null;
+
     }
 
     @PostMapping("/findid")
