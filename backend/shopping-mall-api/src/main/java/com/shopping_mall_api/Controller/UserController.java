@@ -41,8 +41,28 @@ public class UserController {
         return userRepository.findById(id).orElse(null);
     }
 
+    @PostMapping("/signin")
+    public ResponseEntity<SignInData> postUser(@RequestBody SignInData signInData){
+        SignInStatus status = userService.signIn(signInData);
+
+        switch(status){
+            case SignInStatus.SUCCESS:
+                break;
+            case SignInStatus.FAILURE:
+                break;
+            case SignInStatus.LOCKED:
+                break;
+            default:
+                break;
+        }
+    }
+
     @PostMapping("/signup")
+<<<<<<< HEAD
     public ResponseEntity<String> signUpUser(@RequestBody SignUpData signUpData){
+=======
+    public ResponseEntity<SignUpData> postUser(@RequestBody SignUpData signUpData){
+>>>>>>> 1aaf144895d596f042adeff7baa5d7e1370cec95
         SignUpStatus status = userService.signUp(signUpData);
 
         switch(status){
@@ -55,12 +75,6 @@ public class UserController {
             case INVALID_DATA:
                 return new ResponseEntity<String>(status.getMessage(), HttpStatus.)
         }
-    }
-
-    @PostMapping("/signin")
-    public ResponseEntity<SignInData> signInUser(@RequestBody SignInData signInData){
-        SignInStatus status = null;
-
     }
 
     @PostMapping("/findid")

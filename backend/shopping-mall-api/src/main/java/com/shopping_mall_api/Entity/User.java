@@ -20,6 +20,12 @@ public class User {
     private String birthday;
     @Column(name = "createdAt")
     private String createdAt;
+    private Integer likeTableId;
+    private Integer previousSearchTableId;
+    private Integer cartTableId;
+    private Integer problemOrderTableId;
+    private Integer recentWatchingTableId;
+    private boolean locked;
 
     public void setId(Integer id) {
         this.id = id;
@@ -51,5 +57,9 @@ public class User {
 
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }

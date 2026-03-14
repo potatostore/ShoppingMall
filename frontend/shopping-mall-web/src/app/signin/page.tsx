@@ -25,13 +25,35 @@ export default function signinPage(){
     // state === findPassword
     const [findPasswordId, setFindPasswordId] = useState<string>('');
 
+    const handleSignIn_Kakao = async () => {
+        const signIn_KakaoData = {
+
+        };
+
+        try {
+            
+        } catch(error){
+            
+        }
+    }
+
+    const handleSignIn_Google = async () => {
+        const signIn_GoogleData = {
+
+        };
+
+        try {
+
+        } catch(error){
+
+        }
+    }
+
     const handleSignIn = async () => {
         const signInData = {
             signInId,
             signInPassword
         };
-
-        console.log(signInData);
 
         try{
             const response = await fetch('http://localhost:8080/users/signin',{
@@ -87,6 +109,14 @@ export default function signinPage(){
         } catch(error){
             console.error('통신 에러 발생', error);
         }
+    }
+
+    const handleSignUp_Kakao = async () => {
+
+    }
+
+    const handleSignUP_Google = async () => {
+        
     }
 
     const handleFindId = async () => {
@@ -161,6 +191,7 @@ export default function signinPage(){
                     value={signInPassword}
                     onChange={(e) => {setSignInPassword(e.target.value)}}></input>
                 <button onClick={handleSignIn}>로그인</button>
+                <button onClick={handleSignIn_Kakao}>카카오로 로그인</button>
                 <button onClick={convert2SignUp}>회원가입</button>
                 <button onClick={convert2FindId}>ID찾기</button>
                 <button onClick={convert2FindPassword}>비밀번호찾기</button>

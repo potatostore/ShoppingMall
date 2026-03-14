@@ -2,6 +2,7 @@ package com.shopping_mall_api.Controller;
 
 import com.shopping_mall_api.Entity.Product;
 import com.shopping_mall_api.Repository.ProductRepository;
+import com.shopping_mall_api.Service.ProductService;
 import com.shopping_mall_api.TableNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +14,11 @@ import java.util.List;
 @RequestMapping("/" + TableNames.productTableName)
 public class ProductController {
     private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    public ProductController(ProductRepository productRepository){
+    public ProductController(ProductRepository productRepository, ProductService productService){
         this.productRepository = productRepository;
+        this.productService = productService;
     }
 
     @GetMapping
@@ -31,6 +34,16 @@ public class ProductController {
     @PostMapping
     public Product postProduct(@RequestBody Product product){
         return productRepository.save(product);
+    }
+
+    @PostMapping("/addproduct")
+    public Product addProduct(@RequestBody Product product){
+        ResponseEntity<Product> status = productService.addProduct();
+    }
+
+    @PostMapping("/removeproduct")
+    public Product removeProduct(@RequestBody Product product){
+
     }
 
     @PutMapping("/{id}")
