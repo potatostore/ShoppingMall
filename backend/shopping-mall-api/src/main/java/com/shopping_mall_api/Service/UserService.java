@@ -32,7 +32,7 @@ public class UserService {
                     if (!passwordEncoder.matches(signInData.getSignInPassword(), user.getSignInPassword())) {
                         return SignInStatus.FAILURE;
                     }
-                    if (user.getLocked()) {
+                    if (/*user.getLocked()*/ true) {
                         return SignInStatus.LOCKED;
                     }
                     return SignInStatus.SUCCESS;
@@ -41,13 +41,11 @@ public class UserService {
     }
 
     public SignUpStatus signUp(SignUpData signUpData){
-        return userRepository.findBySignInId(signUpData.getSignUpId())
-                .map(user -> {return SignUpStatus.DUPLICATE_ID;})
-                .orElse(userRepository.save(signUpData));
+        return null;
     }
 
     public FindIdStatus findId(FindIdData findIdData){
-        return userRepository.find
+        return null;
     }
 
     public FindPasswordStatus findPassword(FindPasswordData findPasswordData){

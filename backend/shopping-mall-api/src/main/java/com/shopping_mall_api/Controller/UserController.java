@@ -59,31 +59,29 @@ public class UserController {
 
     @PostMapping("/signinkakao")
     public ResponseEntity<SignInData> signInKakaoUser(@RequestBody String authCode){
-
+        return null;
     }
 
     @PostMapping("/signup")
     public ResponseEntity<SignUpData> signUpUser(@RequestBody SignUpData signUpData){
         SignUpStatus status = userService.signUp(signUpData);
 
-        switch(status){
-            case
-        }
+        return null;
     }
 
     @PostMapping("/signupkakao")
     public ResponseEntity<SignUpData> signUpKakaoUser(@RequestBody String authCode){
-
+        return null;
     }
 
     @PostMapping("/findid")
     public ResponseEntity<FindIdData> FindIdUser(@RequestBody FindIdData findIdData){
-        FindIdStatus status = null;
+        return null;
     }
 
     @PostMapping("/findpassword")
     public ResponseEntity<FindPasswordData> FindPasswordUser(@RequestBody FindPasswordData findPasswordData){
-        FindPasswordStatus status = null;
+        return null;
     }
 
     @PutMapping("/{id}")

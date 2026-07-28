@@ -38,12 +38,12 @@ public class ProductController {
 
     @PostMapping("/addproduct")
     public Product addProduct(@RequestBody Product product){
-        ResponseEntity<Product> status = productService.addProduct();
+        return null;
     }
 
     @PostMapping("/removeproduct")
     public Product removeProduct(@RequestBody Product product){
-
+        return null;
     }
 
     @PutMapping("/{id}")
