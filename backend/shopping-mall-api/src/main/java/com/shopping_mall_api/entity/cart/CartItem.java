@@ -1,6 +1,7 @@
 package com.shopping_mall_api.entity.cart;
 
 
+import com.shopping_mall_api.dto.cart.cartItem.CartItemResponseDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
