@@ -10,6 +10,11 @@
         <module name="shopping-mall-api.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="shopping-mall-api" target="21" />
+      <module name="shopping-mall-api.main" target="21" />
+      <module name="shopping-mall-api.test" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
