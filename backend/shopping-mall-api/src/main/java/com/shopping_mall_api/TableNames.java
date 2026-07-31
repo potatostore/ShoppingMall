@@ -6,6 +6,7 @@ public class TableNames {
     public static final String userTableName = "users";
     public static final String employeeTableName = "employee";
     public static final String cartTableName = "cart";
+    public static final String cartItemTableName = "cart_item";
     public static final String orderDetailTableName = "orderDetail";
     public static final String likeTableName = "like";
     public static final String previousSearchTableName = "previousSearch";

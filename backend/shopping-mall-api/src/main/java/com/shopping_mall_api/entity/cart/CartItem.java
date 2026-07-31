@@ -1,6 +1,7 @@
 package com.shopping_mall_api.entity.cart;
 
 
+import com.shopping_mall_api.TableNames;
 import com.shopping_mall_api.dto.cart.cartItem.CartItemResponseDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -9,10 +10,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@Getter
-@Table
 @Entity
+@Getter
+@NoArgsConstructor
+@Table(name = TableNames.cartItemTableName)
 public class CartItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,11 +22,9 @@ public class CartItem extends BaseEntity {
     @Column(nullable = false)
     private Long productId;
 
-    @Column(nullable = false)
     @Min(value = 0)
     private Integer curProductPrice;
 
-    @Column(nullable = false)
     @Min(value = 0)
     private Integer quantity;
 
@@ -34,30 +33,36 @@ public class CartItem extends BaseEntity {
 
     @Builder
     public CartItem(Long productId, Integer curProductPrice, Integer quantity){
+        if(productId == null){
+            throw new IllegalArgumentException("productId는 필수입니다.");
+        }
         this.productId = productId;
-        this.curProductPrice = curProductPrice;
-        this.quantity = quantity;
+        this.curProductPrice = (curProductPrice != null) ? curProductPrice : 0;
+        this.quantity = (quantity != null) ? quantity : 0;
 
         this.totalProductPrice = (curProductPrice != null && quantity != null) ? curProductPrice * quantity : 0;
     }
 
     public CartItem(CartItemResponseDTO cartItemResponseDTO){
-        this.productId = cartItemResponseDTO.getProductId();
-        this.curProductPrice = cartItemResponseDTO.getCurProductPrice();;
-        this.quantity = cartItemResponseDTO.getQuantity();
-        this.totalProductPrice = cartItemResponseDTO.getTotalPrice();
+        this(cartItemResponseDTO.getProductId(),
+             cartItemResponseDTO.getCurProductPrice(),
+             cartItemResponseDTO.getQuantity());
     }
 
     public void updateQuantity(Integer quantity){
-        this.quantity = quantity;
+        this.quantity = (quantity != null && quantity >= 0) ? quantity : 0;
+        updateTotalProductPrice();
     }
 
     public void updateCurProductPrice(Integer curProductPrice){
-        this.curProductPrice = curProductPrice;
+        this.curProductPrice = (curProductPrice != null && curProductPrice >= 0) ? curProductPrice : 0;
+        updateTotalProductPrice();
     }
 
     public void updateTotalProductPrice(){
-        this.totalProductPrice = quantity * curProductPrice;
+        int price = (this.curProductPrice != null) ? this.curProductPrice : 0;
+        int qty = (this.quantity != null) ? this.quantity : 0;
+        this.totalProductPrice = qty * price;
     }
 
     public Integer checkQuantity() {

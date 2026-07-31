@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
     private String name;
     private String email;
     private String logInId;
@@ -22,7 +22,7 @@ public class User {
     private String birthday;
     @Column(name = "createdAt")
     private String createdAt;
-    private String likeTableId;
-    private String cartTableId;
-    private String recentWatchingProductId;
+    private Long likeTableId;
+    private Long cartTableId;
+    private Long recentWatchingProductId;
 }
