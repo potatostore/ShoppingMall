@@ -4,6 +4,7 @@ import com.shopping_mall_api.TableNames;
 import com.shopping_mall_api.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class Cart extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartId;
 
+    @NotNull
     @Column(nullable = false)
     private Long userId;
 
