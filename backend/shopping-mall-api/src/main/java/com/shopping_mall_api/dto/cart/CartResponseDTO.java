@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class CartResponseDTO {
     private Long userId;
     private List<CartItemResponseDTO> cartItemList;
-    private Integer totalCartPrice;
+    private Long totalCartPrice;
 
     public CartResponseDTO(Cart cart){
         if(cart == null){
