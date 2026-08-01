@@ -30,7 +30,7 @@ public class Cart extends BaseEntity {
     private List<CartItem> cartItemList;
 
     @Min(value = 0)
-    private Integer totalCartPrice;
+    private Long totalCartPrice;
 
     @Builder
     public Cart(Long userId){
@@ -39,7 +39,7 @@ public class Cart extends BaseEntity {
         }
         this.userId = userId;
         this.cartItemList = new ArrayList<>();
-        this.totalCartPrice = 0;
+        this.totalCartPrice = 0L;
     }
 
     public void addCartItemInList(CartItem item){
@@ -48,12 +48,12 @@ public class Cart extends BaseEntity {
 
     public void updateTotalCartPrice(){
         if(this.cartItemList.isEmpty()){
-            this.totalCartPrice = 0;
+            this.totalCartPrice = 0L;
             return;
         }
 
         this.totalCartPrice = cartItemList.stream()
-                .mapToInt(item -> (item != null && item.getTotalProductPrice() != null) ?
-                        item.getTotalProductPrice() : 0).sum();
+                .mapToLong(item -> (item != null && item.getTotalProductPrice() != null) ?
+                        item.getTotalProductPrice() : 0L).sum();
     }
 }

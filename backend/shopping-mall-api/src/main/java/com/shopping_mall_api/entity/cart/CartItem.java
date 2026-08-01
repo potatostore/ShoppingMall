@@ -23,24 +23,24 @@ public class CartItem extends BaseEntity {
     private Long productId;
 
     @Min(value = 0)
-    private Integer curProductPrice;
+    private Long curProductPrice;
 
     @Min(value = 0)
-    private Integer quantity;
+    private Long quantity;
 
     @Min(value = 0)
-    private Integer totalProductPrice;
+    private Long totalProductPrice;
 
     @Builder
-    public CartItem(Long productId, Integer curProductPrice, Integer quantity){
+    public CartItem(Long productId, Long curProductPrice, Long quantity){
         if(productId == null){
             throw new IllegalArgumentException("productId는 필수입니다.");
         }
         this.productId = productId;
-        this.curProductPrice = (curProductPrice != null) ? curProductPrice : 0;
-        this.quantity = (quantity != null) ? quantity : 0;
+        this.curProductPrice = (curProductPrice != null) ? curProductPrice : 0L;
+        this.quantity = (quantity != null) ? quantity : 0L;
 
-        this.totalProductPrice = (curProductPrice != null && quantity != null) ? curProductPrice * quantity : 0;
+        this.totalProductPrice = (curProductPrice != null && quantity != null) ? curProductPrice * quantity : 0L;
     }
 
     public CartItem(CartItemResponseDTO cartItemResponseDTO){
@@ -49,23 +49,23 @@ public class CartItem extends BaseEntity {
              cartItemResponseDTO.getQuantity());
     }
 
-    public void updateQuantity(Integer quantity){
-        this.quantity = (quantity != null && quantity >= 0) ? quantity : 0;
+    public void updateQuantity(Long quantity){
+        this.quantity = (quantity != null && quantity >= 0) ? quantity : 0L;
         updateTotalProductPrice();
     }
 
-    public void updateCurProductPrice(Integer curProductPrice){
-        this.curProductPrice = (curProductPrice != null && curProductPrice >= 0) ? curProductPrice : 0;
+    public void updateCurProductPrice(Long curProductPrice){
+        this.curProductPrice = (curProductPrice != null && curProductPrice >= 0) ? curProductPrice : 0L;
         updateTotalProductPrice();
     }
 
     public void updateTotalProductPrice(){
-        int price = (this.curProductPrice != null) ? this.curProductPrice : 0;
-        int qty = (this.quantity != null) ? this.quantity : 0;
+        Long price = (this.curProductPrice != null) ? this.curProductPrice : 0L;
+        Long qty = (this.quantity != null) ? this.quantity : 0L;
         this.totalProductPrice = qty * price;
     }
 
-    public Integer checkQuantity() {
+    public Long checkQuantity() {
         return this.quantity;
     }
 }

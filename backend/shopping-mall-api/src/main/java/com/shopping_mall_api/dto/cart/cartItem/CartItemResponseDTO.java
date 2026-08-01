@@ -12,9 +12,9 @@ import lombok.Getter;
 public class CartItemResponseDTO {
     private Long cartItemId;
     private Long productId;
-    private Integer curProductPrice;
-    private Integer quantity;
-    private Integer totalPrice;
+    private Long curProductPrice;
+    private Long quantity;
+    private Long totalPrice;
 
     public CartItemResponseDTO(CartItem item){
         if(item == null){

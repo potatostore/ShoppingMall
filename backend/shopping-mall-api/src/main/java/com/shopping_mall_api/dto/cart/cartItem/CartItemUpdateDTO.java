@@ -15,5 +15,5 @@ public class CartItemUpdateDTO {
 
     @NotNull
     @Min(value = 1, message = "product quantity must be at least 1")
-    private Integer quantity;
+    private Long quantity;
 }
