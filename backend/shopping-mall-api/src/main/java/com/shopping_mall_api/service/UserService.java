@@ -4,7 +4,7 @@ import com.shopping_mall_api.dto.FindIdData;
 import com.shopping_mall_api.dto.FindPasswordData;
 import com.shopping_mall_api.dto.SignInData;
 import com.shopping_mall_api.dto.SignUpData;
-import com.shopping_mall_api.repository.UserRepository;
+import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.status.FindIdStatus;
 import com.shopping_mall_api.status.FindPasswordStatus;
 import com.shopping_mall_api.status.SignInStatus;

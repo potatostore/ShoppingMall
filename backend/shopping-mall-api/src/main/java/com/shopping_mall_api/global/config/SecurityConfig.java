@@ -1,4 +1,4 @@
-package com.shopping_mall_api;
+package com.shopping_mall_api.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

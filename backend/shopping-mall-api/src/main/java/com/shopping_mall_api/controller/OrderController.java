@@ -1,8 +1,8 @@
 package com.shopping_mall_api.controller;
 
 import com.shopping_mall_api.entity.order.Order;
-import com.shopping_mall_api.repository.OrderRepository;
-import com.shopping_mall_api.TableNames;
+import com.shopping_mall_api.repository.order.OrderRepository;
+import com.shopping_mall_api.global.constant.TableNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
