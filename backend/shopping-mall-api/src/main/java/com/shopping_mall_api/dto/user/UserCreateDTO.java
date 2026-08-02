@@ -1,4 +1,4 @@
-package com.shopping_mall_api.dto.User;
+package com.shopping_mall_api.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
