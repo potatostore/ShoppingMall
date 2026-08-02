@@ -1,7 +1,7 @@
 package com.shopping_mall_api.controller;
 
 import com.shopping_mall_api.entity.cart.Cart;
-import com.shopping_mall_api.repository.CartRepository;
+import com.shopping_mall_api.repository.cart.CartRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

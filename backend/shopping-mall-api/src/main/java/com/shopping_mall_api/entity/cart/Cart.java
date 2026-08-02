@@ -1,6 +1,6 @@
 package com.shopping_mall_api.entity.cart;
 
-import com.shopping_mall_api.TableNames;
+import com.shopping_mall_api.global.constant.TableNames;
 import com.shopping_mall_api.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -11,6 +11,7 @@ import lombok.Builder;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -25,8 +26,7 @@ public class Cart extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "cart_id")
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> cartItemList;
 
     @Min(value = 0)
@@ -34,26 +34,30 @@ public class Cart extends BaseEntity {
 
     @Builder
     public Cart(Long userId){
-        if(userId == null){
-            throw new IllegalArgumentException("userId는 필수입니다.");
-        }
+        Objects.requireNonNull(userId, "userId must not be null");
+
         this.userId = userId;
         this.cartItemList = new ArrayList<>();
         this.totalCartPrice = 0L;
     }
 
-    public void addCartItemInList(CartItem item){
-        this.cartItemList.add(item);
+    public void addCartItemInList(CartItem cartItem){
+        Objects.requireNonNull(cartItem, "cartItem must not be null");
+
+        this.cartItemList.add(cartItem);
+
+        updateTotalCartPrice();
     }
 
     public void updateTotalCartPrice(){
+        Objects.requireNonNull(this.cartItemList, "cartItemList has no any cartItem");
+
         if(this.cartItemList.isEmpty()){
             this.totalCartPrice = 0L;
             return;
         }
 
         this.totalCartPrice = cartItemList.stream()
-                .mapToLong(item -> (item != null && item.getTotalProductPrice() != null) ?
-                        item.getTotalProductPrice() : 0L).sum();
+                .mapToLong(CartItem::getTotalProductPrice).sum();
     }
 }

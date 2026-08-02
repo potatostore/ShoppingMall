@@ -1,46 +1,68 @@
 package com.shopping_mall_api.entity.cart;
 
 
-import com.shopping_mall_api.TableNames;
+import com.shopping_mall_api.global.constant.TableNames;
 import com.shopping_mall_api.dto.cart.cartItem.CartItemResponseDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = TableNames.cartItemTableName)
 public class CartItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartItemId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cart_id")
+    private Cart cart;
+
+    @NotNull(message = "productId must not be null")
     @Column(nullable = false)
     private Long productId;
 
-    @Min(value = 0)
+    @NotNull(message = "curProductPrice must not be null")
+    @Min(value = 0, message = "curProductPrice must not be negative")
+    @Column(nullable = false)
     private Long curProductPrice;
 
-    @Min(value = 0)
+    @NotNull(message = "quantity must not be null")
+    @Min(value = 0, message = "quantity must not be negative")
+    @Column(nullable = false)
     private Long quantity;
 
-    @Min(value = 0)
+    @Min(value = 0, message = "totalProductPrice must not be negative")
+    @Column(nullable = false)
     private Long totalProductPrice;
 
     @Builder
     public CartItem(Long productId, Long curProductPrice, Long quantity){
-        if(productId == null){
-            throw new IllegalArgumentException("productId는 필수입니다.");
-        }
-        this.productId = productId;
-        this.curProductPrice = (curProductPrice != null) ? curProductPrice : 0L;
-        this.quantity = (quantity != null) ? quantity : 0L;
+        Objects.requireNonNull(productId, "productId must not be null");
+        Objects.requireNonNull(curProductPrice, "curProductPrice must not be null");
+        Objects.requireNonNull(quantity, "quantity must not be null");
 
-        this.totalProductPrice = (curProductPrice != null && quantity != null) ? curProductPrice * quantity : 0L;
+        if(curProductPrice < 0){
+            throw new IllegalArgumentException("curProductPrice must not be negative");
+        }
+        if(quantity < 0){
+            throw new IllegalArgumentException("quantity must not be negative");
+        }
+
+        this.productId = productId;
+        this.curProductPrice = curProductPrice;
+        this.quantity = quantity;
+
+        updateTotalProductPrice();
     }
 
     public CartItem(CartItemResponseDTO cartItemResponseDTO){
@@ -50,22 +72,30 @@ public class CartItem extends BaseEntity {
     }
 
     public void updateQuantity(Long quantity){
-        this.quantity = (quantity != null && quantity >= 0) ? quantity : 0L;
+        Objects.requireNonNull(quantity, "quantity must not be null");
+
+        if(quantity < 0){
+            throw new IllegalArgumentException("quantity must not be negative");
+        }
+
+        this.quantity = quantity;
+
         updateTotalProductPrice();
     }
 
     public void updateCurProductPrice(Long curProductPrice){
-        this.curProductPrice = (curProductPrice != null && curProductPrice >= 0) ? curProductPrice : 0L;
+        Objects.requireNonNull(curProductPrice, "curProductPrice must not be null");
+
+        if(curProductPrice < 0){
+            throw new IllegalArgumentException("curProductPrice must not be negative");
+        }
+
+        this.curProductPrice = curProductPrice;
+
         updateTotalProductPrice();
     }
 
     public void updateTotalProductPrice(){
-        Long price = (this.curProductPrice != null) ? this.curProductPrice : 0L;
-        Long qty = (this.quantity != null) ? this.quantity : 0L;
-        this.totalProductPrice = qty * price;
-    }
-
-    public Long checkQuantity() {
-        return this.quantity;
+        this.totalProductPrice = this.quantity * this.curProductPrice;
     }
 }
