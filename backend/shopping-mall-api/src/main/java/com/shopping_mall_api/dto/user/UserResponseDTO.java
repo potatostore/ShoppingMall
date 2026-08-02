@@ -1,4 +1,4 @@
-package com.shopping_mall_api.dto.user;
+package com.shopping_mall_api.dto.User;
 
 import com.shopping_mall_api.entity.user.User;
 import lombok.AllArgsConstructor;
@@ -6,22 +6,26 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserResponseDTO {
-    private Long userId;
-    private String email;
     private String name;
+    private String email;
+    private String phoneNumber;
+    private LocalDate birthday;
 
-    public UserResponseDTO(User user) {
+    public UserResponseDTO(User user){
         if(user == null){
             throw new IllegalArgumentException("user must not be null");
         }
 
-        this.userId = user.getUserId();
-        this.email = user.getEmail();
         this.name = user.getName();
+        this.email = user.getEmail();
+        this.phoneNumber = user.getPhoneNumber();
+        this.birthday = user.getBirthday();
     }
 }
