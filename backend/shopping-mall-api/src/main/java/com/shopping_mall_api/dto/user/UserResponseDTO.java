@@ -11,12 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UserResponseDTO {
-
     private Long userId;
     private String email;
     private String name;
 
-    // Entity -> DTO 변환 생성자
     public UserResponseDTO(User user) {
         this.userId = user.getUserId();
         this.email = user.getEmail();

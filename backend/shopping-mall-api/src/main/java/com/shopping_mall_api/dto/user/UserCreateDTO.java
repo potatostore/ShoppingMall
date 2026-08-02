@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserCreateDTO {
-
     @NotBlank(message = "email must not be blank")
     @Email(message = "invalid email format")
     private String email;
