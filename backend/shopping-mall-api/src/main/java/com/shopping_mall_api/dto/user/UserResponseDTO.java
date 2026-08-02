@@ -16,6 +16,10 @@ public class UserResponseDTO {
     private String name;
 
     public UserResponseDTO(User user) {
+        if(user == null){
+            throw new IllegalArgumentException("user must not be null");
+        }
+
         this.userId = user.getUserId();
         this.email = user.getEmail();
         this.name = user.getName();

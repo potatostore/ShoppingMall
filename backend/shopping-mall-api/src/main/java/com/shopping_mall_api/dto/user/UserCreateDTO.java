@@ -1,24 +1,36 @@
-package com.shopping_mall_api.dto.user;
+package com.shopping_mall_api.dto.User;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserCreateDTO {
-    @NotBlank(message = "email must not be blank")
-    @Email(message = "invalid email format")
-    private String email;
-
-    @NotBlank(message = "password must not be blank")
-    @Size(min = 8, message = "password must be at least 8 characters")
-    private String password;
-
     @NotBlank(message = "name must not be blank")
     private String name;
+
+    @Email
+    @NotBlank(message = "email must not be blank")
+    private String email;
+
+    @NotBlank(message = "logInId must not be blank")
+    private String logInId;
+
+    @NotBlank(message = "logInPassword must not be blank")
+    private String logInPassword;
+
+    @NotBlank(message = "phoneNumber must not be blank")
+    private String phoneNumber;
+
+    @NotNull(message = "birthday must not be null")
+    private LocalDate birthday;
 }
