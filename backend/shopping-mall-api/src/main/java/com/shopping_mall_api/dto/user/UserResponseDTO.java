@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class UserResponseDTO {
+    private Long userId;
     private String name;
     private String email;
     private String phoneNumber;
@@ -23,6 +24,7 @@ public class UserResponseDTO {
             throw new IllegalArgumentException("user must not be null");
         }
 
+        this.userId = user.getUserId();
         this.name = user.getName();
         this.email = user.getEmail();
         this.phoneNumber = user.getPhoneNumber();

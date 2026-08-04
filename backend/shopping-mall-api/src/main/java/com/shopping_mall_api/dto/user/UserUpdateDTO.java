@@ -13,22 +13,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserUpdateDTO {
-    @NotBlank(message = "name must not be blank")
     private String name;
-
-    @Email
-    @NotBlank(message = "email must not be blank")
     private String email;
-
-    @NotBlank(message = "logInId must not be blank")
     private String logInId;
-
-    @NotBlank(message = "logInPassword must not be blank")
     private String logInPassword;
-
-    @NotBlank(message = "phoneNumber must not be blank")
     private String phoneNumber;
-
-    @NotNull(message = "birthday must not be null")
     private LocalDate birthday;
 }

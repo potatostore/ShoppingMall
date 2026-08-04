@@ -1,6 +1,7 @@
 package com.shopping_mall_api.controller;
 
 import com.shopping_mall_api.dto.user.UserCreateDTO;
+import com.shopping_mall_api.dto.user.UserCreateResponseDTO;
 import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.global.api.ApiResponse;
@@ -8,9 +9,7 @@ import com.shopping_mall_api.service.UserService;
 import com.shopping_mall_api.global.constant.TableNames;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,16 +18,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/" + TableNames.userTableName)
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class UserController {
     private final UserService userService;
 
     @PostMapping
-    @Transactional
-    public ResponseEntity<ApiResponse<UserResponseDTO>> createUser(
+    public ResponseEntity<ApiResponse<UserCreateResponseDTO>> createUser(
             @Valid @RequestBody UserCreateDTO userCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
-                "Success : Create User",
+                "Success : create User & Cart",
                 userService.createUser(userCreateDTO)
         ));
     }
@@ -42,7 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserResponseDTO>> getUser(@Valid @PathVariable Long userId){
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getUser(@PathVariable Long userId){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : get user (" + userId + ")",
                 userService.getUser(userId)
@@ -50,9 +47,8 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    @Transactional
     public ResponseEntity<ApiResponse<UserResponseDTO>> patchUser(
-            @Valid @PathVariable Long userId, @RequestBody UserUpdateDTO userUpdateDTO
+            @PathVariable Long userId, @Valid @RequestBody UserUpdateDTO userUpdateDTO
     ){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch user info (" + userId + ")",
@@ -61,19 +57,17 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    @Transactional
     public ResponseEntity<ApiResponse<UserResponseDTO>> putUser(
-            @Valid @PathVariable Long userId, @Valid @RequestBody UserUpdateDTO userUpdateDTO
+            @PathVariable Long userId, @Valid @RequestBody UserUpdateDTO userUpdateDTO
     ){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : put user info (" + userId + ")",
-                userService.putUser(userId, userUpdateDTO)
+                userService.putUserInfo(userId, userUpdateDTO)
         ));
     }
 
     @DeleteMapping("/{userId}")
-    @Transactional
-    public ResponseEntity<ApiResponse<UserResponseDTO>> deleteUser(@Valid @PathVariable Long userId){
+    public ResponseEntity<ApiResponse<UserResponseDTO>> deleteUser(@PathVariable Long userId){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : delete user info (" + userId + ")",
                 userService.deleteUser(userId)
