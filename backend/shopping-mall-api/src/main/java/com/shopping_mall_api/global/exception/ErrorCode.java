@@ -14,6 +14,7 @@ public enum ErrorCode {
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User not found"),
     USER_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "U002", "User already exist"),
+    USER_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "U003", "User info cannot update"),
 
     //Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Cannot found product"),
