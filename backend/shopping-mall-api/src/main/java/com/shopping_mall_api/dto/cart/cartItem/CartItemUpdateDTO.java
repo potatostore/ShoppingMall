@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CartItemUpdateDTO {
     @NotNull
+    private Long productId;
+
+    @NotNull
     @Min(value = 1, message = "product quantity must be at least 1")
     private Long quantity;
 }

@@ -1,64 +1,69 @@
 package com.shopping_mall_api.controller;
 
-import com.shopping_mall_api.entity.product.Product;
-import com.shopping_mall_api.repository.product.ProductRepository;
-import com.shopping_mall_api.service.ProductService;
+import com.shopping_mall_api.dto.product.ProductCreateDTO;
+import com.shopping_mall_api.dto.product.ProductResponseDTO;
+import com.shopping_mall_api.dto.product.ProductUpdateDTO;
+import com.shopping_mall_api.global.api.ApiResponse;
+import com.shopping_mall_api.service.product.ProductService;
 import com.shopping_mall_api.global.constant.TableNames;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/" + TableNames.productTableName)
+@RequiredArgsConstructor
 public class ProductController {
-    private final ProductRepository productRepository;
     private final ProductService productService;
 
-    public ProductController(ProductRepository productRepository, ProductService productService){
-        this.productRepository = productRepository;
-        this.productService = productService;
+    @PostMapping
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> createProduct(ProductCreateDTO productCreateDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : product create",
+                productService.createProduct(productCreateDTO)
+        ));
     }
 
     @GetMapping
-    public List<Product> getProduct(){
-        return productRepository.findAll();
+    public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> getProducts(){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : get all products",
+                productService.getProducts()
+        ));
     }
 
-    @GetMapping("/{id}")
-    public Product getProduct(@PathVariable Integer id){
-        return productRepository.findById(id).orElse(null);
+    @GetMapping("/{productId}")
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> getProduct(@PathVariable Long productId){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : get product (" + productId + ")",
+                productService.getProduct(productId)
+        ));
     }
 
-    @PostMapping
-    public Product postProduct(@RequestBody Product product){
-        return productRepository.save(product);
+    @PatchMapping("/{productId}")
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> patchProduct(
+            @PathVariable Long productId, @Valid @RequestBody ProductUpdateDTO productUpdateDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : patch product (" + productId + ")",
+                productService.patchProduct(productId, productUpdateDTO)
+        ));
     }
 
-    @PostMapping("/addproduct")
-    public Product addProduct(@RequestBody Product product){
-        return null;
+    @PutMapping("/{productId}")
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> putProduct(
+            @PathVariable Long productId, @Valid @RequestBody ProductUpdateDTO productUpdateDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : put product (" + productId + ")",
+                productService.putProduct(productId, productUpdateDTO)
+        ));
     }
 
-    @PostMapping("/removeproduct")
-    public Product removeProduct(@RequestBody Product product){
-        return null;
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> putProduct(@PathVariable Integer id, @RequestBody Product product){
-        boolean exist = productRepository.existsById(id);
-
-        productRepository.save(product);
-
-        return (exist) ?
-                new ResponseEntity<>(product, HttpStatus.OK):
-                new ResponseEntity<>(product, HttpStatus.CREATED);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteProduct(@PathVariable Integer id){
-        productRepository.deleteById(id);
+    @DeleteMapping("/{productId}")
+    public void deleteProduct(@PathVariable Long productId){
+        productService.deleteProduct(productId);
     }
 }

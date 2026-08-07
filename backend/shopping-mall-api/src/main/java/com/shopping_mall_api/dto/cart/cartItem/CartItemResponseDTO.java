@@ -10,18 +10,12 @@ import java.util.Objects;
 @AllArgsConstructor
 public class CartItemResponseDTO {
     private Long cartItemId;
-    private Long productId;
-    private Long curProductPrice;
     private Long quantity;
-    private Long totalPrice;
 
     public CartItemResponseDTO(CartItem cartItem){
         Objects.requireNonNull(cartItem, "cartItem must not be null");
 
         this.cartItemId = cartItem.getCartItemId();
-        this.productId = cartItem.getProductId();
-        this.curProductPrice = cartItem.getCurProductPrice();
         this.quantity = cartItem.getQuantity();
-        this.totalPrice = cartItem.getTotalProductPrice();
     }
 }

@@ -1,4 +1,4 @@
-package com.shopping_mall_api.service;
+package com.shopping_mall_api.service.user;
 
 import com.shopping_mall_api.dto.cart.CartResponseDTO;
 import com.shopping_mall_api.dto.user.UserCreateDTO;
@@ -10,6 +10,7 @@ import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.repository.user.UserRepository;
+import com.shopping_mall_api.service.Cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -96,14 +97,12 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDTO deleteUser(Long userId){
+    public void deleteUser(Long userId){
         CheckConfig.npeCheck(userId, "userId");
 
         User deleteUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User  (" + userId + ")"));
 
         userRepository.deleteById(userId);
-
-        return new UserResponseDTO(deleteUser);
     }
 }

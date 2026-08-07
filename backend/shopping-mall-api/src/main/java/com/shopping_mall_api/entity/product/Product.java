@@ -1,6 +1,8 @@
 package com.shopping_mall_api.entity.product;
 
+import com.shopping_mall_api.dto.product.ProductUpdateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
+import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -13,7 +15,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Entity
 @Table(name = TableNames.productTableName)
@@ -39,18 +40,38 @@ public class Product extends BaseEntity {
 
     @Builder
     public Product(String name, Long price) {
-        Objects.requireNonNull(name, "name must not be null");
-        Objects.requireNonNull(price, "price must not be null");
-
-        if (name.isBlank()) {
-            throw new IllegalArgumentException("name must not be blank");
-        }
-        if (price < 0) {
-            throw new IllegalArgumentException("price must be greater than or equal to 0");
-        }
+        CheckConfig.npeAndBlankCheck(name, "name");
+        CheckConfig.npeAndNegativeCheck(price, "price");
 
         this.productDetailList = new ArrayList<>();
         this.name = name;
         this.price = price;
+    }
+
+    public void patchProduct(ProductUpdateDTO productUpdateDTO){
+        CheckConfig.npeCheck(productUpdateDTO, "productUpdateDTO");
+
+        if(productUpdateDTO.getName() != null || !productUpdateDTO.getName().isBlank()){
+            this.name = productUpdateDTO.getName();
+        }
+        if(productUpdateDTO.getPrice() != null || productUpdateDTO.getPrice() >= 0){
+            this.price = productUpdateDTO.getPrice();
+        }
+        if(productUpdateDTO.getProductDetailUpdateDTOList() != null){
+            this.productDetailList = productUpdateDTO.getProductDetailUpdateDTOList().stream()
+                    .map(ProductDetail::new).toList();
+        }
+    }
+
+    public void putProduct(ProductUpdateDTO productUpdateDTO){
+        CheckConfig.npeCheck(productUpdateDTO, "productUpdateDTO");
+        CheckConfig.npeCheck(productUpdateDTO.getName(), "name");
+        CheckConfig.npeCheck(productUpdateDTO.getPrice(), "price");
+        CheckConfig.npeCheck(productUpdateDTO.getProductDetailUpdateDTOList(), "productDetailUpdateDTOList");
+
+        this.name = productUpdateDTO.getName();
+        this.price = productUpdateDTO.getPrice();
+        this.productDetailList = productUpdateDTO.getProductDetailUpdateDTOList().stream()
+                .map(ProductDetail::new).toList();
     }
 }
