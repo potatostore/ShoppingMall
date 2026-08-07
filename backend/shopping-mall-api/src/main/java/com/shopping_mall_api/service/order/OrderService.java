@@ -1,12 +1,7 @@
 package com.shopping_mall_api.service.order;
 
-import com.shopping_mall_api.dto.cart.CartResponseDTO;
-import com.shopping_mall_api.dto.order.OrderCreateDTO;
 import com.shopping_mall_api.dto.order.OrderResponseDTO;
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
-import com.shopping_mall_api.entity.cart.Cart;
-import com.shopping_mall_api.entity.user.User;
-import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.repository.order.OrderRepository;
 import com.shopping_mall_api.service.Cart.CartService;
 import com.shopping_mall_api.service.user.UserService;

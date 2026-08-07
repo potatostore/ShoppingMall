@@ -3,6 +3,7 @@ package com.shopping_mall_api.entity.order;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.entity.cart.Cart;
 import com.shopping_mall_api.entity.user.User;
+import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -11,7 +12,6 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Entity
 @Table(name = TableNames.orderTableName)
@@ -40,8 +40,8 @@ public class Order extends BaseEntity {
 
     @Builder
     public Order(User user, Cart cart) {
-        Objects.requireNonNull(user, "user must not be null");
-        Objects.requireNonNull(cart, "cart must not be null");
+        CheckConfig.npeCheck(user, "user");
+        CheckConfig.npeCheck(cart, "cart");
 
         this.orderItemList = new ArrayList<>();
         this.user = user;
@@ -50,7 +50,7 @@ public class Order extends BaseEntity {
     }
 
     public void addOrderItem(OrderItem orderItem){
-        Objects.requireNonNull(orderItem, "orderItem must not be null");
+        CheckConfig.npeCheck(orderItem, "orderItem");
 
         orderItemList.add(orderItem);
 
@@ -58,10 +58,7 @@ public class Order extends BaseEntity {
     }
 
     public void updateTotalOrderPrice(){
-        if(orderItemList.isEmpty()){
-            this.totalOrderPrice = 0L;
-            return;
-        }
+        CheckConfig.npeAndEmptyCheck(this.orderItemList, "orderItemList");
 
         this.totalOrderPrice = orderItemList.stream()
                 .mapToLong(OrderItem::getTotalOrderItemPrice).sum();
