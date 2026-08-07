@@ -1,7 +1,6 @@
 package com.shopping_mall_api.dto.user;
 
 import com.shopping_mall_api.entity.user.User;
-import com.shopping_mall_api.global.config.CheckConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +19,9 @@ public class UserResponseDTO {
     private LocalDate birthday;
 
     public UserResponseDTO(User user){
-        CheckConfig.npeCheck(user, "user");
+        if(user == null){
+            throw new IllegalArgumentException("user must not be null");
+        }
 
         this.name = user.getName();
         this.email = user.getEmail();
