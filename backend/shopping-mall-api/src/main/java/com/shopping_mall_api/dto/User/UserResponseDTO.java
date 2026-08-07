@@ -1,4 +1,4 @@
-package com.shopping_mall_api.dto.User;
+package com.shopping_mall_api.dto.user;
 
 import com.shopping_mall_api.entity.user.User;
 import lombok.AllArgsConstructor;
