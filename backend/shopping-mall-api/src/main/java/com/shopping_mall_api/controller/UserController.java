@@ -5,7 +5,7 @@ import com.shopping_mall_api.dto.user.UserCreateResponseDTO;
 import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.global.api.ApiResponse;
-import com.shopping_mall_api.service.UserService;
+import com.shopping_mall_api.service.user.UserService;
 import com.shopping_mall_api.global.constant.TableNames;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserCreateResponseDTO>> createUser(
             @Valid @RequestBody UserCreateDTO userCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
-                "Success : create User & Cart",
+                "Success : create user & cart",
                 userService.createUser(userCreateDTO)
         ));
     }
@@ -33,7 +33,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getUsers(){
         return ResponseEntity.ok(ApiResponse.success(
-                "Success : Get All Users",
+                "Success : get all users",
                 userService.getUsers()
         ));
     }
@@ -67,10 +67,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserResponseDTO>> deleteUser(@PathVariable Long userId){
-        return ResponseEntity.ok(ApiResponse.success(
-                "Success : delete user info (" + userId + ")",
-                userService.deleteUser(userId)
-        ));
+    public void deleteUser(@PathVariable Long userId){
+        userService.deleteUser(userId);
     }
 }

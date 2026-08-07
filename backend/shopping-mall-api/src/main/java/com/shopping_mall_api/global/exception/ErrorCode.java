@@ -26,6 +26,9 @@ public enum ErrorCode {
     CART_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "C002", "Cart Already Exist"),
     CART_EMPTY(HttpStatus.BAD_REQUEST, "C003", "There are no CartItem in Cart"),
 
+    //CartItem
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CT001", "Cannot found cart item"),
+
     //Order
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "Cannot found Order");
 

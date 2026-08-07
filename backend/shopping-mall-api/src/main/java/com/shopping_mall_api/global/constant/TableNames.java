@@ -13,7 +13,7 @@ public class TableNames {
     public static final String cartItemTableName = "cart_item";
 
     // order db table name
-    public static final String orderTableName = "orders";
+    public static final String orderTableName = "order";
     public static final String orderItemTableName = "order_item";
 
     // like db table name

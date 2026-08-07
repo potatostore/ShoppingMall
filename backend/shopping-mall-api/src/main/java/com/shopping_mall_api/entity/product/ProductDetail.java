@@ -1,5 +1,8 @@
 package com.shopping_mall_api.entity.product;
 
+import com.shopping_mall_api.dto.product.ProductUpdateDTO;
+import com.shopping_mall_api.dto.product.productDetail.ProductDetailUpdateDTO;
+import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -26,12 +29,15 @@ public class ProductDetail {
 
     @Builder
     public ProductDetail(String detail){
-        Objects.requireNonNull(detail, "detail must not be null");
-
-        if(detail.isBlank()){
-            throw new IllegalArgumentException("detail must not be blank");
-        }
+        CheckConfig.npeAndBlankCheck(detail, "detail");
 
         this.detail = detail;
+    }
+
+    public ProductDetail(ProductDetailUpdateDTO productDetailUpdateDTO){
+        CheckConfig.npeCheck(productDetailUpdateDTO, "productDetailUpdateDTO");
+        CheckConfig.npeAndBlankCheck(productDetailUpdateDTO.getDetail(), "detail");
+
+        this.detail = productDetailUpdateDTO.getDetail();
     }
 }

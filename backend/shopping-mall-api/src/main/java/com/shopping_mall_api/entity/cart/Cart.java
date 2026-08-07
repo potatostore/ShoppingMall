@@ -1,7 +1,12 @@
 package com.shopping_mall_api.entity.cart;
 
+import com.shopping_mall_api.dto.cart.CartUpdateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemUpdateDTO;
+import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
 import com.shopping_mall_api.entity.BaseEntity;
+import com.shopping_mall_api.global.exception.ErrorCode;
+import com.shopping_mall_api.global.exception.NotFoundException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +16,9 @@ import lombok.Builder;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -41,23 +48,40 @@ public class Cart extends BaseEntity {
         this.totalCartPrice = 0L;
     }
 
-    public void addCartItemInList(CartItem cartItem){
-        Objects.requireNonNull(cartItem, "cartItem must not be null");
-
-        this.cartItemList.add(cartItem);
-
-        updateTotalCartPrice();
-    }
-
     public void updateTotalCartPrice(){
-        Objects.requireNonNull(this.cartItemList, "cartItemList has no any cartItem");
-
-        if(this.cartItemList.isEmpty()){
-            this.totalCartPrice = 0L;
-            return;
-        }
+        CheckConfig.npeAndEmptyCheck(cartItemList, "cartItemList");
 
         this.totalCartPrice = cartItemList.stream()
-                .mapToLong(CartItem::getTotalProductPrice).sum();
+                .mapToLong(CartItem::getTotalCartItemPrice).sum();
+    }
+
+    public void patchCart(CartUpdateDTO cartUpdateDTO){
+        CheckConfig.npeCheck(cartUpdateDTO, "cartUpdateDTO");
+
+        List<CartItemUpdateDTO> patchCartItem = cartUpdateDTO.getCartItemUpdateDTOList();
+
+        CheckConfig.npeAndEmptyCheck(patchCartItem, "patchCartItem");
+
+        Map<Long, CartItem> existingItemMap = this.cartItemList.stream()
+                .collect(Collectors.toMap(
+                        item -> item.getProduct().getProductId(),
+                        item -> item
+                ));
+
+        for(CartItemUpdateDTO dto : patchCartItem){
+            CartItem cartItem = existingItemMap.get(dto.getProductId());
+
+            if(cartItem == null){
+                throw new NotFoundException(ErrorCode.CART_ITEM_NOT_FOUND, "cannot found cart item (" + dto.getProductId() + ")");
+            }
+
+            cartItem.updateQuantity(dto.getQuantity());
+        }
+    }
+
+    public void deleteCartItem(Long productId){
+        CheckConfig.npeCheck(productId, "productId");
+
+        this.cartItemList.removeIf(cartItem -> cartItem.getProduct().getProductId().equals(productId));
     }
 }

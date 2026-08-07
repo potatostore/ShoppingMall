@@ -1,50 +1,56 @@
 package com.shopping_mall_api.controller;
 
-import com.shopping_mall_api.entity.cart.Cart;
-import com.shopping_mall_api.repository.cart.CartRepository;
-import org.springframework.http.HttpStatus;
+import com.shopping_mall_api.dto.cart.CartResponseDTO;
+import com.shopping_mall_api.dto.cart.CartUpdateDTO;
+import com.shopping_mall_api.global.api.ApiResponse;
+import com.shopping_mall_api.service.Cart.CartService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/cart")
+@RequiredArgsConstructor
 public class CartController {
-    private final CartRepository cartRepository;
-
-    public CartController(CartRepository cartRepository){
-        this.cartRepository = cartRepository;
-    }
+    private CartService cartService;
 
     @GetMapping
-    public List<Cart> getCart(){
-        return cartRepository.findAll();
+    public ResponseEntity<ApiResponse<List<CartResponseDTO>>> getCarts(){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : get all carts",
+                cartService.getCarts()
+        ));
     }
 
-    @GetMapping("{id}")
-    public Cart getCart(@PathVariable Integer id){
-        return cartRepository.findById(id).orElse(null);
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<CartResponseDTO>> getCart(@PathVariable Long userId){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : get cart (" + userId + ")",
+                cartService.getCart(userId)
+        ));
     }
 
-    @PostMapping
-    public Cart postCart(@RequestBody Cart cart){
-        return cartRepository.save(cart);
+    @PatchMapping("/{userId}")
+    public ResponseEntity<ApiResponse<CartResponseDTO>> patchCart(
+            @PathVariable Long userId, @Valid @RequestBody CartUpdateDTO cartUpdateDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : patch cart (" + userId + ")",
+                cartService.patchCart(userId, cartUpdateDTO)
+        ));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Cart> putCart(@PathVariable Integer id, @RequestBody Cart cart){
-        boolean exist = cartRepository.existsById(id);
-
-        cartRepository.save(cart);
-
-        return (exist) ?
-                new ResponseEntity<Cart>(cart, HttpStatus.OK) :
-                new ResponseEntity<Cart>(cart, HttpStatus.CREATED);
+    @DeleteMapping("/{userId}")
+    public void deleteCart(@PathVariable Long userId){
+        cartService.deleteCart(userId);
     }
 
-    @DeleteMapping("{id}")
-    public void deleteCart(@PathVariable Integer id){
-        cartRepository.deleteById(id);
+    @DeleteMapping("/{userId}/{productId}")
+    public void deleteCartItemInCart(@PathVariable Long userId, @PathVariable Long productId){
+        cartService.deleteCartItem(userId, productId);
     }
 }
