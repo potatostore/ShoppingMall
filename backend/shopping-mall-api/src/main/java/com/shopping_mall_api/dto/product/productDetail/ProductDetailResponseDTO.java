@@ -1,6 +1,7 @@
 package com.shopping_mall_api.dto.product.productDetail;
 
 import com.shopping_mall_api.entity.product.ProductDetail;
+import com.shopping_mall_api.global.config.CheckConfig;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,7 @@ public class ProductDetailResponseDTO {
 
     @Builder
     public ProductDetailResponseDTO(ProductDetail productDetail){
-        if(productDetail == null){
-            throw new IllegalArgumentException("product detail must not be null");
-        }
+        CheckConfig.npeCheck(productDetail, "productDetail");
 
         this.detail = productDetail.getDetail();
     }

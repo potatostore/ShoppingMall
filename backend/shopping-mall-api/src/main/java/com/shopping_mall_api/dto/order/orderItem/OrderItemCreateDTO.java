@@ -1,13 +1,11 @@
 package com.shopping_mall_api.dto.order.orderItem;
 
+import com.shopping_mall_api.global.config.CheckConfig;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
@@ -25,16 +23,9 @@ public class OrderItemCreateDTO {
 
     @Builder
     public OrderItemCreateDTO(Long productId, Long curOrderItemPrice, Long quantity){
-        Objects.requireNonNull(productId, "productId must not be null");
-        Objects.requireNonNull(curOrderItemPrice, "curOrderItemPrice must not be null");
-        Objects.requireNonNull(quantity, "quantity must not be null");
-
-        if(curOrderItemPrice < 0){
-            throw new IllegalArgumentException("curOrderItemPrice must not be negative");
-        }
-        if(quantity < 0){
-            throw new IllegalArgumentException("quantity must not be negative");
-        }
+        CheckConfig.npeCheck(productId, "productId");
+        CheckConfig.npeAndNegativeCheck(curOrderItemPrice, "curOrderItemPrice");
+        CheckConfig.npeAndNegativeCheck(quantity, "quantity");
 
         this.productId = productId;
         this.curOrderItemPrice = curOrderItemPrice;

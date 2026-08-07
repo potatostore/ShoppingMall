@@ -1,11 +1,10 @@
 package com.shopping_mall_api.dto.order.orderItem;
 
 import com.shopping_mall_api.entity.order.OrderItem;
+import com.shopping_mall_api.global.config.CheckConfig;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
@@ -17,7 +16,7 @@ public class OrderItemResponseDTO {
 
     @Builder
     public OrderItemResponseDTO(OrderItem orderItem){
-        Objects.requireNonNull(orderItem, "orderItem must not be null");
+        CheckConfig.npeCheck(orderItem, "orderItem");
 
         this.productId = orderItem.getProductId();
         this.curOrderItemPrice = orderItem.getCurOrderItemPrice();

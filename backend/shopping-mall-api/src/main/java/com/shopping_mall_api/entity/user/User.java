@@ -1,7 +1,5 @@
 package com.shopping_mall_api.entity.user;
 
-import com.shopping_mall_api.dto.user.UserCreateDTO;
-import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.global.config.CheckConfig;
@@ -15,10 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.swing.text.html.Option;
 import java.time.LocalDate;
-import java.util.Objects;
-import java.util.Optional;
 
 @Entity
 @Table(name = TableNames.userTableName)
