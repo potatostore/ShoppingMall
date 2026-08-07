@@ -17,7 +17,6 @@ import lombok.Builder;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Entity
@@ -41,7 +40,7 @@ public class Cart extends BaseEntity {
 
     @Builder
     public Cart(Long userId){
-        Objects.requireNonNull(userId, "userId must not be null");
+        CheckConfig.npeCheck(userId, "userId");
 
         this.userId = userId;
         this.cartItemList = new ArrayList<>();

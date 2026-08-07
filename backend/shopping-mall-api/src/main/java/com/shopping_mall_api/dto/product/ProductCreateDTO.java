@@ -1,7 +1,6 @@
 package com.shopping_mall_api.dto.product;
 
 import com.shopping_mall_api.dto.product.productDetail.ProductDetailCreateDTO;
-import com.shopping_mall_api.entity.product.ProductDetail;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
