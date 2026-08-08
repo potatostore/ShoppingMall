@@ -23,7 +23,11 @@ public class OrderService {
         return null;
     }
 
-    public List<OrderResponseDTO> getOrders(Long userId){
+    public List<OrderResponseDTO> getOrders(){
+        return null;
+    }
+
+    public List<OrderResponseDTO> getOrdersWithUserId(Long userId){
         return null;
     }
 
