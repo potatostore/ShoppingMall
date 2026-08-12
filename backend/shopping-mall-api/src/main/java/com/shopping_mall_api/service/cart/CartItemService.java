@@ -1,4 +1,4 @@
-package com.shopping_mall_api.service.Cart;
+package com.shopping_mall_api.service.cart;
 
 import com.shopping_mall_api.repository.cart.CartItemRepository;
 import lombok.RequiredArgsConstructor;

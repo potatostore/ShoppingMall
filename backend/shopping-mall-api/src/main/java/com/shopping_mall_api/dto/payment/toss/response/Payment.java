@@ -1,4 +1,4 @@
-package com.shopping_mall_api.dto.payment.toss;
+package com.shopping_mall_api.dto.payment.toss.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.shopping_mall_api.global.config.CheckConfig;
@@ -110,7 +110,7 @@ public record Payment(
         CashReceipt cashReceipt,
         List<CashReceipt> cashReceipts,
         Discount discount
-) {
+) implements TossResponse {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Cancel(
             Long cancelAmount,

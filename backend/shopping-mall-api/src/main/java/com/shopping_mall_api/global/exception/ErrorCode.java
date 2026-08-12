@@ -30,7 +30,14 @@ public enum ErrorCode {
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CT001", "Cannot found cart item"),
 
     //Order
-    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "Cannot found Order");
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "Cannot found Order"),
+    ORDER_PRICE_UNMATCHED(HttpStatus.BAD_REQUEST, "O002", "Unmatched Price Info"),
+
+    //Payment
+    PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "PA001", "Payment Failed"),
+
+    //Toss Client
+    TOSS_SERVER_ERROR(HttpStatus.BAD_REQUEST, "TS001", "Toss Server Error");
 
     private final HttpStatus httpStatus;
     private final String errorCode;

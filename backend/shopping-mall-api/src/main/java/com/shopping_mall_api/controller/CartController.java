@@ -4,7 +4,7 @@ import com.shopping_mall_api.dto.cart.CartResponseDTO;
 import com.shopping_mall_api.dto.cart.CartUpdateDTO;
 import com.shopping_mall_api.global.api.ApiResponse;
 import com.shopping_mall_api.global.constant.ApiURLNames;
-import com.shopping_mall_api.service.Cart.CartService;
+import com.shopping_mall_api.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

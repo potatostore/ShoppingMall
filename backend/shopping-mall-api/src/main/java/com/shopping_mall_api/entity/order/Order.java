@@ -1,5 +1,6 @@
 package com.shopping_mall_api.entity.order;
 
+import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.entity.cart.Cart;
 import com.shopping_mall_api.entity.user.User;
@@ -26,12 +27,12 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
-
     @OneToMany(mappedBy = "order", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<OrderItem> orderItemList;
+
+    @NotNull
+    @Column(nullable = false)
+    private OrderStatus orderStatus;
 
     @NotNull(message = "totalOrderPrice must not be null")
     @Column(nullable = false)
@@ -39,20 +40,29 @@ public class Order extends BaseEntity {
     private Long totalOrderPrice;
 
     @Builder
-    public Order(User user, Cart cart) {
+    public Order(User user, List<OrderItemCreateDTO> orderItemCreateDTOList, OrderStatus orderStatus) {
         CheckConfig.npeCheck(user, "user");
-        CheckConfig.npeCheck(cart, "cart");
+        CheckConfig.npeAndEmptyCheck(orderItemCreateDTOList, "orderItemCreateDTOList");
+        CheckConfig.npeCheck(orderStatus, "orderStatus");
 
         this.orderItemList = new ArrayList<>();
+        orderItemCreateDTOList.forEach(this::addOrderItem);
         this.user = user;
-        this.cart = cart;
-        this.totalOrderPrice = 0L;
+        this.orderStatus = orderStatus;
     }
 
-    public void addOrderItem(OrderItem orderItem){
-        CheckConfig.npeCheck(orderItem, "orderItem");
+    public void addOrderItem(OrderItemCreateDTO orderItemCreateDTO){
+        CheckConfig.npeCheck(orderItemCreateDTO, "orderItemCreateDTO");
 
-        orderItemList.add(orderItem);
+        OrderItem addOrderItem = OrderItem.builder()
+                                    .productId(orderItemCreateDTO.getProductId())
+                                    .quantity(orderItemCreateDTO.getQuantity())
+                                    .curOrderItemPrice(orderItemCreateDTO.getCurOrderItemPrice())
+                                    .build();
+
+        addOrderItem.assignOrder(this);
+
+        orderItemList.add(addOrderItem);
 
         updateTotalOrderPrice();
     }
@@ -62,5 +72,16 @@ public class Order extends BaseEntity {
 
         this.totalOrderPrice = orderItemList.stream()
                 .mapToLong(OrderItem::getTotalOrderItemPrice).sum();
+    }
+
+    public void completePayment(){
+        this.orderStatus = OrderStatus.PAID;
+    }
+
+    public void failPayment(){
+        this.orderStatus = OrderStatus.FAILED;
+        //주문 재고 복구
+        //쿠폰 및 포인트 복구(미사용 처리)
+        //실패 사유(로그 저장)
     }
 }

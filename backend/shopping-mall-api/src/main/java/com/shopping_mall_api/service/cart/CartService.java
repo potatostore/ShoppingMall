@@ -1,4 +1,4 @@
-package com.shopping_mall_api.service.Cart;
+package com.shopping_mall_api.service.cart;
 
 import com.shopping_mall_api.dto.cart.CartResponseDTO;
 import com.shopping_mall_api.dto.cart.CartUpdateDTO;
