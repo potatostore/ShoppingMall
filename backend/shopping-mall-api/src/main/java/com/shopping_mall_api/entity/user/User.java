@@ -1,5 +1,6 @@
 package com.shopping_mall_api.entity.user;
 
+import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.global.config.CheckConfig;

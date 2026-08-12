@@ -10,7 +10,7 @@ import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.repository.user.UserRepository;
-import com.shopping_mall_api.service.Cart.CartService;
+import com.shopping_mall_api.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,6 +59,13 @@ public class UserService {
 
         return userRepository.findById(userId)
                 .map(UserResponseDTO::new)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
+    }
+
+    protected User getUserEntity(Long userId){
+        CheckConfig.npeCheck(userId, "userId");
+
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
     }
 

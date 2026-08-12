@@ -35,5 +35,5 @@ public class ApiURLNames {
     public static final String deleteOrderURL = "/{orderId}";
 
     // toss payments api
-    public static final String tossPaymentsRequestURL = "https://api.tosspayments.com/v1/payments/confirm";
+    public static final String tossPaymentAuthURL = "/toss/payment/auth";
 }

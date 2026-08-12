@@ -59,4 +59,10 @@ public class OrderItem extends BaseEntity {
              orderItemCreateDTO.getCurOrderItemPrice(),
              orderItemCreateDTO.getQuantity());
     }
+
+    public void assignOrder(Order order){
+        CheckConfig.npeCheck(order, "order");
+
+        this.order = order;
+    }
 }

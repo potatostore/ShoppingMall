@@ -2,6 +2,9 @@ package com.shopping_mall_api.controller;
 
 import com.shopping_mall_api.dto.order.OrderResponseDTO;
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
+import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
+import com.shopping_mall_api.dto.payment.toss.TossPaymentRequestDTO;
+import com.shopping_mall_api.dto.payment.toss.response.Payment;
 import com.shopping_mall_api.global.api.ApiResponse;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.service.order.OrderService;
@@ -20,10 +23,20 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping(ApiURLNames.createOrderURL)
-    public ResponseEntity<ApiResponse<OrderResponseDTO>> createOrder(@PathVariable Long userId){
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> createOrder(
+            @PathVariable Long userId, @Valid @RequestBody List<OrderItemCreateDTO> orderItemCreateDTOList){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : create order",
-                orderService.createOrder(userId)
+                orderService.createOrder(userId, orderItemCreateDTOList)
+        ));
+    }
+
+    @PostMapping(ApiURLNames.tossPaymentAuthURL)
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> authTossPaymentOrder(
+            @Valid @RequestBody TossPaymentRequestDTO tossPaymentRequestDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : paid order with toss",
+                orderService.authTossPayment(tossPaymentRequestDTO)
         ));
     }
 
