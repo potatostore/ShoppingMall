@@ -1,18 +1,25 @@
 package com.shopping_mall_api.entity.order;
 
+import com.shopping_mall_api.dto.order.OrderUpdateDTO;
 import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
+import com.shopping_mall_api.dto.order.orderItem.OrderItemUpdateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.entity.cart.Cart;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
+import com.shopping_mall_api.global.exception.ErrorCode;
+import com.shopping_mall_api.global.exception.NotFoundException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.security.core.parameters.P;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = TableNames.orderTableName)
@@ -72,6 +79,31 @@ public class Order extends BaseEntity {
 
         this.totalOrderPrice = orderItemList.stream()
                 .mapToLong(OrderItem::getTotalOrderItemPrice).sum();
+    }
+
+    public void patchOrder(OrderUpdateDTO orderUpdateDTO){
+        CheckConfig.npeCheck(orderUpdateDTO, "orderUpdateDTO");
+
+        List<OrderItemUpdateDTO> patchOrderItem = orderUpdateDTO.getOrderItemResponseDTOList();
+
+        CheckConfig.npeAndEmptyCheck(patchOrderItem, "patchOrderItem");
+
+        Map<Long, OrderItem> existingOrderItemMap = this.orderItemList.stream()
+                .collect(Collectors.toMap(
+                        OrderItem::getProductId,
+                        item -> item
+                ));
+
+        for(OrderItemUpdateDTO dto : patchOrderItem){
+            OrderItem orderItem = existingOrderItemMap.get(dto.getProductId());
+
+            if(orderItem == null){
+                throw new NotFoundException(ErrorCode.ORDER_NOT_FOUND);
+            }
+
+            orderItem.updateQuantity(dto.getQuantity());
+            orderItem.updateCurOrderItemPrice(dto.getCurOrderItemPrice());
+        }
     }
 
     public void completePayment(){

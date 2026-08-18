@@ -1,6 +1,5 @@
 package com.shopping_mall_api.entity.user;
 
-import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.global.config.CheckConfig;
@@ -38,6 +37,10 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @NotBlank
+    @Column(nullable = false)
+    private String role;
+
     @NotNull
     @Column(nullable = false)
     private String phoneNumber;
@@ -47,22 +50,25 @@ public class User extends BaseEntity {
     private LocalDate birthday;
 
     @Builder
-    public User(String email, String logInPassword, String name, String phoneNumber, LocalDate birthday) {
+    public User(String email, String logInPassword, String name, String role, String phoneNumber, LocalDate birthday) {
         CheckConfig.npeCheck(email, "email");
         CheckConfig.npeCheck(logInPassword, "password");
         CheckConfig.npeCheck(name, "name");
+        CheckConfig.npeCheck(role, "role");
         CheckConfig.npeCheck(phoneNumber, "phoneNumber");
         CheckConfig.npeCheck(birthday, "birthday");
 
         this.email = email;
         this.logInPassword = logInPassword;
         this.name = name;
+        this.role = role;
         this.phoneNumber = phoneNumber;
         this.birthday = birthday;
     }
 
     public void patchUser(UserUpdateDTO userUpdateDTO, String encodedLogInPassword){
         CheckConfig.npeCheck(userUpdateDTO, "userCreateDTO");
+        CheckConfig.npeAndBlankCheck(encodedLogInPassword, "encodedLogInPassword");
 
         if(userUpdateDTO.getEmail() != null){
             this.email = userUpdateDTO.getEmail();
@@ -72,6 +78,9 @@ public class User extends BaseEntity {
         }
         if(userUpdateDTO.getName() != null){
             this.name = userUpdateDTO.getName();
+        }
+        if(userUpdateDTO.getRole() != null){
+            this.role = userUpdateDTO.getRole();
         }
         if(userUpdateDTO.getPhoneNumber() != null){
             this.phoneNumber = userUpdateDTO.getPhoneNumber();;
@@ -92,6 +101,7 @@ public class User extends BaseEntity {
         this.email = userUpdateDTO.getEmail();
         this.logInPassword = encodedLogInPassword;
         this.name = userUpdateDTO.getName();
+        this.role = userUpdateDTO.getRole();
         this.phoneNumber = userUpdateDTO.getPhoneNumber();
         this.birthday = userUpdateDTO.getBirthday();
     }

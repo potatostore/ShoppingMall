@@ -15,6 +15,15 @@ spring:
       hibernate:
         format_sql: true
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  servlet:
+    context-path: /api/v1
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -31,3 +40,9 @@ toss:
   payments:
     secret-key: ${TOSS_SECRET_KEY}
     url: https://api.tosspayments.com/v1/payments
+
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  access-token-expiration-ms: 1800000 # 30분
+  refresh-token-expiration-ms: 604800000 # 7일

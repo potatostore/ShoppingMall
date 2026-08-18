@@ -65,4 +65,24 @@ public class OrderItem extends BaseEntity {
 
         this.order = order;
     }
+
+    public void updateQuantity(Long quantity){
+        CheckConfig.npeAndNegativeCheck(quantity, "quantity");
+
+        this.quantity = quantity;
+
+        updateTotalItemPrice();
+    }
+
+    public void updateCurOrderItemPrice(Long curOrderItemPrice){
+        CheckConfig.npeAndNegativeCheck(curOrderItemPrice, "curOrderItemPrice");
+
+        this.curOrderItemPrice = curOrderItemPrice;
+
+        updateTotalItemPrice();
+    }
+
+    public void updateTotalItemPrice(){
+        this.totalOrderItemPrice = this.quantity * this.curOrderItemPrice;
+    }
 }

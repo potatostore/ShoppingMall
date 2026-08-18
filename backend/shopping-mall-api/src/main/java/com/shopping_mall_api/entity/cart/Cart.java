@@ -71,7 +71,7 @@ public class Cart extends BaseEntity {
             CartItem cartItem = existingItemMap.get(dto.getProductId());
 
             if(cartItem == null){
-                throw new NotFoundException(ErrorCode.CART_ITEM_NOT_FOUND, "cannot found cart item (" + dto.getProductId() + ")");
+                throw new NotFoundException(ErrorCode.CART_ITEM_NOT_FOUND);
             }
 
             cartItem.updateQuantity(dto.getQuantity());

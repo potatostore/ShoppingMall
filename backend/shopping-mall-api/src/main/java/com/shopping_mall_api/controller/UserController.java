@@ -10,6 +10,7 @@ import com.shopping_mall_api.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,7 +42,7 @@ public class UserController {
 
     // "
     @GetMapping(ApiURLNames.findUserURL)
-    public ResponseEntity<ApiResponse<UserResponseDTO>> getUser(@PathVariable Long userId){
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getUser(@AuthenticationPrincipal Long userId){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : get user (" + userId + ")",
                 userService.getUser(userId)
@@ -50,7 +51,7 @@ public class UserController {
 
     @PatchMapping(ApiURLNames.updateUserURL)
     public ResponseEntity<ApiResponse<UserResponseDTO>> patchUser(
-            @PathVariable Long userId, @Valid @RequestBody UserUpdateDTO userUpdateDTO
+            @AuthenticationPrincipal Long userId, @Valid @RequestBody UserUpdateDTO userUpdateDTO
     ){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch user info (" + userId + ")",
@@ -60,7 +61,7 @@ public class UserController {
 
     // 관리자 레벨의 실행 권한 부여 기능 추가
     @DeleteMapping(ApiURLNames.deleteUserURL)
-    public void deleteUser(@PathVariable Long userId){
+    public void deleteUser(@AuthenticationPrincipal Long userId){
         userService.deleteUser(userId);
     }
 }

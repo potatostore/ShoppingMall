@@ -17,6 +17,7 @@ public class UserResponseDTO {
     private Long userId;
     private String name;
     private String email;
+    private String role;
     private String phoneNumber;
     private LocalDate birthday;
 
@@ -26,6 +27,7 @@ public class UserResponseDTO {
         this.userId = user.getUserId();
         this.name = user.getName();
         this.email = user.getEmail();
+        this.role = user.getRole();
         this.phoneNumber = user.getPhoneNumber();
         this.birthday = user.getBirthday();
     }
