@@ -15,6 +15,8 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User not found"),
     USER_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "U002", "User already exist"),
     USER_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "U003", "User info cannot update"),
+    USER_PASSWORD_UNMATCHED(HttpStatus.BAD_REQUEST, "U004", "User password unmatched"),
+    EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "U005", "Email not found"),
 
     //Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Cannot found product"),
@@ -32,6 +34,9 @@ public enum ErrorCode {
     //Order
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "Cannot found Order"),
     ORDER_PRICE_UNMATCHED(HttpStatus.BAD_REQUEST, "O002", "Unmatched Price Info"),
+
+    //Redis
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "RD001", "Cannot found refresh token"),
 
     //Payment
     PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "PA001", "Payment Failed"),

@@ -4,13 +4,13 @@ import com.shopping_mall_api.dto.order.OrderResponseDTO;
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
 import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
 import com.shopping_mall_api.dto.payment.toss.TossPaymentRequestDTO;
-import com.shopping_mall_api.dto.payment.toss.response.Payment;
 import com.shopping_mall_api.global.api.ApiResponse;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.service.order.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class OrderController {
 
     @PostMapping(ApiURLNames.createOrderURL)
     public ResponseEntity<ApiResponse<OrderResponseDTO>> createOrder(
-            @PathVariable Long userId, @Valid @RequestBody List<OrderItemCreateDTO> orderItemCreateDTOList){
+            @AuthenticationPrincipal Long userId, @Valid @RequestBody List<OrderItemCreateDTO> orderItemCreateDTOList){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : create order",
                 orderService.createOrder(userId, orderItemCreateDTOList)
@@ -49,7 +49,7 @@ public class OrderController {
     }
 
     @GetMapping(ApiURLNames.findOrdersWithUserIdURL)
-    public ResponseEntity<ApiResponse<List<OrderResponseDTO>>> getOrdersWithUserId(@PathVariable Long userId){
+    public ResponseEntity<ApiResponse<List<OrderResponseDTO>>> getOrdersWithUserId(@AuthenticationPrincipal Long userId){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : get all orders in user (" + userId + ")",
                 orderService.getOrdersWithUserId(userId)
@@ -57,19 +57,22 @@ public class OrderController {
     }
 
     @GetMapping(ApiURLNames.findOrderURL)
-    public ResponseEntity<ApiResponse<OrderResponseDTO>> getOrder(@PathVariable Long orderId){
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> getOrderWithUserId(
+            @AuthenticationPrincipal Long userId, @PathVariable Long orderId){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : get order (" + orderId + ")",
-                orderService.getOrder(orderId)
+                orderService.getOrderWithUserId(userId, orderId)
         ));
     }
 
     @PatchMapping(ApiURLNames.updateOrderURL)
     public ResponseEntity<ApiResponse<OrderResponseDTO>> patchOrder(
-            @PathVariable Long orderId, @Valid @RequestBody OrderUpdateDTO orderUpdateDTO){
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long orderId,
+            @Valid @RequestBody OrderUpdateDTO orderUpdateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch order (" + orderId + ")",
-                orderService.patchOrder(orderId, orderUpdateDTO)
+                orderService.patchOrder(userId, orderId, orderUpdateDTO)
         ));
     }
 

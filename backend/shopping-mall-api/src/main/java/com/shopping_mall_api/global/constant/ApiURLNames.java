@@ -34,6 +34,10 @@ public class ApiURLNames {
     public static final String updateOrderURL = "/{orderId}";
     public static final String deleteOrderURL = "/{orderId}";
 
+    // auth api
+    public static final String loginURL = "/users/login";
+    public static final String logOutURL = "/users/logout";
+
     // toss payments api
     public static final String tossPaymentAuthURL = "/toss/payment/auth";
 }

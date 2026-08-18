@@ -8,6 +8,7 @@ import com.shopping_mall_api.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class CartController {
     }
 
     @GetMapping(ApiURLNames.findCartURL)
-    public ResponseEntity<ApiResponse<CartResponseDTO>> getCart(@PathVariable Long userId){
+    public ResponseEntity<ApiResponse<CartResponseDTO>> getCart(@AuthenticationPrincipal Long userId){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : get cart (" + userId + ")",
                 cartService.getCart(userId)
@@ -38,7 +39,7 @@ public class CartController {
 
     @PatchMapping(ApiURLNames.updateCartURL)
     public ResponseEntity<ApiResponse<CartResponseDTO>> patchCart(
-            @PathVariable Long userId, @Valid @RequestBody CartUpdateDTO cartUpdateDTO){
+            @AuthenticationPrincipal Long userId, @Valid @RequestBody CartUpdateDTO cartUpdateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch cart (" + userId + ")",
                 cartService.patchCart(userId, cartUpdateDTO)
@@ -46,12 +47,12 @@ public class CartController {
     }
 
     @DeleteMapping(ApiURLNames.deleteCartURL)
-    public void deleteCart(@PathVariable Long userId){
+    public void deleteCart(@AuthenticationPrincipal Long userId){
         cartService.deleteCart(userId);
     }
 
     @DeleteMapping(ApiURLNames.deleteCartItemInCartURL)
-    public void deleteCartItemInCart(@PathVariable Long userId, @PathVariable Long productId){
+    public void deleteCartItemInCart(@AuthenticationPrincipal Long userId, @PathVariable Long productId){
         cartService.deleteCartItem(userId, productId);
     }
 }
