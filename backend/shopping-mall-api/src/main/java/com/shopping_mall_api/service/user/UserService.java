@@ -32,12 +32,12 @@ public class UserService {
         CheckConfig.npeCheck(userCreateDTO, "userCreateDTO");
         
         User createUser = User.builder()
-                .email(userCreateDTO.getEmail())
-                .logInPassword(passwordEncoder.encode(userCreateDTO.getLogInPassword()))
-                .name(userCreateDTO.getName())
-                .role(userCreateDTO.getRole())
-                .phoneNumber(userCreateDTO.getPhoneNumber())
-                .birthday(userCreateDTO.getBirthday())
+                .email(userCreateDTO.getSignUpEmail())
+                .logInPassword(passwordEncoder.encode(userCreateDTO.getSignUpPassword()))
+                .name(userCreateDTO.getSignUpName())
+                .role(userCreateDTO.getSignUpRole())
+                .phoneNumber(userCreateDTO.getSignUpPhoneNumber())
+                .birthday(userCreateDTO.getSignUpBirthday())
                 .build();
 
         UserResponseDTO userResponseDTO = new UserResponseDTO(userRepository.save(createUser));

@@ -16,21 +16,21 @@ import java.time.LocalDate;
 @Builder
 public class UserCreateDTO {
     @NotBlank(message = "name must not be blank")
-    private String name;
+    private String signUpName;
 
     @Email
     @NotBlank(message = "email must not be blank")
-    private String email;
+    private String signUpEmail;
 
     @NotBlank(message = "logInPassword must not be blank")
-    private String logInPassword;
+    private String signUpPassword;
 
     @NotBlank
-    private String role;
+    private String signUpRole;
 
     @NotBlank(message = "phoneNumber must not be blank")
-    private String phoneNumber;
+    private String signUpPhoneNumber;
 
     @NotNull(message = "birthday must not be null")
-    private LocalDate birthday;
+    private LocalDate signUpBirthday;
 }

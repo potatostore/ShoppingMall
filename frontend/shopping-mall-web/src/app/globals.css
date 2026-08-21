@@ -1,5 +1,3 @@
-@import "tailwindcss";
-
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -29,7 +27,7 @@ body {
   border: 1px solid #ccc; 
 }
 
-.signin-page-container{
+.login-page-container{
   display: flex;
   max-width: 1440px;
   min-width: 770px;

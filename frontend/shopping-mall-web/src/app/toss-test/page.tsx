@@ -2,9 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 
-// TODO: https://developers.tosspayments.com 개발자센터에서 발급받은
-// "테스트 클라이언트 키"(test_ck_로 시작)로 교체할 것. 시크릿 키(application.yml의
-// toss.payments.secret-key)와는 다른 값이고, 브라우저에 노출돼도 되는 공개 키임.
 const TOSS_CLIENT_KEY = "test_ck_DpexMgkW36xxbXXGBwoMrGbR5ozO";
 
 declare global {
