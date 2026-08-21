@@ -21,7 +21,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping(ApiURLNames.createProductURL)
-    public ResponseEntity<ApiResponse<ProductResponseDTO>> createProduct(ProductCreateDTO productCreateDTO){
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> createProduct(@RequestBody ProductCreateDTO productCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : product create",
                 productService.createProduct(productCreateDTO)

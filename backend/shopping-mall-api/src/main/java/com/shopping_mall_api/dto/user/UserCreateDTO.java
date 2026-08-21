@@ -22,9 +22,6 @@ public class UserCreateDTO {
     @NotBlank(message = "email must not be blank")
     private String email;
 
-    @NotBlank(message = "logInId must not be blank")
-    private String logInId;
-
     @NotBlank(message = "logInPassword must not be blank")
     private String logInPassword;
 

@@ -1,6 +1,7 @@
 package com.shopping_mall_api.entity.cart;
 
 
+import com.shopping_mall_api.dto.cart.cartItem.CartItemCreateDTO;
 import com.shopping_mall_api.dto.cart.cartItem.CartItemUpdateDTO;
 import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.global.config.CheckConfig;
@@ -46,6 +47,20 @@ public class CartItem extends BaseEntity {
         this.cart = cart;
         this.product = product;
         this.quantity = quantity;
+    }
+
+    public CartItem(Product product, Long quantity){
+        CheckConfig.npeCheck(product, "product");
+        CheckConfig.npeCheck(quantity, "quantity");
+
+        this.product = product;
+        this.quantity = quantity;
+    }
+
+    public void assignCart(Cart cart){
+        CheckConfig.npeCheck(cart, "cart");
+
+        this.cart = cart;
     }
 
     public void updateQuantity(Long quantity){

@@ -27,9 +27,12 @@ public class ProductService {
         Product createProduct = Product.builder()
                 .name(productCreateDTO.getName())
                 .price(productCreateDTO.getPrice())
+                .productDetailCreateDTOList(productCreateDTO.getProductDetailCreateDTOList())
                 .build();
 
-        return new ProductResponseDTO(productRepository.save(createProduct));
+        productRepository.save(createProduct);
+
+        return new ProductResponseDTO(createProduct);
     }
 
     public List<ProductResponseDTO> getProducts(){

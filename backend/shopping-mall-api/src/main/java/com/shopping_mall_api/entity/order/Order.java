@@ -19,6 +19,7 @@ import org.springframework.security.core.parameters.P;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Entity
@@ -33,6 +34,9 @@ public class Order extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Column(unique = true, nullable = false)
+    private Long orderUid;
 
     @OneToMany(mappedBy = "order", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<OrderItem> orderItemList;
@@ -55,7 +59,12 @@ public class Order extends BaseEntity {
         this.orderItemList = new ArrayList<>();
         orderItemCreateDTOList.forEach(this::addOrderItem);
         this.user = user;
+        this.orderUid = generateOrderUid();
         this.orderStatus = orderStatus;
+    }
+
+    private static Long generateOrderUid(){
+        return ThreadLocalRandom.current().nextLong(100_000L, 1_000_000_000_000L);
     }
 
     public void addOrderItem(OrderItemCreateDTO orderItemCreateDTO){

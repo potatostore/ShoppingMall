@@ -1,5 +1,6 @@
 package com.shopping_mall_api.service.order;
 
+import com.shopping_mall_api.dto.order.OrderCreateDTO;
 import com.shopping_mall_api.dto.order.OrderResponseDTO;
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
 import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
@@ -23,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -32,23 +32,27 @@ import java.util.List;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
-    private final CartRepository cartRepository;
 
     private final TossClient tossClient;
 
     @Transactional
-    public OrderResponseDTO createOrder(Long userId, List<OrderItemCreateDTO> orderItemCreateDTOList){
+    public OrderResponseDTO createOrder(Long userId, OrderCreateDTO orderCreateDTO){
         CheckConfig.npeCheck(userId, "userId");
+        CheckConfig.npeCheck(orderCreateDTO, "orderCreateDTO");
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
 
+        // 주문 생성 전 재고 확인
+        // orderCreateDTO curItemPrice필드를 제거하고, 상품 가격은 조회 후 기입
+
         Order createOrder = Order.builder()
                 .user(user)
-                .orderItemCreateDTOList(orderItemCreateDTOList)
+                .orderItemCreateDTOList(orderCreateDTO.getOrderItemCreateDTOList())
                 .orderStatus(OrderStatus.PENDING)
                 .build();
 
+        // 주문 생성 시 장바구니에서 해당 상품 제거 로직
         // 재고 차감 로직 추가
         // 쿠폰 및 포인트 차감 로직
 
@@ -61,7 +65,7 @@ public class OrderService {
     public OrderResponseDTO authTossPayment(TossPaymentRequestDTO tossPaymentRequestDTO){
         CheckConfig.npeCheck(tossPaymentRequestDTO, "tossPaymentRequestDTO");
 
-        Order tossOrder = orderRepository.findById(Long.valueOf(tossPaymentRequestDTO.orderId()))
+        Order tossOrder = orderRepository.findByOrderUid(tossPaymentRequestDTO.orderId())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
         if(!tossPaymentRequestDTO.amount().equals(tossOrder.getTotalOrderPrice())){
@@ -92,7 +96,7 @@ public class OrderService {
     public List<OrderResponseDTO> getOrdersWithUserId(Long userId){
         CheckConfig.npeCheck(userId, "userId");
 
-        List<Order> orderList = orderRepository.findByUserId(userId);
+        List<Order> orderList = orderRepository.findByUser_UserId(userId);
 
         return orderList.stream()
                 .map(OrderResponseDTO::new)
@@ -103,7 +107,7 @@ public class OrderService {
         CheckConfig.npeCheck(userId, "userId");
         CheckConfig.npeCheck(orderId, "orderId");
 
-        List<Order> orderList = orderRepository.findByUserId(userId);
+        List<Order> orderList = orderRepository.findByUser_UserId(userId);
 
         return orderList.stream()
                 .filter(order -> order.getOrderId()
@@ -112,6 +116,7 @@ public class OrderService {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
     }
 
+    @Transactional
     public OrderResponseDTO patchOrder(Long userId, Long orderId, OrderUpdateDTO orderUpdateDTO){
         CheckConfig.npeCheck(userId, "userId");
         CheckConfig.npeCheck(orderId, "orderId");
@@ -129,6 +134,7 @@ public class OrderService {
         return new OrderResponseDTO(order);
     }
 
+    @Transactional
     public void deleteOrder(Long orderId){
         CheckConfig.npeCheck(orderId, "orderId");
 

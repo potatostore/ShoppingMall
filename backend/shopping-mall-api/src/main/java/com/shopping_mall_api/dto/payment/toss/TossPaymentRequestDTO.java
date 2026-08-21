@@ -10,17 +10,17 @@ public record TossPaymentRequestDTO(
     @NotBlank
     String paymentKey,
 
-    @NotBlank
-    String orderId,
+    @NotNull
+    Long orderId,
 
     @NotNull
     @Min(value = 0)
     Long amount
 ) {
     @Builder
-    public TossPaymentRequestDTO(String paymentKey, String orderId, Long amount){
+    public TossPaymentRequestDTO(String paymentKey, Long orderId, Long amount){
         CheckConfig.npeAndBlankCheck(paymentKey, "paymentKey");
-        CheckConfig.npeAndBlankCheck(orderId, "orderId");
+        CheckConfig.npeCheck(orderId, "orderId");
         CheckConfig.npeAndNegativeCheck(amount, "amount");
 
         this.paymentKey = paymentKey;

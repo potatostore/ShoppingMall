@@ -1,6 +1,7 @@
 package com.shopping_mall_api.entity.product;
 
 import com.shopping_mall_api.dto.product.ProductUpdateDTO;
+import com.shopping_mall_api.dto.product.productDetail.ProductDetailCreateDTO;
 import com.shopping_mall_api.dto.product.productDetail.ProductDetailUpdateDTO;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
@@ -34,10 +35,22 @@ public class ProductDetail {
         this.detail = detail;
     }
 
+    public ProductDetail(ProductDetailCreateDTO productDetailCreateDTO){
+        CheckConfig.npeCheck(productDetailCreateDTO, "productDetailCreateDTO");
+
+        this.detail = productDetailCreateDTO.getDetail();
+    }
+
     public ProductDetail(ProductDetailUpdateDTO productDetailUpdateDTO){
         CheckConfig.npeCheck(productDetailUpdateDTO, "productDetailUpdateDTO");
         CheckConfig.npeAndBlankCheck(productDetailUpdateDTO.getDetail(), "detail");
 
         this.detail = productDetailUpdateDTO.getDetail();
+    }
+
+    public void assignProduct(Product product){
+        CheckConfig.npeCheck(product, "product");
+
+        this.product = product;
     }
 }

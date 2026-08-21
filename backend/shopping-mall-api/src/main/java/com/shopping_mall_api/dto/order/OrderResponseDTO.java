@@ -12,12 +12,14 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderResponseDTO {
     private Long orderId;
+    private Long orderUid;
     private List<OrderItemResponseDTO> orderItemResponseDTOList;
     private Long totalOrderPrice;
 
     @Builder
     public OrderResponseDTO(Order order){
         this.orderId = order.getOrderId();
+        this.orderUid = order.getOrderUid();
         this.orderItemResponseDTOList = (order.getOrderItemList() != null)
                 ? order.getOrderItemList().stream()
                 .map(OrderItemResponseDTO::new)

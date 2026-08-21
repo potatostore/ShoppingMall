@@ -35,6 +35,7 @@ public class UserService {
                 .email(userCreateDTO.getEmail())
                 .logInPassword(passwordEncoder.encode(userCreateDTO.getLogInPassword()))
                 .name(userCreateDTO.getName())
+                .role(userCreateDTO.getRole())
                 .phoneNumber(userCreateDTO.getPhoneNumber())
                 .birthday(userCreateDTO.getBirthday())
                 .build();

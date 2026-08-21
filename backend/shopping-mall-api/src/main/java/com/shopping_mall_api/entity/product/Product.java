@@ -1,6 +1,8 @@
 package com.shopping_mall_api.entity.product;
 
 import com.shopping_mall_api.dto.product.ProductUpdateDTO;
+import com.shopping_mall_api.dto.product.productDetail.ProductDetailCreateDTO;
+import com.shopping_mall_api.dto.product.productDetail.ProductDetailUpdateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
@@ -39,11 +41,20 @@ public class Product extends BaseEntity {
     private List<ProductDetail> productDetailList;
 
     @Builder
-    public Product(String name, Long price) {
+    public Product(String name, Long price, List<ProductDetailCreateDTO> productDetailCreateDTOList) {
         CheckConfig.npeAndBlankCheck(name, "name");
         CheckConfig.npeAndNegativeCheck(price, "price");
+        CheckConfig.npeAndEmptyCheck(productDetailCreateDTOList, "productDetailCreateDTOList");
 
         this.productDetailList = new ArrayList<>();
+
+        for(ProductDetailCreateDTO dto : productDetailCreateDTOList){
+            ProductDetail productDetail = new ProductDetail(dto);
+
+            this.productDetailList.add(productDetail);
+            productDetail.assignProduct(this);
+        }
+
         this.name = name;
         this.price = price;
     }
@@ -51,15 +62,18 @@ public class Product extends BaseEntity {
     public void patchProduct(ProductUpdateDTO productUpdateDTO){
         CheckConfig.npeCheck(productUpdateDTO, "productUpdateDTO");
 
-        if(productUpdateDTO.getName() != null || !productUpdateDTO.getName().isBlank()){
+        if(productUpdateDTO.getName() != null && !productUpdateDTO.getName().isBlank()){
             this.name = productUpdateDTO.getName();
         }
-        if(productUpdateDTO.getPrice() != null || productUpdateDTO.getPrice() >= 0){
+        if(productUpdateDTO.getPrice() != null && productUpdateDTO.getPrice() >= 0){
             this.price = productUpdateDTO.getPrice();
         }
         if(productUpdateDTO.getProductDetailUpdateDTOList() != null){
-            this.productDetailList = productUpdateDTO.getProductDetailUpdateDTOList().stream()
-                    .map(ProductDetail::new).toList();
+            this.productDetailList.clear();
+
+            for(ProductDetailUpdateDTO dto : productUpdateDTO.getProductDetailUpdateDTOList()){
+                this.productDetailList.add(new ProductDetail(dto));
+            }
         }
     }
 

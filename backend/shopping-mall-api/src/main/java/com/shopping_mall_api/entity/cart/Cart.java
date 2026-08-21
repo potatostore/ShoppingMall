@@ -1,7 +1,9 @@
 package com.shopping_mall_api.entity.cart;
 
 import com.shopping_mall_api.dto.cart.CartUpdateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemCreateDTO;
 import com.shopping_mall_api.dto.cart.cartItem.CartItemUpdateDTO;
+import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
 import com.shopping_mall_api.entity.BaseEntity;
@@ -48,10 +50,25 @@ public class Cart extends BaseEntity {
     }
 
     public void updateTotalCartPrice(){
-        CheckConfig.npeAndEmptyCheck(cartItemList, "cartItemList");
+        CheckConfig.npeCheck(cartItemList, "cartItemList");
 
         this.totalCartPrice = cartItemList.stream()
                 .mapToLong(CartItem::getTotalCartItemPrice).sum();
+    }
+
+    public CartItem addCartItemInCart(Product product, Long quantity){
+        CheckConfig.npeCheck(product, "product");
+        CheckConfig.npeCheck(quantity, "quantity");
+
+        CartItem cartItem = new CartItem(product, quantity);
+
+        this.cartItemList.add(cartItem);
+
+        cartItem.assignCart(this);
+
+        updateTotalCartPrice();
+
+        return cartItem;
     }
 
     public void patchCart(CartUpdateDTO cartUpdateDTO){

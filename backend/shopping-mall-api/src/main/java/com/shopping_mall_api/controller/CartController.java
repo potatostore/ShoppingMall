@@ -2,6 +2,8 @@ package com.shopping_mall_api.controller;
 
 import com.shopping_mall_api.dto.cart.CartResponseDTO;
 import com.shopping_mall_api.dto.cart.CartUpdateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemCreateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemResponseDTO;
 import com.shopping_mall_api.global.api.ApiResponse;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.service.cart.CartService;
@@ -19,7 +21,16 @@ import java.util.List;
 @RequestMapping(ApiURLNames.cartURL)
 @RequiredArgsConstructor
 public class CartController {
-    private CartService cartService;
+    private final CartService cartService;
+
+    @PostMapping(ApiURLNames.addCartItemInCartURL)
+    public ResponseEntity<ApiResponse<CartResponseDTO>> addCartItemInCart(
+            @AuthenticationPrincipal Long userId, @RequestBody CartItemCreateDTO cartItemCreateDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : Add CartItem in Cart",
+                cartService.addCartItemInCart(userId, cartItemCreateDTO)
+        ));
+    }
 
     @GetMapping(ApiURLNames.findCartsURL)
     public ResponseEntity<ApiResponse<List<CartResponseDTO>>> getCarts(){

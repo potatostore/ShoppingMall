@@ -1,8 +1,8 @@
 package com.shopping_mall_api.controller;
 
+import com.shopping_mall_api.dto.order.OrderCreateDTO;
 import com.shopping_mall_api.dto.order.OrderResponseDTO;
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
-import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
 import com.shopping_mall_api.dto.payment.toss.TossPaymentRequestDTO;
 import com.shopping_mall_api.global.api.ApiResponse;
 import com.shopping_mall_api.global.constant.ApiURLNames;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "https://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping(ApiURLNames.orderURL)
 @RequiredArgsConstructor
@@ -24,10 +24,10 @@ public class OrderController {
 
     @PostMapping(ApiURLNames.createOrderURL)
     public ResponseEntity<ApiResponse<OrderResponseDTO>> createOrder(
-            @AuthenticationPrincipal Long userId, @Valid @RequestBody List<OrderItemCreateDTO> orderItemCreateDTOList){
+            @AuthenticationPrincipal Long userId, @Valid @RequestBody OrderCreateDTO orderCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : create order",
-                orderService.createOrder(userId, orderItemCreateDTOList)
+                orderService.createOrder(userId, orderCreateDTO)
         ));
     }
 

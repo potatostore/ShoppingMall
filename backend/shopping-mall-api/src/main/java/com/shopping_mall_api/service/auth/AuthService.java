@@ -28,6 +28,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
+    @Transactional
     public LogInResponseDTO logIn(LogInRequestDTO logInRequestDTO){
         CheckConfig.npeCheck(logInRequestDTO, "logInRequestDTO");
 

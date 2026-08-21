@@ -49,6 +49,7 @@ public class OrderItem extends BaseEntity {
         CheckConfig.npeAndNegativeCheck(curOrderItemPrice, "curOrderItemPrice");
         CheckConfig.npeAndNegativeCheck(quantity, "quantity");
 
+        this.productId = productId;
         this.curOrderItemPrice = curOrderItemPrice;
         this.quantity = quantity;
         this.totalOrderItemPrice = this.quantity * this.curOrderItemPrice;

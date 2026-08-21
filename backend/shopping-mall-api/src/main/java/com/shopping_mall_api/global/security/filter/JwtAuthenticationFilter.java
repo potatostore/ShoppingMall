@@ -53,12 +53,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String extractToken(HttpServletRequest request){
         CheckConfig.npeCheck(request, "request");
 
+        String cookieToken = null;
         if(request.getCookies() != null){
-            return Arrays.stream(request.getCookies())
-                    .filter(c -> c.getName().equals("AccessToken"))
+            cookieToken = Arrays.stream(request.getCookies())
+                    .filter(c -> c.getName().equals("accessToken"))
                     .findFirst()
                     .map(Cookie::getValue)
                     .orElse(null);
+        }
+
+        if(StringUtils.hasText(cookieToken)){
+            return cookieToken;
         }
 
         String bearer = request.getHeader(HttpHeaders.AUTHORIZATION);

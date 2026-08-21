@@ -14,9 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderCreateDTO {
-    @NotNull(message = "userId must not be null")
-    private Long userId;
-
     @Valid
     @NotEmpty(message = "orderItemCreateDTOList must have 1 orderItemCreateDTO at least")
     private List<OrderItemCreateDTO> orderItemCreateDTOList;

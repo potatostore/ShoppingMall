@@ -2,11 +2,17 @@ package com.shopping_mall_api.service.cart;
 
 import com.shopping_mall_api.dto.cart.CartResponseDTO;
 import com.shopping_mall_api.dto.cart.CartUpdateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemCreateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemResponseDTO;
 import com.shopping_mall_api.entity.cart.Cart;
+import com.shopping_mall_api.entity.cart.CartItem;
+import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.repository.cart.CartItemRepository;
 import com.shopping_mall_api.repository.cart.CartRepository;
+import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +25,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class CartService {
     private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -34,16 +42,40 @@ public class CartService {
         return new CartResponseDTO(cartRepository.save(createCart));
     }
 
+    @Transactional
+    public CartResponseDTO addCartItemInCart(Long userId, CartItemCreateDTO cartItemCreateDTO){
+        CheckConfig.npeCheck(userId, "userId");
+        CheckConfig.npeCheck(cartItemCreateDTO, "cartItemCreateDTO");
+
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.CART_NOT_FOUND));
+
+        Product product = productRepository.findById(cartItemCreateDTO.getProductId())
+                .orElseThrow(() -> new NotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        CartItem cartItem = cart.addCartItemInCart(product, cartItemCreateDTO.getQuantity());
+
+        cartItemRepository.save(cartItem);
+        cartRepository.save(cart);
+
+        return new CartResponseDTO(cart);
+    }
+
     public List<CartResponseDTO> getCarts(){
         return cartRepository.findAll().stream()
+                .peek(Cart::updateTotalCartPrice)
                 .map(CartResponseDTO::new).toList();
     }
 
     public CartResponseDTO getCart(Long userId){
         CheckConfig.npeCheck(userId, "userId");
 
-        return new CartResponseDTO(cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.CART_NOT_FOUND, "Cannot Found Cart (" + userId + ")")));
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.CART_NOT_FOUND));
+
+        cart.updateTotalCartPrice();
+
+        return new CartResponseDTO(cart);
     }
 
     @Transactional
@@ -65,6 +97,7 @@ public class CartService {
         cartRepository.deleteByUserId(userId);
     }
 
+    @Transactional
     public void deleteCartItem(Long userId, Long productId){
         CheckConfig.npeCheck(userId, "userId");
         CheckConfig.npeCheck(productId, "productId");
