@@ -13,13 +13,14 @@ export default function signinPage(){
     const [logInPassword, setLogInPassword] = useState<string>('');
 
     // state === signUp
+    const [signUpState, setSignUpState] = useState<string>('email');
+
     const [signUpName, setSignUpName] = useState<string>('');
     const [signUpEmail, setSignUpEmail] = useState<string>('');
     const [signUpPassword, setSignUpPassword] = useState<string>('')
     const [signUpRole, setSignUpRole] = useState<string>('');
     const [signUpPhoneNumber, setSignUpPhoneNumber] = useState<string>('');
     const [signUpBirthday, setSignUpBirthday] = useState<string>('');
-    const [signUpState, setSignUpState] = useState<string>('email');
 
     // state === findId
     const [findIdName, setFindIdName] = useState<string>('');
