@@ -24,23 +24,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* 네비게이션 */}
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-bold tracking-tight text-zinc-900">
-            감자몰
-          </Link>
-          <div className="hidden gap-8 text-sm font-medium text-zinc-600 sm:flex">
-            <Link href="/products" className="hover:text-zinc-900">전체 상품</Link>
-            <Link href="/cart" className="hover:text-zinc-900">장바구니</Link>
-          </div>
-          <div className="flex gap-4 text-sm font-medium">
-            <Link href="/login" className="text-zinc-600 hover:text-zinc-900">로그인</Link>
-            <Link href="/cart" className="text-zinc-600 hover:text-zinc-900">장바구니</Link>
-          </div>
-        </nav>
-      </header>
-
       {/* 배너 */}
       <section className="bg-zinc-900 px-6 py-24 text-center text-white">
         <p className="text-sm font-medium tracking-widest text-zinc-400 uppercase">Welcome</p>

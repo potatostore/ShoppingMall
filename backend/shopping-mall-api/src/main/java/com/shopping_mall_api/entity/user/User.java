@@ -66,21 +66,14 @@ public class User extends BaseEntity {
         this.birthday = birthday;
     }
 
-    public void patchUser(UserUpdateDTO userUpdateDTO, String encodedLogInPassword){
+    public void patchUser(UserUpdateDTO userUpdateDTO){
         CheckConfig.npeCheck(userUpdateDTO, "userCreateDTO");
-        CheckConfig.npeAndBlankCheck(encodedLogInPassword, "encodedLogInPassword");
 
         if(userUpdateDTO.getEmail() != null){
             this.email = userUpdateDTO.getEmail();
         }
-        if(encodedLogInPassword != null){
-            this.logInPassword = encodedLogInPassword;
-        }
         if(userUpdateDTO.getName() != null){
             this.name = userUpdateDTO.getName();
-        }
-        if(userUpdateDTO.getRole() != null){
-            this.role = userUpdateDTO.getRole();
         }
         if(userUpdateDTO.getPhoneNumber() != null){
             this.phoneNumber = userUpdateDTO.getPhoneNumber();;
@@ -90,18 +83,15 @@ public class User extends BaseEntity {
         }
     }
 
-    public void putUser(UserUpdateDTO userUpdateDTO, String encodedLogInPassword){
+    public void putUser(UserUpdateDTO userUpdateDTO){
         CheckConfig.npeCheck(userUpdateDTO, "userUpdateDTO");
         CheckConfig.npeCheck(userUpdateDTO.getEmail(), "email");
-        CheckConfig.npeCheck(encodedLogInPassword, "encodedLogInPassword");
         CheckConfig.npeCheck(userUpdateDTO.getName(), "name");
         CheckConfig.npeCheck(userUpdateDTO.getPhoneNumber(), "phoneNumber");
         CheckConfig.npeCheck(userUpdateDTO.getBirthday(), "birthDay");
 
         this.email = userUpdateDTO.getEmail();
-        this.logInPassword = encodedLogInPassword;
         this.name = userUpdateDTO.getName();
-        this.role = userUpdateDTO.getRole();
         this.phoneNumber = userUpdateDTO.getPhoneNumber();
         this.birthday = userUpdateDTO.getBirthday();
     }

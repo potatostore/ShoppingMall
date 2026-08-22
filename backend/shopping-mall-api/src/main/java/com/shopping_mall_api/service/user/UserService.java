@@ -75,15 +75,10 @@ public class UserService {
         CheckConfig.npeCheck(userId, "userId");
         CheckConfig.npeCheck(userUpdateDTO, "userUpdateDTO");
 
-        String encodedLogInPassword = null;
-        if(userUpdateDTO.getLogInPassword() != null){
-            encodedLogInPassword = passwordEncoder.encode(userUpdateDTO.getLogInPassword());
-        }
-
         User patchUser = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        patchUser.patchUser(userUpdateDTO, encodedLogInPassword);
+        patchUser.patchUser(userUpdateDTO);
 
         return new UserResponseDTO(patchUser);
     }
@@ -92,14 +87,11 @@ public class UserService {
     public UserResponseDTO putUserInfo(Long userId, UserUpdateDTO userUpdateDTO){
         CheckConfig.npeCheck(userId, "userId");
         CheckConfig.npeCheck(userUpdateDTO, "userUpdateDTO");
-        CheckConfig.npeCheck(userUpdateDTO.getLogInPassword(), "userUpdateDTO-logInPassword must not be null");
-
-        String encodedLogInPassword = passwordEncoder.encode(userUpdateDTO.getLogInPassword());
 
         User putUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
 
-        putUser.putUser(userUpdateDTO, encodedLogInPassword);
+        putUser.putUser(userUpdateDTO);
 
         return new UserResponseDTO(putUser);
     }

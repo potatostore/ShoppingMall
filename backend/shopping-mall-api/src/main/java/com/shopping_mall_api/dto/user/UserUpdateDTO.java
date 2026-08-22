@@ -12,9 +12,7 @@ import java.time.LocalDate;
 public class UserUpdateDTO {
     private String name;
     private String email;
-    private String role;
     private String logInId;
-    private String logInPassword;
     private String phoneNumber;
     private LocalDate birthday;
 }
