@@ -2,6 +2,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { CLIENT_API_URL } from "@/lib/api";
 
 function ResultContent() {
     const searchParams = useSearchParams();
@@ -20,7 +21,7 @@ function ResultContent() {
         }
 
         try {
-            const response = await fetch('http://localhost:8080/api/v1/orders/toss/payment/auth', {
+            const response = await fetch(`${CLIENT_API_URL}/orders/toss/payment/auth`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },

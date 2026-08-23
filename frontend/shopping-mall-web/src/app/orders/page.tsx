@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { SERVER_API_URL } from "@/lib/api";
 
-const orderApiUrl = "http://localhost:8080/api/v1/orders";
-const productApiUrl = "http://localhost:8080/api/v1/products";
+const orderApiUrl = `${SERVER_API_URL}/orders`;
+const productApiUrl = `${SERVER_API_URL}/products`;
 
 type OrderItem = {
     productId: number;
