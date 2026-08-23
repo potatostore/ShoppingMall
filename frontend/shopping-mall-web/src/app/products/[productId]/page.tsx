@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import BackButton from "./BackButton";
 import AddToCartForm from "./AddToCartForm";
+import { SERVER_API_URL } from "@/lib/api";
 
-const productApiUrl = "http://localhost:8080/api/v1/products";
+const productApiUrl = `${SERVER_API_URL}/products`;
 
 type ProductDetail = {
     detail: string;

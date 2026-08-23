@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { SERVER_API_URL } from "@/lib/api";
 
-const productApiUrl = "http://localhost:8080/api/v1/products";
+const productApiUrl = `${SERVER_API_URL}/products`;
 
 type Product = {
   productId: number;

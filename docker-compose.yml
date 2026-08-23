@@ -21,7 +21,9 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/mall_db?serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-      
+      - TOSS_SECRET_KEY=${TOSS_SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+
   frontend:
     build:
       context: ./frontend
@@ -32,5 +34,7 @@ services:
       - /app/node_modules
     environment:
       - WATCHPACK_POLLING=true
+      - API_INTERNAL_URL=http://backend:8080/api/v1
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     #depends_on:
       #- backend

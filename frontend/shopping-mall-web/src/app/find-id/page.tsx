@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const findIdApiUrl = "http://localhost:8080/api/v1/users/find-id";
+const findIdApiUrl = `${CLIENT_API_URL}/users/find-id`;
 
 export default function FindIdPage() {
     const [name, setName] = useState<string>('');

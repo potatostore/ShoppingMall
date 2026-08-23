@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const logoutApiUrl = "http://localhost:8080/api/v1/users/logout";
+const logoutApiUrl = `${CLIENT_API_URL}/users/logout`;
 
 export default function ProfileMenu() {
     const router = useRouter();

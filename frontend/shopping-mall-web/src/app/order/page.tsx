@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const productApiUrl = "http://localhost:8080/api/v1/products";
-const orderApiUrl = "http://localhost:8080/api/v1/orders";
+const productApiUrl = `${CLIENT_API_URL}/products`;
+const orderApiUrl = `${CLIENT_API_URL}/orders`;
 
 const CHECKOUT_ITEMS_KEY = "checkoutItems";
 const TOSS_CLIENT_KEY = "test_ck_DpexMgkW36xxbXXGBwoMrGbR5ozO";
