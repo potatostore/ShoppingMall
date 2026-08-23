@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const findPasswordApiUrl = "http://localhost:8080/api/v1/users/find-password";
+const findPasswordApiUrl = `${CLIENT_API_URL}/users/find-password`;
 
 export default function FindPasswordPage() {
     const [email, setEmail] = useState<string>('');

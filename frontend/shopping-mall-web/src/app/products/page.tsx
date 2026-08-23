@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const productApiUrl = 'http://localhost:8080/api/v1/products';
+const productApiUrl = `${CLIENT_API_URL}/products`;
 
 type ProductDetail = {
     detail: string;

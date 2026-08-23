@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import ProfileEditor from "./ProfileEditor";
+import { SERVER_API_URL } from "@/lib/api";
 
-const userApiUrl = "http://localhost:8080/api/v1/users";
+const userApiUrl = `${SERVER_API_URL}/users`;
 
 type UserProfile = {
     userId: number;

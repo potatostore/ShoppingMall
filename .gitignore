@@ -201,5 +201,8 @@ $RECYCLE.BIN/
 #Docker data
 mysql_data/
 
+# Ignore environment file (settind env file each os)
+.env
+
 # Ignore IDE config for backend
 backend/.idea/

@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const cartApiUrl = "http://localhost:8080/api/v1/carts";
-const productApiUrl = "http://localhost:8080/api/v1/products";
+const cartApiUrl = `${CLIENT_API_URL}/carts`;
+const productApiUrl = `${CLIENT_API_URL}/products`;
 
 const CHECKOUT_ITEMS_KEY = "checkoutItems";
 

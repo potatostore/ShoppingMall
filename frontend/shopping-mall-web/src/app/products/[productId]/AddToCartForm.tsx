@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from "react";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const cartApiUrl = "http://localhost:8080/api/v1/carts";
+const cartApiUrl = `${CLIENT_API_URL}/carts`;
 
 export default function AddToCartForm({ productId }: { productId: number }) {
     const [quantity, setQuantity] = useState<number>(1);

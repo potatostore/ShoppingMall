@@ -3,8 +3,9 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const tossAuthUrl = "http://localhost:8080/api/v1/orders/toss/payment/auth";
+const tossAuthUrl = `${CLIENT_API_URL}/orders/toss/payment/auth`;
 
 function OrderResultContent() {
     const searchParams = useSearchParams();

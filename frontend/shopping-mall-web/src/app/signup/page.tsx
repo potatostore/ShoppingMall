@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CLIENT_API_URL } from "@/lib/api";
 
-const userApiUrl = 'http://localhost:8080/api/v1/users';
+const userApiUrl = `${CLIENT_API_URL}/users`;
 
 export default function SignUpPage() {
     const router = useRouter();
