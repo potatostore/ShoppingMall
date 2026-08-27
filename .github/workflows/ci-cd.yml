@@ -1,0 +1,37 @@
+name: CI-CD
+
+on:
+  push: 
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: 
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone ShoppingMall
+        uses: actions/checkout@v4
+
+      - name: JDK Set-up
+        uses: actions/setup-java@v4
+        with: 
+          distribution: corretto
+          java-version: '21'
+        cache: gradle
+
+      - name: docker-db build
+        run: docker compose up -d db
+
+      - name: wait docker-db running
+        run: |
+          until docker compose exec -T db mysqladmin ping -h localhost -uroot -proot --silent ; do
+            echo "waiting mysql ready"
+            sleep 2
+          done
+      
+      - name: test was
+        working-directory: backend/shopping-mall-api
+        run: ./gradlew test
