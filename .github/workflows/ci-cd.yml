@@ -20,7 +20,7 @@ jobs:
         with: 
           distribution: corretto
           java-version: '21'
-        cache: gradle
+          cache: gradle
 
       - name: docker-db build
         run: docker compose up -d db
