@@ -35,3 +35,6 @@ jobs:
       - name: test was
         working-directory: backend/shopping-mall-api
         run: ./gradlew test
+        env:
+          TOSS_SECRET_KEY: ${{ secrets.TOSS_SECRET_KEY }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
