@@ -77,6 +77,9 @@ public class ProductService {
     public void deleteProduct(Long productId){
         CheckConfig.npeCheck(productId, "productId");
 
+        productRepository.findById(productId)
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+
         productRepository.deleteById(productId);
     }
 }

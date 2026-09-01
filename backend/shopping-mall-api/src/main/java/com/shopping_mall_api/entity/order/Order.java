@@ -113,6 +113,8 @@ public class Order extends BaseEntity {
             orderItem.updateQuantity(dto.getQuantity());
             orderItem.updateCurOrderItemPrice(dto.getCurOrderItemPrice());
         }
+
+        updateTotalOrderPrice();
     }
 
     public void completePayment(){

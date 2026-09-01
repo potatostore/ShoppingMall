@@ -10,6 +10,7 @@ import com.shopping_mall_api.dto.payment.toss.response.TossError;
 import com.shopping_mall_api.dto.payment.toss.response.TossResponse;
 import com.shopping_mall_api.entity.order.Order;
 import com.shopping_mall_api.entity.order.OrderStatus;
+import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.client.toss.TossClient;
 import com.shopping_mall_api.global.config.CheckConfig;
@@ -19,6 +20,7 @@ import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.global.exception.UnmatchedPriceException;
 import com.shopping_mall_api.repository.cart.CartRepository;
 import com.shopping_mall_api.repository.order.OrderRepository;
+import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ import java.util.List;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
     private final TossClient tossClient;
 
@@ -96,6 +99,9 @@ public class OrderService {
     public List<OrderResponseDTO> getOrdersWithUserId(Long userId){
         CheckConfig.npeCheck(userId, "userId");
 
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
         List<Order> orderList = orderRepository.findByUser_UserId(userId);
 
         return orderList.stream()
@@ -137,6 +143,9 @@ public class OrderService {
     @Transactional
     public void deleteOrder(Long orderId){
         CheckConfig.npeCheck(orderId, "orderId");
+
+        orderRepository.findById(orderId)
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
         orderRepository.deleteById(orderId);
     }

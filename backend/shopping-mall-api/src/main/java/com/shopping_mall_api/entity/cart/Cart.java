@@ -93,6 +93,8 @@ public class Cart extends BaseEntity {
 
             cartItem.updateQuantity(dto.getQuantity());
         }
+
+        updateTotalCartPrice();
     }
 
     public void deleteCartItem(Long productId){

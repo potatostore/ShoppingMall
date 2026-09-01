@@ -94,6 +94,9 @@ public class CartService {
     public void deleteCart(Long userId){
         CheckConfig.npeCheck(userId, "userId");
 
+        cartRepository.findByUserId(userId)
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.CART_NOT_FOUND));
+
         cartRepository.deleteByUserId(userId);
     }
 

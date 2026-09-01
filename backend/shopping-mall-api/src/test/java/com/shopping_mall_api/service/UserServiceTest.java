@@ -36,7 +36,6 @@ public class UserServiceTest {
 
     @InjectMocks private UserService userService;
 
-    // when create user, cart must create together
     @Test
     void userCreateTest(){
         UserCreateDTO userCreateDTO = UserCreateDTO.builder()
@@ -75,7 +74,7 @@ public class UserServiceTest {
 
     @Test
     void getUserTest(){
-        User existingUser = User.builder()
+        User existUser = User.builder()
                 .email("qwer1234@google.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
@@ -84,7 +83,7 @@ public class UserServiceTest {
                 .birthday(LocalDate.of(2026, 8, 27))
                 .build();
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existUser));
 
         UserResponseDTO result = userService.getUser(1L);
 
