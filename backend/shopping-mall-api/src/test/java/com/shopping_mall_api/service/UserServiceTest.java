@@ -40,7 +40,7 @@ public class UserServiceTest {
     void userCreateTest(){
         UserCreateDTO userCreateDTO = UserCreateDTO.builder()
                 .signUpName("김민준")
-                .signUpEmail("qwer1234@google.com")
+                .signUpEmail("qwer1234@gmail.com")
                 .signUpPassword("qwer1234")
                 .signUpRole("USER")
                 .signUpPhoneNumber("01011111111")
@@ -62,7 +62,7 @@ public class UserServiceTest {
         UserCreateResponseDTO result = userService.createUser(userCreateDTO);
 
         assertThat(result.userResponseDTO().getName()).isEqualTo("김민준");
-        assertThat(result.userResponseDTO().getEmail()).isEqualTo("qwer1234@google.com");
+        assertThat(result.userResponseDTO().getEmail()).isEqualTo("qwer1234@gmail.com");
         assertThat(result.cartResponseDTO()).isNotNull();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -75,7 +75,7 @@ public class UserServiceTest {
     @Test
     void getUserTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -88,7 +88,7 @@ public class UserServiceTest {
         UserResponseDTO result = userService.getUser(1L);
 
         assertThat(result.getName()).isEqualTo("김민준");
-        assertThat(result.getEmail()).isEqualTo("qwer1234@google.com");
+        assertThat(result.getEmail()).isEqualTo("qwer1234@gmail.com");
     }
 
     @Test
@@ -101,7 +101,7 @@ public class UserServiceTest {
     @Test
     void patchUserTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -111,7 +111,7 @@ public class UserServiceTest {
 
         UserUpdateDTO updateUserDTO = UserUpdateDTO.builder()
                 .name("이민준")
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .phoneNumber("01022222222")
                 .birthday(LocalDate.of(2026, 8, 27))
                 .build();
@@ -130,7 +130,7 @@ public class UserServiceTest {
 
         UserUpdateDTO updateUserDTO = UserUpdateDTO.builder()
                 .name("이민준")
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .phoneNumber("01022222222")
                 .birthday(LocalDate.of(2026, 8, 27))
                 .build();
@@ -141,7 +141,7 @@ public class UserServiceTest {
     @Test
     void putUserTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -151,7 +151,7 @@ public class UserServiceTest {
 
         UserUpdateDTO updateUserDTO = UserUpdateDTO.builder()
                 .name("이민준")
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .phoneNumber("01022222222")
                 .birthday(LocalDate.of(2026, 8, 27))
                 .build();
@@ -170,7 +170,7 @@ public class UserServiceTest {
 
         UserUpdateDTO updateUserDTO = UserUpdateDTO.builder()
                 .name("이민준")
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .phoneNumber("01022222222")
                 .birthday(LocalDate.of(2026, 8, 27))
                 .build();
@@ -181,7 +181,7 @@ public class UserServiceTest {
     @Test
     void deleteUserTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")

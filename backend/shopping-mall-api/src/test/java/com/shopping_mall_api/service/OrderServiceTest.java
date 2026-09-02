@@ -47,7 +47,7 @@ public class OrderServiceTest {
     @Test
     void createOrder_successTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -90,7 +90,7 @@ public class OrderServiceTest {
                 .build();
 
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -138,7 +138,7 @@ public class OrderServiceTest {
         TossResponse tossResponse = mock(TossError.class);
 
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -173,7 +173,7 @@ public class OrderServiceTest {
         );
         
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -201,7 +201,7 @@ public class OrderServiceTest {
     @Test
     void getOrders_successTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -235,7 +235,7 @@ public class OrderServiceTest {
     @Test
     void getOrdersWithUserId_successTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -277,7 +277,7 @@ public class OrderServiceTest {
     @Test
     void getOrderWithUserId_successTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -312,7 +312,7 @@ public class OrderServiceTest {
     @Test
     void getOrderWithUserId_orderNotFoundExceptionTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -342,7 +342,7 @@ public class OrderServiceTest {
     @Test
     void patchOrder_successTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
@@ -400,7 +400,7 @@ public class OrderServiceTest {
     @Test
     void deleteOrder_successTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")

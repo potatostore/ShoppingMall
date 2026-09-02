@@ -66,6 +66,9 @@ public class AuthService {
     public void logOut(Long userId){
         CheckConfig.npeCheck(userId, "userId");
 
+        refreshTokenRepository.findByUserId(userId)
+                        .orElseThrow(() -> new NotFoundException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
+
         refreshTokenRepository.delete(userId);
     }
 }

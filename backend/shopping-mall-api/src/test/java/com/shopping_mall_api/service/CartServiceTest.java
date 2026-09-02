@@ -44,7 +44,7 @@ public class CartServiceTest {
     @Test
     void createCart_successTest(){
         User existUser = User.builder()
-                .email("qwer1234@google.com")
+                .email("qwer1234@gmail.com")
                 .logInPassword("encodedPassword")
                 .name("김민준")
                 .role("USER")
