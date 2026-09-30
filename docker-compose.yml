@@ -10,6 +10,12 @@ services:
     volumes:
       - ./mysql_data:/var/lib/mysql
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
   backend:
     build: ./backend
     container_name: backend-server
@@ -17,7 +23,9 @@ services:
       - "8080:8080"
     depends_on:
       - db
+      - redis
     environment:
+      - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/mall_db?serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
