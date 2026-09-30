@@ -63,13 +63,6 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
     }
 
-    protected User getUserEntity(Long userId){
-        CheckConfig.npeCheck(userId, "userId");
-
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
-    }
-
     @Transactional
     public UserResponseDTO patchUserInfo(Long userId, UserUpdateDTO userUpdateDTO){
         CheckConfig.npeCheck(userId, "userId");

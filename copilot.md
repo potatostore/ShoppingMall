@@ -23,8 +23,8 @@
 - 문제점 / 근거 / 수정 후 다음으로 개발을 추천하는 기능을 copilot-addendum.md파일에 작성
 
 ## 현재 단계(로드맵)
-- 전체적인 개발 로드맵 : Spring Boot + MySQL → CI/CD + Web Server → Grafana/Prometheus + Mock Data → Deploy
-- 현재 개발 중인 작업 : 데이터 스키마 작성
+- 전체적인 개발 로드맵 : Spring Boot + MySQL → CI(테스트 코드) + Web Server → JWT 인증 심화(로그인/로그아웃) → Grafana/Prometheus + Mock Data → Deploy(CD 포함, 현 단계에서 제외 후 최종 배포 단계에서 재도입 예정)
+- 현재 개발 중인 작업 : 컨트롤러 예외/인가 테스트 마무리 → 완료 후 JWT 로그인/로그아웃 인증 방식 심화로 전환 예정(20260917 확정 — 현직자 조언 반영해 Docker/K8s·CI/CD 배포 자동화는 당분간 보류)
 - 현재 개발 중인 작업은 전적으로 copilot이 추적 및 기록
 
 ## copilot-addendum.md 기록 규칙

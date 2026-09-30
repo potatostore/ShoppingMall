@@ -27,7 +27,7 @@ public class CartController {
     public ResponseEntity<ApiResponse<CartResponseDTO>> addCartItemInCart(
             @AuthenticationPrincipal Long userId, @RequestBody CartItemCreateDTO cartItemCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
-                "Success : Add CartItem in Cart",
+                "Success : add cartItem in cart",
                 cartService.addCartItemInCart(userId, cartItemCreateDTO)
         ));
     }

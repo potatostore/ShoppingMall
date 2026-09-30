@@ -3,6 +3,7 @@ package com.shopping_mall_api.dto.product;
 import com.shopping_mall_api.dto.product.productDetail.ProductDetailResponseDTO;
 import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.global.config.CheckConfig;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProductResponseDTO {
     private Long productId;
     private String name;

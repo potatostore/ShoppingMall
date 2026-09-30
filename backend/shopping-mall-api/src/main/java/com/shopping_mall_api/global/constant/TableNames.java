@@ -16,6 +16,6 @@ public class TableNames {
     public static final String orderTableName = "orders";
     public static final String orderItemTableName = "order_item";
 
-    // like db table name
-    public static final String likeTableName = "like";
+    // likes db table name
+    public static final String likesTableName = "likes";
 }

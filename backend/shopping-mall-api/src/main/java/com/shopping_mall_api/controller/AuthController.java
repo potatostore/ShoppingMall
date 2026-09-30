@@ -19,7 +19,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping(ApiURLNames.loginURL)
-    public ResponseEntity<ApiResponse<String>> logIn(@Valid @RequestBody LogInRequestDTO logInRequestDTO){
+    public ResponseEntity<ApiResponse<Void>> logIn(@Valid @RequestBody LogInRequestDTO logInRequestDTO){
         LogInResponseDTO logInResponseDTO = authService.logIn(logInRequestDTO);
 
         return ResponseEntity.ok()

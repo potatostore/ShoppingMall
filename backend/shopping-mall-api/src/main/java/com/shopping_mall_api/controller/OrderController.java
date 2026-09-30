@@ -43,7 +43,7 @@ public class OrderController {
     @GetMapping(ApiURLNames.findOrdersURL)
     public ResponseEntity<ApiResponse<List<OrderResponseDTO>>> getOrders(){
        return ResponseEntity.ok(ApiResponse.success(
-                "Success : get all orders ",
+                "Success : get all orders",
                 orderService.getOrders()
         ));
     }

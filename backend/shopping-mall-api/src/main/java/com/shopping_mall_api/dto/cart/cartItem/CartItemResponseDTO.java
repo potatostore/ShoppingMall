@@ -19,4 +19,5 @@ public class CartItemResponseDTO {
         this.productItemId = cartItem.getProduct().getProductId();
         this.quantity = cartItem.getQuantity();
     }
+
 }
