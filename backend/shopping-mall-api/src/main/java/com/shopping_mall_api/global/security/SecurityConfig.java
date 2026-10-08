@@ -48,11 +48,31 @@ public class SecurityConfig {
 
                 // Authorization filter
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/users/signup", "/users/login").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/orders/**").hasRole("ADMIN")
-                        .requestMatchers("/orders/**", "/carts/**", "/users/**").authenticated()
-                        .requestMatchers("/orders/**", "/carts/**").authenticated()
-                        .anyRequest().permitAll()
+                        // ADMIN API
+                        .requestMatchers(HttpMethod.POST, "/products").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/users", "/carts", "/orders").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/products/{productId}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/products/{productId}",
+                                                            "/orders/{orderId}").hasRole("ADMIN")
+
+                        // Authenticated User
+                        .requestMatchers(HttpMethod.POST, "/carts",
+                                                          "/orders", "/orders/toss/payment/auth").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/me",
+                                                         "/carts/me",
+                                                         "/orders/me", "/orders/{orderId}").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/users/me",
+                                                           "/carts/me",
+                                                           "/orders/{orderId}").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/users/logout", "/users/me",
+                                                            "/carts/items/{productId}", "/carts/me").authenticated()
+
+                        // Permit All
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/login", "/users/signup").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/products", "/products/{productId}").permitAll()
+
+                        .anyRequest().hasRole("ADMIN")
                 )
 
                 .exceptionHandling(exception ->
