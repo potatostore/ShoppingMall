@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     public List<Order> findByUser_UserId(Long userId);
     public Optional<Order> findByOrderUid(Long orderUid);
+    public boolean existsByOrderUid(Long orderUid);
     public Optional<Order> findByOrderIdAndUser_UserId(Long orderId, Long userId);
 
     @Query("select o.orderId from Order o where o.orderStatus = :status and o.createdAt < :threshold order by o.orderId")

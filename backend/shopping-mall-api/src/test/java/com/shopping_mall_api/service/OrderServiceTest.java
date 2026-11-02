@@ -30,6 +30,7 @@ import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.order.OrderService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -113,6 +114,25 @@ public class OrderServiceTest {
         InOrder inOrder = inOrder(productRepository);
         inOrder.verify(productRepository).decreaseStock(1L, 2L);
         inOrder.verify(productRepository).decreaseStock(2L, 1L);
+    }
+
+    @Test
+    void createOrder_regeneratesOrderUidOnCollisionTest(){
+        OrderCreateDTO orderCreateDTO = new OrderCreateDTO(List.of(
+                OrderItemCreateDTO.builder().productId(1L).quantity(1L).build()
+        ));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(createUser()));
+        when(productRepository.findAllById(any())).thenReturn(List.of(createProduct(1L, 1000L)));
+        when(productRepository.decreaseStock(1L, 1L)).thenReturn(1);
+        // 첫 번째 orderUid는 이미 사용 중, 두 번째는 사용 가능
+        when(orderRepository.existsByOrderUid(anyLong())).thenReturn(true, false);
+
+        OrderResponseDTO result = orderService.createOrder(1L, orderCreateDTO);
+
+        ArgumentCaptor<Long> uidCaptor = ArgumentCaptor.forClass(Long.class);
+        verify(orderRepository, times(2)).existsByOrderUid(uidCaptor.capture());
+        assertThat(result.getOrderUid()).isEqualTo(uidCaptor.getAllValues().get(1));
     }
 
     @Test

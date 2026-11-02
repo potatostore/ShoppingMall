@@ -72,6 +72,11 @@ public class Order extends BaseEntity {
         return ThreadLocalRandom.current().nextLong(100_000L, 1_000_000_000_000L);
     }
 
+    // 저장 전 orderUid가 이미 쓰이고 있으면 서비스가 다시 뽑음 (OrderService.assignUniqueOrderUid)
+    public void regenerateOrderUid(){
+        this.orderUid = generateOrderUid();
+    }
+
     public void addOrderItem(OrderItem orderItem){
         CheckConfig.npeCheck(orderItem, "orderItem");
 

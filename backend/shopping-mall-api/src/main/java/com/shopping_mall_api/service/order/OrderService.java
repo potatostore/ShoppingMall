@@ -101,6 +101,7 @@ public class OrderService {
                 .orderStatus(OrderStatus.PENDING)
                 .build();
 
+        assignUniqueOrderUid(createOrder);
         orderRepository.save(createOrder);
 
         return new OrderResponseDTO(createOrder);
@@ -359,6 +360,20 @@ public class OrderService {
         }
 
         orderRepository.deleteById(orderId);
+    }
+
+    // orderUid는 토스 주문번호로 쓰이는 난수. 충돌하면 unique 제약 위반으로 500이 나므로 저장 전에 확인하고 다시 뽑음
+    // (확인과 저장 사이의 동시 충돌은 확률이 극히 낮아 unique 제약에 맡김)
+    private static final int ORDER_UID_MAX_ATTEMPTS = 5;
+
+    private void assignUniqueOrderUid(Order order){
+        for(int attempt = 1; attempt <= ORDER_UID_MAX_ATTEMPTS; attempt++){
+            if(!orderRepository.existsByOrderUid(order.getOrderUid())){
+                return;
+            }
+            order.regenerateOrderUid();
+        }
+        throw new IllegalStateException("Cannot generate unique orderUid");
     }
 
     // 결제가 끝난 상품만 장바구니에서 제거 (주문 생성 시점에 지우면 결제 실패·이탈 시 장바구니가 비어 버림)
