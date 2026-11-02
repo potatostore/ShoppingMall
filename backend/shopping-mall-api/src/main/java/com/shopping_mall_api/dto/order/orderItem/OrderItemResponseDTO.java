@@ -15,6 +15,7 @@ public class OrderItemResponseDTO {
     private Long curOrderItemPrice;
     private Long quantity;
     private Long totalOrderItemPrice;
+    private String productName;
 
     @Builder
     public OrderItemResponseDTO(OrderItem orderItem){
@@ -24,5 +25,6 @@ public class OrderItemResponseDTO {
         this.curOrderItemPrice = orderItem.getCurOrderItemPrice();
         this.quantity = orderItem.getQuantity();
         this.totalOrderItemPrice = orderItem.getTotalOrderItemPrice();
+        this.productName = orderItem.getProductName();
     }
 }

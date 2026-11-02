@@ -10,6 +10,9 @@ import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.annotations.BatchSize;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -36,14 +39,23 @@ public class Order extends BaseEntity {
     @Column(unique = true, nullable = false)
     private Long orderUid;
 
+    // 목록 조회 시 컬렉션을 엔티티마다 따로 조회하지 않고 IN 쿼리로 묶음 (N+1 → 1+1)
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "order", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<OrderItem> orderItemList;
 
     // ORDINAL(기본값)은 enum 순서가 바뀌면 기존 데이터 의미가 바뀌므로 문자열로 저장
+    // Hibernate 6.2+는 MySQL에서 STRING enum을 enum('PENDING',...) 타입 컬럼으로 만들어, 상태를 추가하면 기존 컬럼에 저장이 실패함
+    // → VARCHAR로 고정해 상태 추가 시 스키마 변경이 필요 없게 함
     @NotNull
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20)
     private OrderStatus orderStatus;
+
+    // 토스 승인 시 받은 결제 키. 결제 취소(환불) API 호출에 필요
+    @Column(length = 200)
+    private String paymentKey;
 
     @NotNull(message = "totalOrderPrice must not be null")
     @Column(nullable = false)
@@ -66,6 +78,11 @@ public class Order extends BaseEntity {
 
     private static Long generateOrderUid(){
         return ThreadLocalRandom.current().nextLong(100_000L, 1_000_000_000_000L);
+    }
+
+    // 저장 전 orderUid가 이미 쓰이고 있으면 서비스가 다시 뽑음 (OrderService.assignUniqueOrderUid)
+    public void regenerateOrderUid(){
+        this.orderUid = generateOrderUid();
     }
 
     public void addOrderItem(OrderItem orderItem){
@@ -114,9 +131,26 @@ public class Order extends BaseEntity {
         updateTotalOrderPrice();
     }
 
-    public void completePayment(){
+    public void completePayment(String paymentKey){
         checkPending();
+        CheckConfig.npeAndBlankCheck(paymentKey, "paymentKey");
+        this.paymentKey = paymentKey;
         this.orderStatus = OrderStatus.PAID;
+    }
+
+    // 결제창 이탈 등으로 일정 시간 결제되지 않은 주문 (OrderExpirationScheduler)
+    public void expire(){
+        checkPending();
+        this.orderStatus = OrderStatus.EXPIRED;
+    }
+
+    // 결제 전(PENDING) 또는 결제 완료(PAID) 주문만 취소 가능. PAID는 토스 결제 취소가 성공한 뒤에 호출
+    public void cancel(){
+        if(this.orderStatus != OrderStatus.PENDING && this.orderStatus != OrderStatus.PAID){
+            throw new InvalidOrderStatusException(ErrorCode.ORDER_STATUS_INVALID,
+                    "Order cannot be canceled (current : " + this.orderStatus + ")");
+        }
+        this.orderStatus = OrderStatus.CANCELED;
     }
 
     public void failPayment(){

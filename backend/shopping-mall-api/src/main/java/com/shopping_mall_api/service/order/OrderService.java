@@ -26,16 +26,22 @@ import com.shopping_mall_api.repository.order.OrderRepository;
 import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.ResourceAccessException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,6 +52,9 @@ public class OrderService {
     private final CartRepository cartRepository;
 
     private final TossClient tossClient;
+
+    // 토스 결제 상태 중 "결제되지 않은 채 끝난" 상태 → 주문 만료 대상
+    private static final Set<String> TOSS_UNPAID_FINAL_STATUSES = Set.of("ABORTED", "EXPIRED", "CANCELED");
 
     @Transactional
     public OrderResponseDTO createOrder(Long userId, OrderCreateDTO orderCreateDTO){
@@ -75,6 +84,7 @@ public class OrderService {
 
             orderItemList.add(OrderItem.builder()
                     .productId(product.getProductId())
+                    .productName(product.getName())
                     .curOrderItemPrice(product.getPrice())
                     .quantity(entry.getValue())
                     .build());
@@ -92,6 +102,7 @@ public class OrderService {
                 .orderStatus(OrderStatus.PENDING)
                 .build();
 
+        assignUniqueOrderUid(createOrder);
         orderRepository.save(createOrder);
 
         return new OrderResponseDTO(createOrder);
@@ -119,22 +130,61 @@ public class OrderService {
                     "Order cannot be paid (current : " + tossOrder.getOrderStatus() + ")");
         }
 
-        TossResponse tossResponse = tossClient.confirm(tossPaymentRequestDTO);
+        TossResponse tossResponse;
+        try {
+            tossResponse = tossClient.confirm(tossPaymentRequestDTO);
+        } catch (ResourceAccessException e) {
+            // 타임아웃·연결 끊김: 토스는 승인했는데 응답만 못 받았을 수 있으므로 실패로 단정하지 않고 결제 조회로 확인
+            log.warn("Toss confirm I/O error, look up payment status (orderUid={})", tossOrder.getOrderUid(), e);
+            reconcileWithToss(tossOrder);
+            return new OrderResponseDTO(tossOrder);
+        }
 
         switch(tossResponse){
-            case Payment payment ->{
-                tossOrder.completePayment();
-                removeOrderedItemsFromCart(tossOrder);
-            }
-            case TossError tossError ->{
-                tossOrder.failPayment();
+            case Payment payment -> completePayment(tossOrder, tossPaymentRequestDTO.paymentKey());
+            case TossError tossError -> {
+                failPaymentAndRestoreStock(tossOrder);
                 // noRollbackFor = PaymentException이라 FAILED 상태와 재고 복구가 함께 커밋됨
-                restoreStock(tossOrder);
                 throw new PaymentException(ErrorCode.PAYMENT_FAILED);
             }
         }
 
         return new OrderResponseDTO(tossOrder);
+    }
+
+    // 토스 결제 조회 결과로 PENDING 주문을 맞춤
+    // DONE → 결제 완료 처리, ABORTED·EXPIRED → 실패 + 재고 복구, 그 외(조회 실패, 결제 없음, 진행 중) → PENDING 유지 후 502
+    // PENDING 유지 시 사용자는 같은 paymentKey로 다시 승인 요청 가능
+    private void reconcileWithToss(Order order){
+        TossResponse lookup;
+        try {
+            lookup = tossClient.getPaymentByOrderId(order.getOrderUid());
+        } catch (ResourceAccessException e) {
+            throw new PaymentException(ErrorCode.TOSS_SERVER_ERROR);
+        }
+
+        if(lookup instanceof Payment payment){
+            if("DONE".equals(payment.status())){
+                completePayment(order, payment.paymentKey());
+                return;
+            }
+            if("ABORTED".equals(payment.status()) || "EXPIRED".equals(payment.status())){
+                failPaymentAndRestoreStock(order);
+                throw new PaymentException(ErrorCode.PAYMENT_FAILED);
+            }
+        }
+
+        throw new PaymentException(ErrorCode.TOSS_SERVER_ERROR);
+    }
+
+    private void completePayment(Order order, String paymentKey){
+        order.completePayment(paymentKey);
+        removeOrderedItemsFromCart(order);
+    }
+
+    private void failPaymentAndRestoreStock(Order order){
+        order.failPayment();
+        restoreStock(order);
     }
 
     public List<OrderResponseDTO> getOrders(){
@@ -200,6 +250,104 @@ public class OrderService {
         return new OrderResponseDTO(order);
     }
 
+    public List<Long> findStalePendingOrderIds(LocalDateTime threshold, int limit){
+        CheckConfig.npeCheck(threshold, "threshold");
+
+        return orderRepository.findOrderIdsByStatusCreatedBefore(OrderStatus.PENDING, threshold, PageRequest.of(0, limit));
+    }
+
+    // 오래된 PENDING 주문 정리 (OrderExpirationScheduler가 주문마다 호출, 주문별 트랜잭션)
+    // 만료 전에 토스 결제 조회로 실제 상태 확인:
+    //   DONE → 승인 응답만 유실된 경우이므로 결제 완료 처리
+    //   결제 없음(NOT_FOUND_PAYMENT) 또는 ABORTED·EXPIRED·CANCELED → EXPIRED + 재고 복구
+    //   조회 실패·결제 진행 중 → 그대로 두고 다음 주기에 다시 확인
+    @Transactional
+    public void expireIfStale(Long orderId){
+        CheckConfig.npeCheck(orderId, "orderId");
+
+        Order order = orderRepository.findByIdForUpdate(orderId).orElse(null);
+
+        // 조회와 잠금 사이에 결제·취소된 주문은 건너뜀
+        if(order == null || order.getOrderStatus() != OrderStatus.PENDING){
+            return;
+        }
+
+        TossResponse lookup;
+        try {
+            lookup = tossClient.getPaymentByOrderId(order.getOrderUid());
+        } catch (ResourceAccessException e) {
+            log.warn("Toss lookup failed while expiring order, retry next run (orderUid={})", order.getOrderUid(), e);
+            return;
+        }
+
+        switch(lookup){
+            case Payment payment when "DONE".equals(payment.status()) -> completePayment(order, payment.paymentKey());
+            case Payment payment when TOSS_UNPAID_FINAL_STATUSES.contains(payment.status()) -> expireAndRestoreStock(order);
+            case Payment payment -> log.info("Payment still in progress, keep PENDING (orderUid={}, status={})",
+                    order.getOrderUid(), payment.status());
+            case TossError tossError when "NOT_FOUND_PAYMENT".equals(tossError.code()) -> expireAndRestoreStock(order);
+            case TossError tossError -> log.warn("Toss lookup error, retry next run (orderUid={}, code={})",
+                    order.getOrderUid(), tossError.code());
+        }
+    }
+
+    private void expireAndRestoreStock(Order order){
+        order.expire();
+        restoreStock(order);
+    }
+
+    private static final String DEFAULT_CANCEL_REASON = "고객 요청에 의한 주문 취소";
+
+    // 본인 주문 취소. PENDING → 바로 취소, PAID → 토스 결제 취소 성공 후 취소, 둘 다 재고 복구
+    // 토스 취소 실패(에러 응답·네트워크 오류)면 주문은 PAID 그대로 두고 예외 → 다시 요청 가능
+    @Transactional
+    public OrderResponseDTO cancelOrder(Long userId, Long orderId, String cancelReason){
+        CheckConfig.npeCheck(userId, "userId");
+        CheckConfig.npeCheck(orderId, "orderId");
+
+        Order order = orderRepository.findByOrderIdAndUserIdForUpdate(orderId, userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
+
+        if(order.getOrderStatus() == OrderStatus.PAID){
+            refundWithToss(order, (cancelReason == null || cancelReason.isBlank()) ? DEFAULT_CANCEL_REASON : cancelReason);
+        }
+
+        // PENDING·PAID 외 상태(FAILED, CANCELED)는 엔티티에서 400
+        order.cancel();
+        restoreStock(order);
+
+        return new OrderResponseDTO(order);
+    }
+
+    private void refundWithToss(Order order, String cancelReason){
+        if(order.getPaymentKey() == null){
+            // paymentKey 저장 이전에 결제된 주문은 API로 환불할 수 없음 → 토스 개발자센터에서 수동 처리
+            throw new PaymentException(ErrorCode.PAYMENT_CANCEL_FAILED, "Payment key not found for order (" + order.getOrderId() + ")");
+        }
+
+        TossResponse response;
+        try {
+            response = tossClient.cancel(order.getPaymentKey(), cancelReason, "cancel-" + order.getOrderUid());
+        } catch (ResourceAccessException e) {
+            log.warn("Toss cancel I/O error (orderUid={})", order.getOrderUid(), e);
+            throw new PaymentException(ErrorCode.TOSS_SERVER_ERROR);
+        }
+
+        switch(response){
+            case TossError tossError -> {
+                log.warn("Toss cancel rejected (orderUid={}, code={})", order.getOrderUid(), tossError.code());
+                throw new PaymentException(ErrorCode.PAYMENT_CANCEL_FAILED, "Payment cancel failed : " + tossError.message());
+            }
+            // 전액 취소 성공 시 토스 결제 상태는 CANCELED. 그 외 상태면 환불이 끝났다고 볼 수 없으므로 주문을 취소하지 않음
+            case Payment payment -> {
+                if(!"CANCELED".equals(payment.status())){
+                    throw new PaymentException(ErrorCode.PAYMENT_CANCEL_FAILED,
+                            "Unexpected payment status after cancel : " + payment.status());
+                }
+            }
+        }
+    }
+
     @Transactional
     public void deleteOrder(Long orderId){
         CheckConfig.npeCheck(orderId, "orderId");
@@ -213,6 +361,20 @@ public class OrderService {
         }
 
         orderRepository.deleteById(orderId);
+    }
+
+    // orderUid는 토스 주문번호로 쓰이는 난수. 충돌하면 unique 제약 위반으로 500이 나므로 저장 전에 확인하고 다시 뽑음
+    // (확인과 저장 사이의 동시 충돌은 확률이 극히 낮아 unique 제약에 맡김)
+    private static final int ORDER_UID_MAX_ATTEMPTS = 5;
+
+    private void assignUniqueOrderUid(Order order){
+        for(int attempt = 1; attempt <= ORDER_UID_MAX_ATTEMPTS; attempt++){
+            if(!orderRepository.existsByOrderUid(order.getOrderUid())){
+                return;
+            }
+            order.regenerateOrderUid();
+        }
+        throw new IllegalStateException("Cannot generate unique orderUid");
     }
 
     // 결제가 끝난 상품만 장바구니에서 제거 (주문 생성 시점에 지우면 결제 실패·이탈 시 장바구니가 비어 버림)

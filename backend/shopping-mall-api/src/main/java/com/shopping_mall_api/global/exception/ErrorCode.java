@@ -17,6 +17,7 @@ public enum ErrorCode {
     USER_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "U003", "User info cannot update"),
     USER_PASSWORD_UNMATCHED(HttpStatus.BAD_REQUEST, "U004", "User password unmatched"),
     EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "U005", "Email not found"),
+    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "U006", "Invalid email or password"),
 
     //Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Cannot found product"),
@@ -44,9 +45,10 @@ public enum ErrorCode {
 
     //Payment
     PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "PA001", "Payment Failed"),
+    PAYMENT_CANCEL_FAILED(HttpStatus.BAD_REQUEST, "PA002", "Payment cancel failed"),
 
     //Toss Client
-    TOSS_SERVER_ERROR(HttpStatus.BAD_REQUEST, "TS001", "Toss Server Error");
+    TOSS_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "TS001", "Cannot confirm payment status with Toss. Please try again");
 
     private final HttpStatus httpStatus;
     private final String errorCode;

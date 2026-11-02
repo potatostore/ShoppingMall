@@ -7,6 +7,7 @@ import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,6 +19,8 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
+// 장바구니 항목(CartItem.product) 등 지연 로딩 프록시도 IN 쿼리로 묶어서 초기화
+@BatchSize(size = 100)
 @Entity
 @Table(name = TableNames.productTableName)
 @Getter
@@ -43,6 +46,8 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private Long stock;
 
+    // 목록 조회 시 컬렉션을 엔티티마다 따로 조회하지 않고 IN 쿼리로 묶음 (N+1 → 1+1)
+    @BatchSize(size = 100)
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "product")
     private List<ProductDetail> productDetailList;
 

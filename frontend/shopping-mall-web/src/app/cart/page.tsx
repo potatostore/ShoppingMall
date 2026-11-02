@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const cartApiUrl = `${CLIENT_API_URL}/carts`;
-const productApiUrl = `${CLIENT_API_URL}/products`;
 
 const CHECKOUT_ITEMS_KEY = "checkoutItems";
 
@@ -14,6 +13,8 @@ type CartItem = {
     cartItemId: number;
     productItemId: number;
     quantity: number;
+    productName: string;
+    productPrice: number;
 };
 
 type Cart = {
@@ -47,10 +48,7 @@ export default function CartPage() {
     useEffect(() => {
         const loadCart = async () => {
             try {
-                const [cartRes, productRes] = await Promise.all([
-                    authFetch(`${cartApiUrl}/me`),
-                    fetch(productApiUrl),
-                ]);
+                const cartRes = await authFetch(`${cartApiUrl}/me`);
 
                 if (!cartRes.ok) {
                     setError("장바구니를 불러오지 못했습니다. 로그인이 필요할 수 있습니다.");
@@ -58,7 +56,6 @@ export default function CartPage() {
                 }
 
                 const { data: cartData }: { data: Cart } = await cartRes.json();
-                const { data: productData } = await productRes.json();
 
                 setItems(
                     cartData.cartItemList.map((item) => ({
@@ -71,7 +68,14 @@ export default function CartPage() {
                 setOriginalQuantities(
                     new Map(cartData.cartItemList.map((item) => [item.cartItemId, item.quantity]))
                 );
-                setProducts(productData ?? []);
+                // 상품 목록 API가 페이지 단위로 바뀌어, 이름·가격은 장바구니 응답에 담긴 값을 사용
+                setProducts(
+                    cartData.cartItemList.map((item) => ({
+                        productId: item.productItemId,
+                        name: item.productName,
+                        price: item.productPrice,
+                    }))
+                );
             } catch {
                 setError("통신 오류가 발생했습니다.");
             } finally {

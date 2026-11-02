@@ -61,7 +61,7 @@ public class UserControllerTest {
         CartResponseDTO cartResponseDTO = CartResponseDTO.builder()
                 .userId(1L)
                 .cartItemList(List.of(
-                        new CartItemResponseDTO(1L, 1L, 1L)
+                        new CartItemResponseDTO(1L, 1L, 1L, "water", 20260907L)
                 ))
                 .totalCartPrice(20260907L)
                 .build();

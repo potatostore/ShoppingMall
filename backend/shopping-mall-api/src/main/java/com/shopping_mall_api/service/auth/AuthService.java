@@ -6,11 +6,12 @@ import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidTokenException;
-import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.global.security.JwtProvider;
+import com.shopping_mall_api.repository.redis.AccessTokenBlacklistRepository;
 import com.shopping_mall_api.repository.redis.RefreshTokenRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,18 +28,30 @@ import java.time.Duration;
 public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AccessTokenBlacklistRepository accessTokenBlacklistRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+
+    private String dummyEncodedPassword;
+
+    @PostConstruct
+    void initDummyPassword(){
+        this.dummyEncodedPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+    }
 
     @Transactional
     public LogInResponseDTO logIn(LogInRequestDTO logInRequestDTO){
         CheckConfig.npeCheck(logInRequestDTO, "logInRequestDTO");
 
-        User user = userRepository.findByEmail(logInRequestDTO.getEmail())
-                .orElseThrow(() -> new NotFoundException(ErrorCode.EMAIL_NOT_FOUND));
+        // 이메일 없음 / 비밀번호 불일치를 같은 401 메시지로 응답 → 응답으로 가입 여부를 알 수 없게 함
+        // 이메일이 없을 때도 BCrypt 비교를 한 번 수행해 응답 시간 차이로 가입 여부가 드러나지 않게 함
+        User user = userRepository.findByEmail(logInRequestDTO.getEmail()).orElse(null);
+        String encodedPassword = (user != null) ? user.getLogInPassword() : dummyEncodedPassword;
 
-        if(!passwordEncoder.matches(logInRequestDTO.getLogInPassword(), user.getLogInPassword())){
-            throw new UnmatchedPasswordException(ErrorCode.USER_PASSWORD_UNMATCHED);
+        boolean matched = passwordEncoder.matches(logInRequestDTO.getLogInPassword(), encodedPassword);
+
+        if(user == null || !matched){
+            throw new UnmatchedPasswordException(ErrorCode.LOGIN_FAILED);
         }
 
         return issueTokens(user);
@@ -71,10 +85,18 @@ public class AuthService {
     }
 
     // refresh token이 이미 만료·삭제된 경우에도 쿠키는 지워야 하므로 예외 없이 처리 (멱등)
-    public LogInResponseDTO logOut(Long userId){
+    // 지금 쓰던 access token은 만료 전까지 유효하므로 jti를 남은 시간만큼 블랙리스트에 올림
+    public LogInResponseDTO logOut(Long userId, String accessToken){
         CheckConfig.npeCheck(userId, "userId");
 
         refreshTokenRepository.delete(userId);
+
+        if(StringUtils.hasText(accessToken) && jwtProvider.checkValidationToken(accessToken)){
+            String jti = jwtProvider.getJtiFromToken(accessToken);
+            if(StringUtils.hasText(jti)){
+                accessTokenBlacklistRepository.add(jti, jwtProvider.getRemainingMillis(accessToken));
+            }
+        }
 
         return new LogInResponseDTO(
                 expiredCookie(JwtProvider.ACCESS_TOKEN_COOKIE),

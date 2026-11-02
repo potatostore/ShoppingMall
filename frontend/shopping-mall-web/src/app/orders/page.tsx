@@ -1,22 +1,36 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { SERVER_API_URL } from "@/lib/api";
+import { redirect } from "next/navigation";
+import { SERVER_API_URL, reissuePagePath } from "@/lib/api";
+import CancelOrderButton from "./CancelOrderButton";
 
 const orderApiUrl = `${SERVER_API_URL}/orders`;
 const productApiUrl = `${SERVER_API_URL}/products`;
 
 type OrderItem = {
     productId: number;
+    productName: string | null;
     curOrderItemPrice: number;
     quantity: number;
     totalOrderItemPrice: number;
 };
+
+type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELED" | "EXPIRED";
 
 type Order = {
     orderId: number;
     orderUid: number;
     orderItemResponseDTOList: OrderItem[];
     totalOrderPrice: number;
+    orderStatus: OrderStatus;
+};
+
+const STATUS_LABEL: Record<OrderStatus, string> = {
+    PENDING: "결제 대기",
+    PAID: "결제 완료",
+    FAILED: "결제 실패",
+    CANCELED: "취소됨",
+    EXPIRED: "결제 시간 만료",
 };
 
 type Product = {
@@ -25,7 +39,7 @@ type Product = {
     price: number;
 };
 
-async function getMyOrders(): Promise<Order[] | null> {
+async function getMyOrders(): Promise<{ status: number; orders: Order[] | null }> {
     const cookieStore = await cookies();
 
     const res = await fetch(`${orderApiUrl}/me`, {
@@ -34,26 +48,40 @@ async function getMyOrders(): Promise<Order[] | null> {
     });
 
     if (!res.ok) {
-        return null;
+        return { status: res.status, orders: null };
     }
 
     const { data } = await res.json();
-    return data;
+    return { status: res.status, orders: data };
 }
 
-async function getProducts(): Promise<Product[]> {
-    const res = await fetch(productApiUrl, { cache: "no-store" });
+// 상품명 스냅샷이 없는 예전 주문(productName null)만 상품을 단건 조회해 이름을 채움
+async function getProductsByIds(productIds: number[]): Promise<Product[]> {
+    const products = await Promise.all(
+        productIds.map(async (productId) => {
+            const res = await fetch(`${productApiUrl}/${productId}`, { cache: "no-store" });
+            if (!res.ok) {
+                return null;
+            }
+            const { data } = await res.json();
+            return data as Product;
+        })
+    );
+    return products.filter((product): product is Product => product !== null);
+}
 
-    if (!res.ok) {
-        return [];
+export default async function OrdersPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ reissued?: string }>;
+}) {
+    const { reissued } = await searchParams;
+    const { status, orders } = await getMyOrders();
+
+    // access token 만료(401)면 재발급 페이지를 거쳐 다시 돌아옴. 재발급 후에도 401이면 로그인 안내
+    if (status === 401 && !reissued) {
+        redirect(reissuePagePath("/orders"));
     }
-
-    const { data } = await res.json();
-    return data;
-}
-
-export default async function OrdersPage() {
-    const [orders, products] = await Promise.all([getMyOrders(), getProducts()]);
 
     if (!orders) {
         return (
@@ -66,6 +94,9 @@ export default async function OrdersPage() {
         );
     }
 
+    const missingNameIds = [...new Set(orders.flatMap((order) =>
+        order.orderItemResponseDTOList.filter((item) => !item.productName).map((item) => item.productId)))];
+    const products = await getProductsByIds(missingNameIds);
     const productMap = new Map(products.map((p) => [p.productId, p]));
 
     return (
@@ -78,7 +109,17 @@ export default async function OrdersPage() {
                 <ul className="space-y-6">
                     {orders.map((order) => (
                         <li key={order.orderId} className="rounded border border-zinc-200 p-5">
-                            <p className="mb-3 text-sm text-zinc-500">주문번호 {order.orderUid}</p>
+                            <div className="mb-3 flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-sm text-zinc-500">주문번호 {order.orderUid}</p>
+                                    <p className="mt-1 text-sm font-semibold text-zinc-900">
+                                        {STATUS_LABEL[order.orderStatus] ?? order.orderStatus}
+                                    </p>
+                                </div>
+                                {(order.orderStatus === "PENDING" || order.orderStatus === "PAID") && (
+                                    <CancelOrderButton orderId={order.orderId} paid={order.orderStatus === "PAID"} />
+                                )}
+                            </div>
 
                             <ul className="divide-y divide-zinc-100">
                                 {order.orderItemResponseDTOList.map((item) => {
@@ -86,7 +127,7 @@ export default async function OrdersPage() {
                                     return (
                                         <li key={item.productId} className="flex items-center justify-between py-2">
                                             <div>
-                                                <p className="font-medium">{product?.name ?? `상품 #${item.productId}`}</p>
+                                                <p className="font-medium">{item.productName ?? product?.name ?? `상품 #${item.productId}`}</p>
                                                 <p className="text-sm text-zinc-500">
                                                     {item.curOrderItemPrice.toLocaleString()}원 x {item.quantity}개
                                                 </p>

@@ -8,8 +8,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class JwtProviderTest {
-    private static final String KEY = "QfbFjwmdtdTkZjue1fJZkKjTXPJz2TkvPzZHvbAmsyk=";
-    private static final String OTHER_KEY = "bXlTZWNvbmRTZWNyZXRLZXlGb3JUZXN0aW5nT25seTEyMzQ=";
+    // 테스트 전용 키: 사람이 읽을 수 있는 문자열로 둬서 시크릿 스캐너가 실제 키로 오인하지 않게 함
+    // JwtProvider가 Base64로 디코딩하므로 영문·숫자 44자(4의 배수, 디코딩 33바이트 ≥ HS256 최소 32바이트)
+    private static final String KEY = "testOnlyJwtSecretKeyForUnitTestsNotForProd00";
+    private static final String OTHER_KEY = "otherJwtSecretKeyForForgedTokenTestsOnly0000";
 
     private JwtProvider jwtProvider;
 
@@ -69,5 +71,14 @@ class JwtProviderTest {
         // 같은 밀리초에 연속 발급해도 jti 덕분에 달라야 rotation 비교가 의미 있음
         assertThat(jwtProvider.createRefreshToken(1L, "USER"))
                 .isNotEqualTo(jwtProvider.createRefreshToken(1L, "USER"));
+    }
+
+    @Test
+    void accessTokenHasJtiAndRemainingTime(){
+        String access = jwtProvider.createAccessToken(1L, "USER");
+
+        assertThat(jwtProvider.getJtiFromToken(access)).isNotBlank();
+        assertThat(jwtProvider.getJtiFromToken(access)).isNotEqualTo(jwtProvider.getJtiFromToken(jwtProvider.createAccessToken(1L, "USER")));
+        assertThat(jwtProvider.getRemainingMillis(access)).isBetween(1L, 60_000L);
     }
 }

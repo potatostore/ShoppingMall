@@ -2,6 +2,8 @@ package com.shopping_mall_api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shopping_mall_api.dto.product.ProductCreateDTO;
+import com.shopping_mall_api.dto.product.ProductPageResponseDTO;
+import com.shopping_mall_api.dto.product.ProductSortType;
 import com.shopping_mall_api.dto.product.ProductResponseDTO;
 import com.shopping_mall_api.dto.product.ProductUpdateDTO;
 import com.shopping_mall_api.dto.product.productDetail.ProductDetailCreateDTO;
@@ -104,15 +106,46 @@ public class ProductControllerTest {
                 100L
         );
 
-        when(productService.getProducts()).thenReturn(List.of(productResponseDTO));
+        ProductPageResponseDTO page = new ProductPageResponseDTO(List.of(productResponseDTO), 0, 20, 1L, 1, false);
+
+        when(productService.getProducts(null, null, null, ProductSortType.LATEST, 0, 20)).thenReturn(page);
 
         mockMvc.perform(get(ApiURLNames.productURL + ApiURLNames.findProductsURL))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message").value("Success : get all products"))
-                .andExpect(jsonPath("$.data[0].name").value("water"))
-                .andExpect(jsonPath("$.data[0].price").value(20260907L))
-                .andExpect(jsonPath("$.data[0].productDetailResponseDTOList[0].detail").value("product-test-detail"));
+                .andExpect(jsonPath("$.data.content[0].name").value("water"))
+                .andExpect(jsonPath("$.data.content[0].price").value(20260907L))
+                .andExpect(jsonPath("$.data.content[0].productDetailResponseDTOList[0].detail").value("product-test-detail"))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.hasNext").value(false));
+    }
+
+    @Test
+    void getProducts_withSearchParamsTest() throws Exception{
+        when(productService.getProducts("감자", 1000L, 5000L, ProductSortType.PRICE_ASC, 2, 10))
+                .thenReturn(new ProductPageResponseDTO(List.of(), 2, 10, 0L, 0, false));
+
+        mockMvc.perform(get(ApiURLNames.productURL + ApiURLNames.findProductsURL)
+                        .param("keyword", "감자")
+                        .param("minPrice", "1000")
+                        .param("maxPrice", "5000")
+                        .param("sort", "PRICE_ASC")
+                        .param("page", "2")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page").value(2));
+
+        verify(productService).getProducts("감자", 1000L, 5000L, ProductSortType.PRICE_ASC, 2, 10);
+    }
+
+    @Test
+    void getProducts_invalidSortTest() throws Exception{
+        // 정의되지 않은 정렬 값은 타입 변환 실패로 400
+        mockMvc.perform(get(ApiURLNames.productURL + ApiURLNames.findProductsURL).param("sort", "RANDOM"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(productService);
     }
 
     @Test

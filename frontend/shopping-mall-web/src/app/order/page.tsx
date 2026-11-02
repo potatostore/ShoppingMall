@@ -48,11 +48,20 @@ export default function OrderPage() {
                     return;
                 }
 
-                const productRes = await fetch(productApiUrl);
-                const { data: productData } = await productRes.json();
+                // 결제할 상품만 단건 조회 (상품 목록 API는 페이지 단위라 전체를 받을 수 없음)
+                const productList = await Promise.all(
+                    parsed.map(async (item) => {
+                        const res = await fetch(`${productApiUrl}/${item.productId}`);
+                        if (!res.ok) {
+                            return null;
+                        }
+                        const { data } = await res.json();
+                        return data as Product;
+                    })
+                );
 
                 setCheckoutItems(parsed);
-                setProducts(productData ?? []);
+                setProducts(productList.filter((product): product is Product => product !== null));
             } catch {
                 setError("통신 오류가 발생했습니다.");
             } finally {

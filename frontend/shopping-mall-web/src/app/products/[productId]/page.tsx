@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddToCartForm from "./AddToCartForm";
+import LikeButton from "./LikeButton";
 import { SERVER_API_URL } from "@/lib/api";
 
 const productApiUrl = `${SERVER_API_URL}/products`;
@@ -78,6 +79,8 @@ export default async function ProductDetailPage({
                             </ul>
                         </div>
                     )}
+
+                    <LikeButton productId={product.productId} />
 
                     {product.stock > 0 && <AddToCartForm productId={product.productId} price={product.price} />}
                 </div>

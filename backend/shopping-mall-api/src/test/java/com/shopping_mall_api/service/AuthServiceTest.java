@@ -3,10 +3,11 @@ package com.shopping_mall_api.service;
 import com.shopping_mall_api.dto.auth.LogInRequestDTO;
 import com.shopping_mall_api.dto.auth.LogInResponseDTO;
 import com.shopping_mall_api.entity.user.User;
+import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidTokenException;
-import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.global.security.JwtProvider;
+import com.shopping_mall_api.repository.redis.AccessTokenBlacklistRepository;
 import com.shopping_mall_api.repository.redis.RefreshTokenRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.auth.AuthService;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.*;
 public class AuthServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private AccessTokenBlacklistRepository accessTokenBlacklistRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtProvider jwtProvider;
 
@@ -91,7 +93,10 @@ public class AuthServiceTest {
 
         when(userRepository.findByEmail("1111@gmail.com")).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> authService.logIn(logInRequestDTO));
+        UnmatchedPasswordException e = assertThrows(UnmatchedPasswordException.class, () -> authService.logIn(logInRequestDTO));
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.LOGIN_FAILED);
+        // 이메일이 없어도 비밀번호 비교를 수행 (응답 시간으로 가입 여부 노출 방지)
+        verify(passwordEncoder).matches(eq("encodedPassword"), any());
     }
 
     @Test
@@ -112,16 +117,41 @@ public class AuthServiceTest {
 
         when(userRepository.findByEmail("qwer1234@gmail.com")).thenReturn(Optional.of(existUser));
 
-        assertThrows(UnmatchedPasswordException.class, () -> authService.logIn(logInRequestDTO));
+        UnmatchedPasswordException e = assertThrows(UnmatchedPasswordException.class, () -> authService.logIn(logInRequestDTO));
+        // 이메일 없음과 같은 에러 코드·메시지
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.LOGIN_FAILED);
     }
 
     @Test
     void logOut_successTest(){
-        LogInResponseDTO result = authService.logOut(1L);
+        LogInResponseDTO result = authService.logOut(1L, null);
 
         verify(refreshTokenRepository).delete(1L);
         assertThat(result.accessTokenCookie().getMaxAge()).isEqualTo(Duration.ZERO);
         assertThat(result.refreshTokenCookie().getMaxAge()).isEqualTo(Duration.ZERO);
+    }
+
+    @Test
+    void logOut_blacklistsCurrentAccessTokenTest(){
+        when(jwtProvider.checkValidationToken("access")).thenReturn(true);
+        when(jwtProvider.getJtiFromToken("access")).thenReturn("jti-1");
+        when(jwtProvider.getRemainingMillis("access")).thenReturn(120_000L);
+
+        authService.logOut(1L, "access");
+
+        verify(refreshTokenRepository).delete(1L);
+        // 남은 만료 시간만큼만 블랙리스트에 보관
+        verify(accessTokenBlacklistRepository).add("jti-1", 120_000L);
+    }
+
+    @Test
+    void logOut_invalidAccessTokenSkipsBlacklistTest(){
+        when(jwtProvider.checkValidationToken("expired")).thenReturn(false);
+
+        authService.logOut(1L, "expired");
+
+        verify(refreshTokenRepository).delete(1L);
+        verifyNoInteractions(accessTokenBlacklistRepository);
     }
 
     private User reissueUser(){
