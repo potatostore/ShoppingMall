@@ -2,12 +2,14 @@ package com.shopping_mall_api.dto.order.orderItem;
 
 import com.shopping_mall_api.entity.order.OrderItem;
 import com.shopping_mall_api.global.config.CheckConfig;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class OrderItemResponseDTO {
     private Long productId;
     private Long curOrderItemPrice;

@@ -28,7 +28,7 @@ type Product = {
 async function getMyOrders(): Promise<Order[] | null> {
     const cookieStore = await cookies();
 
-    const res = await fetch(`${orderApiUrl}/user/me`, {
+    const res = await fetch(`${orderApiUrl}/me`, {
         cache: "no-store",
         headers: { Cookie: cookieStore.toString() },
     });
