@@ -60,7 +60,7 @@ public class UserController {
 
     @PatchMapping(ApiURLNames.updateUserURL)
     public ResponseEntity<ApiResponse<UserResponseDTO>> patchUser(
-            @AuthenticationPrincipal Long userId, @Valid @RequestBody UserUpdateDTO userUpdateDTO
+            @AuthenticationPrincipal Long userId, @RequestBody @Valid UserUpdateDTO userUpdateDTO
     ){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch user info (" + userId + ")",

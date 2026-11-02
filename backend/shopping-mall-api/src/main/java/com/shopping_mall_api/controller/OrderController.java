@@ -24,7 +24,7 @@ public class OrderController {
 
     @PostMapping(ApiURLNames.createOrderURL)
     public ResponseEntity<ApiResponse<OrderResponseDTO>> createOrder(
-            @AuthenticationPrincipal Long userId, @Valid @RequestBody OrderCreateDTO orderCreateDTO){
+            @AuthenticationPrincipal Long userId, @RequestBody @Valid OrderCreateDTO orderCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : create order",
                 orderService.createOrder(userId, orderCreateDTO)
@@ -69,7 +69,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponseDTO>> patchOrder(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long orderId,
-            @Valid @RequestBody OrderUpdateDTO orderUpdateDTO){
+            @RequestBody @Valid OrderUpdateDTO orderUpdateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch order (" + orderId + ")",
                 orderService.patchOrder(userId, orderId, orderUpdateDTO)

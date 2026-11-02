@@ -25,9 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -88,6 +86,25 @@ public class OrderControllerTest {
     }
 
     @Test
+    void createOrder_EmptyOrderItemListTest() throws Exception{
+        OrderResponseDTO orderResponseDTO = new OrderResponseDTO(
+                1L,
+                1L,
+                List.of(),
+                20260908L
+        );
+
+        mockMvc.perform(post(ApiURLNames.orderURL + ApiURLNames.createOrderURL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(orderResponseDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("orderItemCreateDTOList must have 1 orderItemCreateDTO at least"));
+
+        verifyNoInteractions(orderService);
+    }
+
+    @Test
     void authTossPayment_successTest() throws Exception{
         Long orderId = 1L;
         Long productId = 1L;
@@ -123,6 +140,24 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.data.orderItemResponseDTOList[0].quantity").value(1L))
                 .andExpect(jsonPath("$.data.orderItemResponseDTOList[0].totalOrderItemPrice").value(20260908L))
                 .andExpect(jsonPath("$.data.totalOrderPrice").value(20260908L));
+    }
+
+    @Test
+    void authTossPaymentOrder_InvalidAmountTest() throws Exception{
+        TossPaymentRequestDTO tossPaymentRequestDTO = TossPaymentRequestDTO.builder()
+                .paymentKey("test-payment-key")
+                .orderId(1L)
+                .amount(-1L)
+                .build();
+
+        mockMvc.perform(post(ApiURLNames.orderURL + ApiURLNames.tossPaymentAuthURL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(tossPaymentRequestDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("amount must be at least 0"));
+
+        verifyNoInteractions(orderService);
     }
 
     @Test
@@ -281,6 +316,27 @@ public class OrderControllerTest {
     }
 
     @Test
+    void patchOrder_InvalidQuantityTest() throws Exception{
+        OrderItemUpdateDTO orderItemUpdateDTO = OrderItemUpdateDTO.builder()
+                .productId(1L)
+                .quantity(-1L)
+                .build();
+
+        OrderUpdateDTO orderUpdateDTO = OrderUpdateDTO.builder()
+                .orderItemResponseDTOList(List.of(orderItemUpdateDTO))
+                .build();
+
+        mockMvc.perform(patch(ApiURLNames.orderURL + ApiURLNames.updateOrderURL, 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderUpdateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("quantity must be at least 1"));
+
+        verifyNoInteractions(orderService);
+    }
+
+    @Test
     void deleteOrder_successTest() throws Exception{
         Long orderId = 1L;
 
@@ -291,18 +347,4 @@ public class OrderControllerTest {
         verify(orderService).deleteOrder(orderId);
     }
 
-    @Test
-    void patchOrder_inValidNestedItemTest() throws Exception{
-        String body = """
-                {"orderItemResponseDTOList": [{"productId": 1, "quantity": 0}]}
-                """;
-
-        mockMvc.perform(patch(ApiURLNames.orderURL + ApiURLNames.updateOrderURL, 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("quantity must be at least 1"));
-
-        verify(orderService, never()).patchOrder(any(), any(), any());
-    }
 }
