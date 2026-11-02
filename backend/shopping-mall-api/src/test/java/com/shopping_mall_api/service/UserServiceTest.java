@@ -42,7 +42,6 @@ public class UserServiceTest {
                 .signUpName("김민준")
                 .signUpEmail("qwer1234@gmail.com")
                 .signUpPassword("qwer1234")
-                .signUpRole("USER")
                 .signUpPhoneNumber("01011111111")
                 .signUpBirthday(LocalDate.of(2026, 8, 27))
                 .build();
@@ -68,6 +67,7 @@ public class UserServiceTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getLogInPassword()).isEqualTo("encodedPassword");
+        assertThat(userCaptor.getValue().getRole()).isEqualTo("USER");
 
         verify(cartService).createCart(any());
     }

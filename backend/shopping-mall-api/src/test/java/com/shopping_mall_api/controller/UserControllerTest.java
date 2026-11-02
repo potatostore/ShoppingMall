@@ -47,7 +47,6 @@ public class UserControllerTest {
                 .signUpName("김민준")
                 .signUpEmail("1111@gmail.com")
                 .signUpPassword("qwer1234")
-                .signUpRole("USER")
                 .signUpPhoneNumber("01011111111")
                 .signUpBirthday(LocalDate.of(2026,9,7))
                 .build();;
@@ -97,7 +96,6 @@ public class UserControllerTest {
                   "signUpName": "김민준",
                   "signUpEmail": "",
                   "signUpPassword": "qwer1234",
-                  "signUpRole": "USER",
                   "signUpPhoneNumber": "01011111111",
                   "signUpBirthday": "2026-09-07"
                 }

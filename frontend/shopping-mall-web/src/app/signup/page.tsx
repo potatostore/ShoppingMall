@@ -15,7 +15,6 @@ export default function SignUpPage() {
     const [signUpName, setSignUpName] = useState<string>('');
     const [signUpEmail, setSignUpEmail] = useState<string>('');
     const [signUpPassword, setSignUpPassword] = useState<string>('');
-    const [signUpRole, setSignUpRole] = useState<string>('');
     const [signUpPhoneNumber, setSignUpPhoneNumber] = useState<string>('');
     const [signUpBirthday, setSignUpBirthday] = useState<string>('');
 
@@ -24,7 +23,6 @@ export default function SignUpPage() {
             signUpName,
             signUpEmail,
             signUpPassword,
-            signUpRole,
             signUpPhoneNumber,
             signUpBirthday,
         };
@@ -91,11 +89,6 @@ export default function SignUpPage() {
                         placeholder="Password"
                         value={signUpPassword}
                         onChange={(e) => setSignUpPassword(e.target.value)}></input>
-                    <input
-                        type="text"
-                        placeholder="Role"
-                        value={signUpRole}
-                        onChange={(e) => setSignUpRole(e.target.value)}></input>
                     <input
                         type="text"
                         placeholder="name"

@@ -25,9 +25,6 @@ public class UserCreateDTO {
     @NotBlank(message = "logInPassword must not be blank")
     private String signUpPassword;
 
-    @NotBlank
-    private String signUpRole;
-
     @NotBlank(message = "phoneNumber must not be blank")
     private String signUpPhoneNumber;
 

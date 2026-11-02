@@ -7,6 +7,7 @@ import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.config.CheckConfig;
+import com.shopping_mall_api.global.constant.RoleNames;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.repository.user.UserRepository;
@@ -35,7 +36,7 @@ public class UserService {
                 .email(userCreateDTO.getSignUpEmail())
                 .logInPassword(passwordEncoder.encode(userCreateDTO.getSignUpPassword()))
                 .name(userCreateDTO.getSignUpName())
-                .role(userCreateDTO.getSignUpRole())
+                .role(RoleNames.USER)
                 .phoneNumber(userCreateDTO.getSignUpPhoneNumber())
                 .birthday(userCreateDTO.getSignUpBirthday())
                 .build();
