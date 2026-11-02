@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -90,8 +91,26 @@ public class UserControllerTest {
     }
 
     @Test
-    void createUser_inValidTest(){
-        String body = ""
+    void createUser_inValidTest() throws Exception{
+        String body = """
+                {
+                  "signUpName": "김민준",
+                  "signUpEmail": "",
+                  "signUpPassword": "qwer1234",
+                  "signUpRole": "USER",
+                  "signUpPhoneNumber": "01011111111",
+                  "signUpBirthday": "2026-09-07"
+                }
+                """;
+
+        mockMvc.perform(post(ApiURLNames.userURL + ApiURLNames.createUserURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("email must not be blank"));
+
+        verify(userService, never()).createUser(any(UserCreateDTO.class));
     }
 
     @Test
