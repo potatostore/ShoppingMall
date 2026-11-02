@@ -10,6 +10,8 @@ import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.annotations.BatchSize;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -43,8 +45,11 @@ public class Order extends BaseEntity {
     private List<OrderItem> orderItemList;
 
     // ORDINAL(기본값)은 enum 순서가 바뀌면 기존 데이터 의미가 바뀌므로 문자열로 저장
+    // Hibernate 6.2+는 MySQL에서 STRING enum을 enum('PENDING',...) 타입 컬럼으로 만들어, 상태를 추가하면 기존 컬럼에 저장이 실패함
+    // → VARCHAR로 고정해 상태 추가 시 스키마 변경이 필요 없게 함
     @NotNull
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20)
     private OrderStatus orderStatus;
 
