@@ -10,6 +10,7 @@ import com.shopping_mall_api.dto.payment.toss.response.Payment;
 import com.shopping_mall_api.dto.payment.toss.response.TossError;
 import com.shopping_mall_api.dto.payment.toss.response.TossResponse;
 import com.shopping_mall_api.dto.product.productDetail.ProductDetailCreateDTO;
+import com.shopping_mall_api.entity.cart.Cart;
 import com.shopping_mall_api.entity.order.Order;
 import com.shopping_mall_api.entity.order.OrderItem;
 import com.shopping_mall_api.entity.order.OrderStatus;
@@ -21,6 +22,7 @@ import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.OutOfStockException;
 import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.global.exception.UnmatchedPriceException;
+import com.shopping_mall_api.repository.cart.CartRepository;
 import com.shopping_mall_api.repository.order.OrderRepository;
 import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
@@ -50,6 +52,7 @@ public class OrderServiceTest {
     @Mock private OrderRepository orderRepository;
     @Mock private UserRepository userRepository;
     @Mock private ProductRepository productRepository;
+    @Mock private CartRepository cartRepository;
     @Mock private TossClient tossClient;
 
     @InjectMocks private OrderService orderService;
@@ -195,6 +198,50 @@ public class OrderServiceTest {
         assertThat(result.getOrderItemResponseDTOList().getFirst().getCurOrderItemPrice()).isEqualTo(20260901L);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getQuantity()).isEqualTo(1L);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getCurOrderItemPrice()).isEqualTo(20260901L);
+    }
+
+    @Test
+    void authTossPayment_removesPaidItemsFromCartTest(){
+        Cart cart = Cart.builder().userId(1L).build();
+        cart.addCartItemInCart(createProduct(1L, 1000L), 1L);
+        cart.addCartItemInCart(createProduct(2L, 3000L), 2L);
+
+        Order existOrder = Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 1000L, 1L)))
+                .orderStatus(OrderStatus.PENDING)
+                .build();
+
+        TossPaymentRequestDTO tossPaymentRequestDTO = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 1000L);
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.confirm(tossPaymentRequestDTO)).thenReturn(mock(Payment.class));
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+
+        orderService.authTossPayment(tossPaymentRequestDTO);
+
+        // 결제한 1번 상품만 빠지고, 주문하지 않은 2번 상품은 남음
+        assertThat(cart.getCartItemList())
+                .extracting(cartItem -> cartItem.getProduct().getProductId())
+                .containsExactly(2L);
+        assertThat(cart.getTotalCartPrice()).isEqualTo(6000L);
+    }
+
+    @Test
+    void authTossPayment_tossErrorKeepsCartTest(){
+        Order existOrder = Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 1000L, 1L)))
+                .orderStatus(OrderStatus.PENDING)
+                .build();
+
+        TossPaymentRequestDTO tossPaymentRequestDTO = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 1000L);
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.confirm(tossPaymentRequestDTO)).thenReturn(mock(TossError.class));
+
+        assertThrows(PaymentException.class, () -> orderService.authTossPayment(tossPaymentRequestDTO));
+        verify(cartRepository, never()).findByUserId(any());
     }
 
     @Test

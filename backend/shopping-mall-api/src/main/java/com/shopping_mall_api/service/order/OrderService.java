@@ -21,6 +21,7 @@ import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.OutOfStockException;
 import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.global.exception.UnmatchedPriceException;
+import com.shopping_mall_api.repository.cart.CartRepository;
 import com.shopping_mall_api.repository.order.OrderRepository;
 import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
@@ -42,6 +43,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final CartRepository cartRepository;
 
     private final TossClient tossClient;
 
@@ -122,6 +124,7 @@ public class OrderService {
         switch(tossResponse){
             case Payment payment ->{
                 tossOrder.completePayment();
+                removeOrderedItemsFromCart(tossOrder);
             }
             case TossError tossError ->{
                 tossOrder.failPayment();
@@ -210,6 +213,13 @@ public class OrderService {
         }
 
         orderRepository.deleteById(orderId);
+    }
+
+    // 결제가 끝난 상품만 장바구니에서 제거 (주문 생성 시점에 지우면 결제 실패·이탈 시 장바구니가 비어 버림)
+    private void removeOrderedItemsFromCart(Order order){
+        cartRepository.findByUserId(order.getUser().getUserId())
+                .ifPresent(cart -> order.getOrderItemList()
+                        .forEach(item -> cart.deleteCartItem(item.getProductId())));
     }
 
     private void decreaseStock(Long productId, Long quantity){

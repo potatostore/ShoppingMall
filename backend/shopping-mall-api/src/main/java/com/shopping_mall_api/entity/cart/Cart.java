@@ -101,5 +101,7 @@ public class Cart extends BaseEntity {
         CheckConfig.npeCheck(productId, "productId");
 
         this.cartItemList.removeIf(cartItem -> cartItem.getProduct().getProductId().equals(productId));
+
+        updateTotalCartPrice();
     }
 }
