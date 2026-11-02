@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -288,5 +289,20 @@ public class OrderControllerTest {
                 .andExpect(content().string(""));
 
         verify(orderService).deleteOrder(orderId);
+    }
+
+    @Test
+    void patchOrder_inValidNestedItemTest() throws Exception{
+        String body = """
+                {"orderItemResponseDTOList": [{"productId": 1, "quantity": 0}]}
+                """;
+
+        mockMvc.perform(patch(ApiURLNames.orderURL + ApiURLNames.updateOrderURL, 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("quantity must be at least 1"));
+
+        verify(orderService, never()).patchOrder(any(), any(), any());
     }
 }

@@ -3,6 +3,7 @@ package com.shopping_mall_api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shopping_mall_api.dto.cart.CartResponseDTO;
 import com.shopping_mall_api.dto.cart.CartUpdateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemUpdateDTO;
 import com.shopping_mall_api.dto.cart.cartItem.CartItemCreateDTO;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.service.cart.CartService;
@@ -24,6 +25,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -123,7 +125,7 @@ public class CartControllerTest {
                 .build();
 
         CartUpdateDTO cartUpdateDTO = CartUpdateDTO.builder()
-                        .cartItemUpdateDTOList(List.of())
+                        .cartItemUpdateDTOList(List.of(new CartItemUpdateDTO(1L, 2L)))
                         .build();
 
         when(cartService.patchCart(eq(userId), any(CartUpdateDTO.class))).thenReturn(cartResponseDTO);
@@ -179,5 +181,36 @@ public class CartControllerTest {
         } finally {
             SecurityContextHolder.clearContext();
         }
+    }
+
+    @Test
+    void addCartItemInCart_inValidTest() throws Exception{
+        String body = """
+                {"productId": 1, "quantity": 0}
+                """;
+
+        mockMvc.perform(post(ApiURLNames.cartURL + ApiURLNames.addCartItemInCartURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("quantity는 최소 1개 이상이여야 합니다."));
+
+        verify(cartService, never()).addCartItemInCart(any(), any());
+    }
+
+    @Test
+    void patchCart_inValidNestedItemTest() throws Exception{
+        String body = """
+                {"cartItemUpdateDTOList": [{"productId": 1, "quantity": 0}]}
+                """;
+
+        mockMvc.perform(patch(ApiURLNames.cartURL + ApiURLNames.updateCartURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("product quantity must be at least 1"));
+
+        verify(cartService, never()).patchCart(any(), any());
     }
 }

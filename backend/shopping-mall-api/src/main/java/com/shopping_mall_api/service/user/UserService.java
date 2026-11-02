@@ -121,7 +121,7 @@ public class UserService {
     }
 
     private void checkEmailChangeable(User user, String newEmail){
-        if(newEmail != null && !newEmail.equals(user.getEmail())){
+        if(newEmail != null && !newEmail.isBlank() && !newEmail.equals(user.getEmail())){
             checkDuplicateEmail(newEmail);
         }
     }

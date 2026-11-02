@@ -24,6 +24,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -155,5 +156,36 @@ public class ProductControllerTest {
                 .andExpect(content().string(""));
 
         verify(productService).deleteProduct(productId);
+    }
+
+    @Test
+    void createProduct_inValidTest() throws Exception{
+        String body = """
+                {"name": " ", "price": 1000, "productDetailCreateDTOList": [{"detail": "detail"}]}
+                """;
+
+        mockMvc.perform(post(ApiURLNames.productURL + ApiURLNames.createProductURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("product name must not be blank"));
+
+        verify(productService, never()).createProduct(any());
+    }
+
+    @Test
+    void createProduct_emptyDetailListTest() throws Exception{
+        String body = """
+                {"name": "감자", "price": 1000, "productDetailCreateDTOList": []}
+                """;
+
+        mockMvc.perform(post(ApiURLNames.productURL + ApiURLNames.createProductURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("productDetailCreateDTOList must have 1 productDetailCreateDTO at least"));
+
+        verify(productService, never()).createProduct(any());
     }
 }

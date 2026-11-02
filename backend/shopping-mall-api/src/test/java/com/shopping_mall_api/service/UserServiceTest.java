@@ -166,6 +166,30 @@ public class UserServiceTest {
     }
 
     @Test
+    void patchUserBlankValueIgnoredTest(){
+        User existUser = User.builder()
+                .email("qwer1234@gmail.com")
+                .logInPassword("encodedPassword")
+                .name("김민준")
+                .role("USER")
+                .phoneNumber("01011111111")
+                .birthday(LocalDate.of(2026, 8, 27))
+                .build();
+
+        UserUpdateDTO updateUserDTO = UserUpdateDTO.builder()
+                .name(" ")
+                .email("")
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existUser));
+
+        UserResponseDTO result = userService.patchUserInfo(1L, updateUserDTO);
+
+        assertThat(result.getName()).isEqualTo("김민준");
+        assertThat(result.getEmail()).isEqualTo("qwer1234@gmail.com");
+    }
+
+    @Test
     void patchUserNotFoundExceptionTest(){
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 

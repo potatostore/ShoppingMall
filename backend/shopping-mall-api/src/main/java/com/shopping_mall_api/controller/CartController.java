@@ -25,7 +25,7 @@ public class CartController {
 
     @PostMapping(ApiURLNames.addCartItemInCartURL)
     public ResponseEntity<ApiResponse<CartResponseDTO>> addCartItemInCart(
-            @AuthenticationPrincipal Long userId, @RequestBody CartItemCreateDTO cartItemCreateDTO){
+            @AuthenticationPrincipal Long userId, @Valid @RequestBody CartItemCreateDTO cartItemCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : add cartItem in cart",
                 cartService.addCartItemInCart(userId, cartItemCreateDTO)
