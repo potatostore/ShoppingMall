@@ -7,19 +7,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+// 주문 수정은 수량만 가능. 가격은 주문 시점 가격(OrderItem.curOrderItemPrice)을 유지
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class OrderItemUpdateDTO {
-    @NotNull
+    @NotNull(message = "productId must not be null")
     private Long productId;
 
-    @NotNull
-    @Min(value = 0)
-    private Long curOrderItemPrice;
-
-    @NotNull
-    @Min(value = 1)
+    @NotNull(message = "quantity must not be null")
+    @Min(value = 1, message = "quantity must be at least 1")
     private Long quantity;
 }

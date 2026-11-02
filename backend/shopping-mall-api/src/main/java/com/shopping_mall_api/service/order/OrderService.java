@@ -3,12 +3,15 @@ package com.shopping_mall_api.service.order;
 import com.shopping_mall_api.dto.order.OrderCreateDTO;
 import com.shopping_mall_api.dto.order.OrderResponseDTO;
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
+import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
 import com.shopping_mall_api.dto.payment.toss.TossPaymentRequestDTO;
 import com.shopping_mall_api.dto.payment.toss.response.Payment;
 import com.shopping_mall_api.dto.payment.toss.response.TossError;
 import com.shopping_mall_api.dto.payment.toss.response.TossResponse;
 import com.shopping_mall_api.entity.order.Order;
+import com.shopping_mall_api.entity.order.OrderItem;
 import com.shopping_mall_api.entity.order.OrderStatus;
+import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.client.toss.TossClient;
 import com.shopping_mall_api.global.config.CheckConfig;
@@ -23,7 +26,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,18 +50,39 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
 
-        // 주문 생성 전 재고 확인
-        // orderCreateDTO curItemPrice필드를 제거하고, 상품 가격은 조회 후 기입
+        // 같은 상품이 여러 줄로 오면 수량을 합침 (OrderItem은 productId 기준으로 수정되므로 중복 불가)
+        Map<Long, Long> quantityByProductId = new TreeMap<>();
+        for(OrderItemCreateDTO dto : orderCreateDTO.getOrderItemCreateDTOList()){
+            quantityByProductId.merge(dto.getProductId(), dto.getQuantity(), Long::sum);
+        }
+
+        Map<Long, Product> productMap = productRepository.findAllById(quantityByProductId.keySet()).stream()
+                .collect(Collectors.toMap(Product::getProductId, product -> product));
+
+        // 가격은 클라이언트 값이 아니라 주문 시점의 Product.price로 기록 → 토스 승인 금액 대조의 기준
+        List<OrderItem> orderItemList = new ArrayList<>();
+        for(Map.Entry<Long, Long> entry : quantityByProductId.entrySet()){
+            Product product = productMap.get(entry.getKey());
+
+            if(product == null){
+                throw new NotFoundException(ErrorCode.PRODUCT_NOT_FOUND, "Cannot Found Product (" + entry.getKey() + ")");
+            }
+
+            orderItemList.add(OrderItem.builder()
+                    .productId(product.getProductId())
+                    .curOrderItemPrice(product.getPrice())
+                    .quantity(entry.getValue())
+                    .build());
+        }
+
+        // 재고 차감 로직 추가
+        // 쿠폰 및 포인트 차감 로직
 
         Order createOrder = Order.builder()
                 .user(user)
-                .orderItemCreateDTOList(orderCreateDTO.getOrderItemCreateDTOList())
+                .orderItemList(orderItemList)
                 .orderStatus(OrderStatus.PENDING)
                 .build();
-
-        // 주문 생성 시 장바구니에서 해당 상품 제거 로직
-        // 재고 차감 로직 추가
-        // 쿠폰 및 포인트 차감 로직
 
         orderRepository.save(createOrder);
 

@@ -50,7 +50,6 @@ public class OrderControllerTest {
         OrderItemCreateDTO orderItemCreateDTO = OrderItemCreateDTO.builder()
                 .productId(productId)
                 .quantity(1L)
-                .curOrderItemPrice(20260908L)
                 .build();
 
         OrderCreateDTO orderCreateDTO = OrderCreateDTO.builder()
@@ -256,7 +255,6 @@ public class OrderControllerTest {
 
         OrderItemUpdateDTO orderItemUpdateDTO = OrderItemUpdateDTO.builder()
                 .productId(productId)
-                .curOrderItemPrice(20260908L)
                 .quantity(1L)
                 .build();
 

@@ -7,28 +7,23 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+// 상품 가격은 클라이언트가 보내지 않음: 서버가 Product에서 조회해 OrderItem.curOrderItemPrice에 기록
 @Getter
 @NoArgsConstructor
 public class OrderItemCreateDTO {
     @NotNull(message = "productId must not be null")
     private Long productId;
 
-    @NotNull(message = "curOrderItemPrice must not be null")
-    @Min(value = 0, message = "curOrderItemPrice must not be negative")
-    private Long curOrderItemPrice;
-
     @NotNull(message = "quantity must not be null")
-    @Min(value = 0, message = "quantity must not be negative")
+    @Min(value = 1, message = "quantity must be at least 1")
     private Long quantity;
 
     @Builder
-    public OrderItemCreateDTO(Long productId, Long curOrderItemPrice, Long quantity){
+    public OrderItemCreateDTO(Long productId, Long quantity){
         CheckConfig.npeCheck(productId, "productId");
-        CheckConfig.npeAndNegativeCheck(curOrderItemPrice, "curOrderItemPrice");
         CheckConfig.npeAndNegativeCheck(quantity, "quantity");
 
         this.productId = productId;
-        this.curOrderItemPrice = curOrderItemPrice;
         this.quantity = quantity;
     }
 }
