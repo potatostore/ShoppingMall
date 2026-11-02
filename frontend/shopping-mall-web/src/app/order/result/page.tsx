@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CLIENT_API_URL } from "@/lib/api";
+import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const tossAuthUrl = `${CLIENT_API_URL}/orders/toss/payment/auth`;
 
@@ -26,9 +26,8 @@ function OrderResultContent() {
 
         setStatus("confirming");
         try {
-            const response = await fetch(tossAuthUrl, {
+            const response = await authFetch(tossAuthUrl, {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ paymentKey, orderId: Number(orderId), amount: Number(amount) }),
             });

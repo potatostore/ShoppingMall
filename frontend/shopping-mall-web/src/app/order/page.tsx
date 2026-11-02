@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CLIENT_API_URL } from "@/lib/api";
+import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const productApiUrl = `${CLIENT_API_URL}/products`;
 const orderApiUrl = `${CLIENT_API_URL}/orders`;
@@ -100,9 +100,8 @@ export default function OrderPage() {
                 quantity: item.quantity,
             }));
 
-            const response = await fetch(orderApiUrl, {
+            const response = await authFetch(orderApiUrl, {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ orderItemCreateDTOList }),
             });
