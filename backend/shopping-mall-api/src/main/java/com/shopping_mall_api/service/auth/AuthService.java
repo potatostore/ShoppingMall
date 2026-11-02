@@ -6,11 +6,11 @@ import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidTokenException;
-import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.global.security.JwtProvider;
 import com.shopping_mall_api.repository.redis.RefreshTokenRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,15 +30,26 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
+    private String dummyEncodedPassword;
+
+    @PostConstruct
+    void initDummyPassword(){
+        this.dummyEncodedPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+    }
+
     @Transactional
     public LogInResponseDTO logIn(LogInRequestDTO logInRequestDTO){
         CheckConfig.npeCheck(logInRequestDTO, "logInRequestDTO");
 
-        User user = userRepository.findByEmail(logInRequestDTO.getEmail())
-                .orElseThrow(() -> new NotFoundException(ErrorCode.EMAIL_NOT_FOUND));
+        // 이메일 없음 / 비밀번호 불일치를 같은 401 메시지로 응답 → 응답으로 가입 여부를 알 수 없게 함
+        // 이메일이 없을 때도 BCrypt 비교를 한 번 수행해 응답 시간 차이로 가입 여부가 드러나지 않게 함
+        User user = userRepository.findByEmail(logInRequestDTO.getEmail()).orElse(null);
+        String encodedPassword = (user != null) ? user.getLogInPassword() : dummyEncodedPassword;
 
-        if(!passwordEncoder.matches(logInRequestDTO.getLogInPassword(), user.getLogInPassword())){
-            throw new UnmatchedPasswordException(ErrorCode.USER_PASSWORD_UNMATCHED);
+        boolean matched = passwordEncoder.matches(logInRequestDTO.getLogInPassword(), encodedPassword);
+
+        if(user == null || !matched){
+            throw new UnmatchedPasswordException(ErrorCode.LOGIN_FAILED);
         }
 
         return issueTokens(user);

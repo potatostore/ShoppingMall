@@ -17,6 +17,7 @@ public enum ErrorCode {
     USER_UPDATE_FAILED(HttpStatus.BAD_REQUEST, "U003", "User info cannot update"),
     USER_PASSWORD_UNMATCHED(HttpStatus.BAD_REQUEST, "U004", "User password unmatched"),
     EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "U005", "Email not found"),
+    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "U006", "Invalid email or password"),
 
     //Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Cannot found product"),

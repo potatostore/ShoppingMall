@@ -3,8 +3,8 @@ package com.shopping_mall_api.service;
 import com.shopping_mall_api.dto.auth.LogInRequestDTO;
 import com.shopping_mall_api.dto.auth.LogInResponseDTO;
 import com.shopping_mall_api.entity.user.User;
+import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidTokenException;
-import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.global.security.JwtProvider;
 import com.shopping_mall_api.repository.redis.RefreshTokenRepository;
@@ -91,7 +91,10 @@ public class AuthServiceTest {
 
         when(userRepository.findByEmail("1111@gmail.com")).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> authService.logIn(logInRequestDTO));
+        UnmatchedPasswordException e = assertThrows(UnmatchedPasswordException.class, () -> authService.logIn(logInRequestDTO));
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.LOGIN_FAILED);
+        // 이메일이 없어도 비밀번호 비교를 수행 (응답 시간으로 가입 여부 노출 방지)
+        verify(passwordEncoder).matches(eq("encodedPassword"), any());
     }
 
     @Test
@@ -112,7 +115,9 @@ public class AuthServiceTest {
 
         when(userRepository.findByEmail("qwer1234@gmail.com")).thenReturn(Optional.of(existUser));
 
-        assertThrows(UnmatchedPasswordException.class, () -> authService.logIn(logInRequestDTO));
+        UnmatchedPasswordException e = assertThrows(UnmatchedPasswordException.class, () -> authService.logIn(logInRequestDTO));
+        // 이메일 없음과 같은 에러 코드·메시지
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.LOGIN_FAILED);
     }
 
     @Test

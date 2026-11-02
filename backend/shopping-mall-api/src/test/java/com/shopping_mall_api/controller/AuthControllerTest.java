@@ -6,7 +6,6 @@ import com.shopping_mall_api.dto.auth.LogInResponseDTO;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidTokenException;
-import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.service.auth.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -86,38 +85,21 @@ public class AuthControllerTest {
     }
 
     @Test
-    void logIn_userNotFoundTest() throws Exception{
+    void logIn_failedTest() throws Exception{
         LogInRequestDTO logInRequestDTO = new LogInRequestDTO(
                 "1111@gmail.com",
                 "qwer1234"
         );
 
-        when(authService.logIn(any(LogInRequestDTO.class))).thenThrow(new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        // 이메일 없음·비밀번호 불일치 모두 서비스가 LOGIN_FAILED를 던짐
+        when(authService.logIn(any(LogInRequestDTO.class))).thenThrow(new UnmatchedPasswordException(ErrorCode.LOGIN_FAILED));
 
         mockMvc.perform(post(ApiURLNames.loginURL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(logInRequestDTO)))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.message").value("User not found"))
-                .andExpect(jsonPath("$.data").doesNotExist());
-    }
-
-    @Test
-    void logIn_unmatchedPasswordTest() throws Exception{
-        LogInRequestDTO logInRequestDTO = new LogInRequestDTO(
-                "1111@gmail.com",
-                "qwer1234"
-        );
-
-        when(authService.logIn(any(LogInRequestDTO.class))).thenThrow(new UnmatchedPasswordException(ErrorCode.USER_PASSWORD_UNMATCHED));
-
-        mockMvc.perform(post(ApiURLNames.loginURL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(logInRequestDTO)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.message").value("User password unmatched"))
+                .andExpect(jsonPath("$.message").value("Invalid email or password"))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
 
