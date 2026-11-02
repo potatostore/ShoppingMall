@@ -26,7 +26,7 @@ class JwtAuthenticationFilterTest {
     @BeforeEach
     void setUp(){
         jwtProvider = new JwtProvider();
-        ReflectionTestUtils.setField(jwtProvider, "jwtSecretKey", "testOnlyJwtSecretKeyForUnitTestsNotForProd00");
+        ReflectionTestUtils.setField(jwtProvider, "jwtSecretKey", TestJwtKeys.randomBase64Key());
         ReflectionTestUtils.setField(jwtProvider, "accessTokenExpiration", 60_000L);
         ReflectionTestUtils.setField(jwtProvider, "refreshTokenExpiration", 60_000L);
         jwtProvider.init();

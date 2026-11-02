@@ -8,8 +8,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class JwtProviderTest {
-    private static final String KEY = "QfbFjwmdtdTkZjue1fJZkKjTXPJz2TkvPzZHvbAmsyk=";
-    private static final String OTHER_KEY = "bXlTZWNvbmRTZWNyZXRLZXlGb3JUZXN0aW5nT25seTEyMzQ=";
+    private static final String KEY = TestJwtKeys.randomBase64Key();
+    private static final String OTHER_KEY = TestJwtKeys.randomBase64Key();
 
     private JwtProvider jwtProvider;
 
