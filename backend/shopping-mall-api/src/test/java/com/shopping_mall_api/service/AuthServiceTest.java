@@ -191,14 +191,15 @@ public class AuthServiceTest {
     }
 
     @Test
-    void reissue_reuseDetectedRevokesSessionTest(){
+    void reissue_rotatedOrOverwrittenTokenRejectedTest(){
         when(jwtProvider.checkValidationToken("usedRefresh")).thenReturn(true);
         when(jwtProvider.isRefreshToken("usedRefresh")).thenReturn(true);
         when(jwtProvider.getUserIdFromToken("usedRefresh")).thenReturn(1L);
         when(refreshTokenRepository.findByUserId(1L)).thenReturn(Optional.of("latestRefresh"));
 
         assertThrows(InvalidTokenException.class, () -> authService.reissue("usedRefresh"));
-        verify(refreshTokenRepository).delete(1L);
+        // 저장된 최신 토큰(다른 기기일 수 있음)은 지우지 않고, 새 토큰도 발급하지 않음
+        verify(refreshTokenRepository, never()).delete(anyLong());
         verify(refreshTokenRepository, never()).save(anyLong(), any(), anyLong());
     }
 }

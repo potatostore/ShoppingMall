@@ -56,11 +56,11 @@ public class AuthService {
         String storedRefreshToken = refreshTokenRepository.findByUserId(userId)
                 .orElseThrow(() -> new InvalidTokenException(ErrorCode.INVALID_REFRESH_TOKEN));
 
+        // 서명·만료는 정상인데 저장된 값과 다름 = 이미 교체된 토큰이거나, 다른 기기 로그인으로 덮어써진 토큰
+        // 저장된 토큰까지 지우는 재사용 감지(세션 강제 종료)는 사용자당 토큰이 1개(refresh-token:{userId})인 지금 구조에선
+        // 다른 기기의 정상 세션까지 끊으므로 적용하지 않음 → 멀티 디바이스 정책(Phase 5) 결정 후 도입
         if(!storedRefreshToken.equals(refreshToken)){
-            // 서명·만료는 정상인데 저장된 값과 다름 = 이미 교체된(사용된) refresh token의 재사용
-            // 탈취 가능성이 있으므로 저장된 토큰도 지워 해당 사용자의 세션을 끊음 (재로그인 필요)
-            refreshTokenRepository.delete(userId);
-            throw new InvalidTokenException(ErrorCode.INVALID_REFRESH_TOKEN, "Refresh token reuse detected");
+            throw new InvalidTokenException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         // role이 바뀌었을 수 있으므로 토큰 클레임이 아니라 DB의 현재 값으로 새 토큰 발급
