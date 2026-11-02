@@ -14,7 +14,7 @@ type OrderItem = {
     totalOrderItemPrice: number;
 };
 
-type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELED";
+type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELED" | "EXPIRED";
 
 type Order = {
     orderId: number;
@@ -29,6 +29,7 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
     PAID: "결제 완료",
     FAILED: "결제 실패",
     CANCELED: "취소됨",
+    EXPIRED: "결제 시간 만료",
 };
 
 type Product = {

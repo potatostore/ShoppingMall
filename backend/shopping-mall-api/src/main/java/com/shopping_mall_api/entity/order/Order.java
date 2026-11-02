@@ -125,6 +125,12 @@ public class Order extends BaseEntity {
         this.orderStatus = OrderStatus.PAID;
     }
 
+    // 결제창 이탈 등으로 일정 시간 결제되지 않은 주문 (OrderExpirationScheduler)
+    public void expire(){
+        checkPending();
+        this.orderStatus = OrderStatus.EXPIRED;
+    }
+
     // 결제 전(PENDING) 또는 결제 완료(PAID) 주문만 취소 가능. PAID는 토스 결제 취소가 성공한 뒤에 호출
     public void cancel(){
         if(this.orderStatus != OrderStatus.PENDING && this.orderStatus != OrderStatus.PAID){

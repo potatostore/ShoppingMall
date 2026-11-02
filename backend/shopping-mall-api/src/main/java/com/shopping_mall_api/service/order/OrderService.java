@@ -27,14 +27,17 @@ import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -49,6 +52,9 @@ public class OrderService {
     private final CartRepository cartRepository;
 
     private final TossClient tossClient;
+
+    // 토스 결제 상태 중 "결제되지 않은 채 끝난" 상태 → 주문 만료 대상
+    private static final Set<String> TOSS_UNPAID_FINAL_STATUSES = Set.of("ABORTED", "EXPIRED", "CANCELED");
 
     @Transactional
     public OrderResponseDTO createOrder(Long userId, OrderCreateDTO orderCreateDTO){
@@ -240,6 +246,52 @@ public class OrderService {
         });
 
         return new OrderResponseDTO(order);
+    }
+
+    public List<Long> findStalePendingOrderIds(LocalDateTime threshold, int limit){
+        CheckConfig.npeCheck(threshold, "threshold");
+
+        return orderRepository.findOrderIdsByStatusCreatedBefore(OrderStatus.PENDING, threshold, PageRequest.of(0, limit));
+    }
+
+    // 오래된 PENDING 주문 정리 (OrderExpirationScheduler가 주문마다 호출, 주문별 트랜잭션)
+    // 만료 전에 토스 결제 조회로 실제 상태 확인:
+    //   DONE → 승인 응답만 유실된 경우이므로 결제 완료 처리
+    //   결제 없음(NOT_FOUND_PAYMENT) 또는 ABORTED·EXPIRED·CANCELED → EXPIRED + 재고 복구
+    //   조회 실패·결제 진행 중 → 그대로 두고 다음 주기에 다시 확인
+    @Transactional
+    public void expireIfStale(Long orderId){
+        CheckConfig.npeCheck(orderId, "orderId");
+
+        Order order = orderRepository.findByIdForUpdate(orderId).orElse(null);
+
+        // 조회와 잠금 사이에 결제·취소된 주문은 건너뜀
+        if(order == null || order.getOrderStatus() != OrderStatus.PENDING){
+            return;
+        }
+
+        TossResponse lookup;
+        try {
+            lookup = tossClient.getPaymentByOrderId(order.getOrderUid());
+        } catch (ResourceAccessException e) {
+            log.warn("Toss lookup failed while expiring order, retry next run (orderUid={})", order.getOrderUid(), e);
+            return;
+        }
+
+        switch(lookup){
+            case Payment payment when "DONE".equals(payment.status()) -> completePayment(order, payment.paymentKey());
+            case Payment payment when TOSS_UNPAID_FINAL_STATUSES.contains(payment.status()) -> expireAndRestoreStock(order);
+            case Payment payment -> log.info("Payment still in progress, keep PENDING (orderUid={}, status={})",
+                    order.getOrderUid(), payment.status());
+            case TossError tossError when "NOT_FOUND_PAYMENT".equals(tossError.code()) -> expireAndRestoreStock(order);
+            case TossError tossError -> log.warn("Toss lookup error, retry next run (orderUid={}, code={})",
+                    order.getOrderUid(), tossError.code());
+        }
+    }
+
+    private void expireAndRestoreStock(Order order){
+        order.expire();
+        restoreStock(order);
     }
 
     private static final String DEFAULT_CANCEL_REASON = "고객 요청에 의한 주문 취소";

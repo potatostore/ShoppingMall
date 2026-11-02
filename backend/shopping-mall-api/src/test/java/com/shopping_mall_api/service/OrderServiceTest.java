@@ -788,6 +788,90 @@ public class OrderServiceTest {
     }
 
     @Test
+    void expireIfStale_noPaymentAtToss_expiresAndRestoresStockTest(){
+        Order existOrder = pendingOrder();
+
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid()))
+                .thenReturn(new TossError("NOT_FOUND_PAYMENT", "존재하지 않는 결제 정보 입니다."));
+
+        orderService.expireIfStale(1L);
+
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.EXPIRED);
+        verify(productRepository).increaseStock(1L, 1L);
+    }
+
+    @Test
+    void expireIfStale_tossAborted_expiresTest(){
+        Order existOrder = pendingOrder();
+        Payment aborted = tossPayment("ABORTED");
+
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid())).thenReturn(aborted);
+
+        orderService.expireIfStale(1L);
+
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.EXPIRED);
+        verify(productRepository).increaseStock(1L, 1L);
+    }
+
+    @Test
+    void expireIfStale_tossDone_completesPaymentTest(){
+        Order existOrder = pendingOrder();
+        Payment done = tossPayment("DONE");
+        when(done.paymentKey()).thenReturn("pk-late");
+
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid())).thenReturn(done);
+
+        orderService.expireIfStale(1L);
+
+        // 승인 응답만 유실됐던 주문 → 만료가 아니라 결제 완료로 복구
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(existOrder.getPaymentKey()).isEqualTo("pk-late");
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void expireIfStale_tossInProgress_keepsPendingTest(){
+        Order existOrder = pendingOrder();
+        Payment inProgress = tossPayment("IN_PROGRESS");
+
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid())).thenReturn(inProgress);
+
+        orderService.expireIfStale(1L);
+
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void expireIfStale_lookupFails_keepsPendingTest(){
+        Order existOrder = pendingOrder();
+
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid())).thenThrow(new ResourceAccessException("timeout"));
+
+        orderService.expireIfStale(1L);
+
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void expireIfStale_alreadyPaid_skipsTest(){
+        Order existOrder = paidOrder();
+
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existOrder));
+
+        orderService.expireIfStale(1L);
+
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+        verifyNoInteractions(tossClient);
+    }
+
+    @Test
     void deleteOrder_successTest(){
         User existUser = User.builder()
                 .email("qwer1234@gmail.com")
