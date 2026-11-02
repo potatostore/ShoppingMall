@@ -3,6 +3,7 @@ package com.shopping_mall_api.global.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shopping_mall_api.global.api.ApiResponse;
 import com.shopping_mall_api.global.security.filter.JwtAuthenticationFilter;
+import com.shopping_mall_api.repository.redis.AccessTokenBlacklistRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import java.io.IOException;
 public class SecurityConfig {
     private final JwtProvider jwtProvider;
     private final ObjectMapper objectMapper;
+    private final AccessTokenBlacklistRepository accessTokenBlacklistRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -81,7 +83,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(this::handleAuthenticationFailure)
                         .accessDeniedHandler(this::handleAccessDenied))
 
-                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider, accessTokenBlacklistRepository), UsernamePasswordAuthenticationFilter.class);
         return httpSec.build();
     }
 

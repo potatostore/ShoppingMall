@@ -4,6 +4,7 @@ import com.shopping_mall_api.controller.ProductController;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.global.security.JwtProvider;
 import com.shopping_mall_api.global.security.SecurityConfig;
+import com.shopping_mall_api.repository.redis.AccessTokenBlacklistRepository;
 import com.shopping_mall_api.service.product.ProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ class SecurityErrorResponseTest {
 
     @MockBean private ProductService productService;
     @MockBean private JwtProvider jwtProvider;
+    @MockBean private AccessTokenBlacklistRepository accessTokenBlacklistRepository;
 
     private static final String BODY = """
             {"name": "감자", "price": 1000, "stock": 10, "productDetailCreateDTOList": [{"detail": "detail"}]}

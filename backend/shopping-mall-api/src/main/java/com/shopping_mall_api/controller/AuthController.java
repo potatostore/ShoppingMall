@@ -5,6 +5,8 @@ import com.shopping_mall_api.dto.auth.LogInResponseDTO;
 import com.shopping_mall_api.global.api.ApiResponse;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.global.security.JwtProvider;
+import com.shopping_mall_api.global.security.TokenResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import com.shopping_mall_api.service.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +51,8 @@ public class AuthController {
 
     // 응답 바디는 기존처럼 비우고, 두 토큰 쿠키를 Max-Age=0으로 만료시킴
     @DeleteMapping(ApiURLNames.logOutURL)
-    public ResponseEntity<Void> logOut(@AuthenticationPrincipal Long userId){
-        LogInResponseDTO expiredCookies = authService.logOut(userId);
+    public ResponseEntity<Void> logOut(@AuthenticationPrincipal Long userId, HttpServletRequest request){
+        LogInResponseDTO expiredCookies = authService.logOut(userId, TokenResolver.resolveAccessToken(request));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, expiredCookies.accessTokenCookie().toString())

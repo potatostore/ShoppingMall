@@ -7,6 +7,7 @@ import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidTokenException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.global.security.JwtProvider;
+import com.shopping_mall_api.repository.redis.AccessTokenBlacklistRepository;
 import com.shopping_mall_api.repository.redis.RefreshTokenRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.auth.AuthService;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.*;
 public class AuthServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private AccessTokenBlacklistRepository accessTokenBlacklistRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtProvider jwtProvider;
 
@@ -122,11 +124,34 @@ public class AuthServiceTest {
 
     @Test
     void logOut_successTest(){
-        LogInResponseDTO result = authService.logOut(1L);
+        LogInResponseDTO result = authService.logOut(1L, null);
 
         verify(refreshTokenRepository).delete(1L);
         assertThat(result.accessTokenCookie().getMaxAge()).isEqualTo(Duration.ZERO);
         assertThat(result.refreshTokenCookie().getMaxAge()).isEqualTo(Duration.ZERO);
+    }
+
+    @Test
+    void logOut_blacklistsCurrentAccessTokenTest(){
+        when(jwtProvider.checkValidationToken("access")).thenReturn(true);
+        when(jwtProvider.getJtiFromToken("access")).thenReturn("jti-1");
+        when(jwtProvider.getRemainingMillis("access")).thenReturn(120_000L);
+
+        authService.logOut(1L, "access");
+
+        verify(refreshTokenRepository).delete(1L);
+        // 남은 만료 시간만큼만 블랙리스트에 보관
+        verify(accessTokenBlacklistRepository).add("jti-1", 120_000L);
+    }
+
+    @Test
+    void logOut_invalidAccessTokenSkipsBlacklistTest(){
+        when(jwtProvider.checkValidationToken("expired")).thenReturn(false);
+
+        authService.logOut(1L, "expired");
+
+        verify(refreshTokenRepository).delete(1L);
+        verifyNoInteractions(accessTokenBlacklistRepository);
     }
 
     private User reissueUser(){

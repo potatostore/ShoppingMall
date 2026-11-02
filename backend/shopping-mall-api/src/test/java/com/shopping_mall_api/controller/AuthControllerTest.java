@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -123,7 +124,7 @@ public class AuthControllerTest {
                 userId, null, List.of(new SimpleGrantedAuthority("USER"))
         );
 
-        when(authService.logOut(userId)).thenReturn(new LogInResponseDTO(
+        when(authService.logOut(eq(userId), eq("currentAccess"))).thenReturn(new LogInResponseDTO(
                 ResponseCookie.from("accessToken", "").path("/").maxAge(Duration.ZERO).build(),
                 ResponseCookie.from("refreshToken", "").path("/").maxAge(Duration.ZERO).build()
         ));
@@ -131,13 +132,14 @@ public class AuthControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         try {
-            mockMvc.perform(delete(ApiURLNames.logOutURL))
+            mockMvc.perform(delete(ApiURLNames.logOutURL).cookie(new Cookie("accessToken", "currentAccess")))
                     .andExpect(status().isOk())
                     .andExpect(content().string(""))
                     .andExpect(cookie().maxAge("accessToken", 0))
                     .andExpect(cookie().maxAge("refreshToken", 0));
 
-            verify(authService).logOut(userId);
+            // 블랙리스트에 올릴 수 있도록 현재 access token을 서비스로 넘김
+            verify(authService).logOut(userId, "currentAccess");
         } finally {
             SecurityContextHolder.clearContext();
         }

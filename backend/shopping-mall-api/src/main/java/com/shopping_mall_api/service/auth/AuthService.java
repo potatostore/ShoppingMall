@@ -8,6 +8,7 @@ import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidTokenException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.global.security.JwtProvider;
+import com.shopping_mall_api.repository.redis.AccessTokenBlacklistRepository;
 import com.shopping_mall_api.repository.redis.RefreshTokenRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import jakarta.annotation.PostConstruct;
@@ -27,6 +28,7 @@ import java.util.UUID;
 public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AccessTokenBlacklistRepository accessTokenBlacklistRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
@@ -83,10 +85,18 @@ public class AuthService {
     }
 
     // refresh token이 이미 만료·삭제된 경우에도 쿠키는 지워야 하므로 예외 없이 처리 (멱등)
-    public LogInResponseDTO logOut(Long userId){
+    // 지금 쓰던 access token은 만료 전까지 유효하므로 jti를 남은 시간만큼 블랙리스트에 올림
+    public LogInResponseDTO logOut(Long userId, String accessToken){
         CheckConfig.npeCheck(userId, "userId");
 
         refreshTokenRepository.delete(userId);
+
+        if(StringUtils.hasText(accessToken) && jwtProvider.checkValidationToken(accessToken)){
+            String jti = jwtProvider.getJtiFromToken(accessToken);
+            if(StringUtils.hasText(jti)){
+                accessTokenBlacklistRepository.add(jti, jwtProvider.getRemainingMillis(accessToken));
+            }
+        }
 
         return new LogInResponseDTO(
                 expiredCookie(JwtProvider.ACCESS_TOKEN_COOKIE),

@@ -70,4 +70,13 @@ class JwtProviderTest {
         assertThat(jwtProvider.createRefreshToken(1L, "USER"))
                 .isNotEqualTo(jwtProvider.createRefreshToken(1L, "USER"));
     }
+
+    @Test
+    void accessTokenHasJtiAndRemainingTime(){
+        String access = jwtProvider.createAccessToken(1L, "USER");
+
+        assertThat(jwtProvider.getJtiFromToken(access)).isNotBlank();
+        assertThat(jwtProvider.getJtiFromToken(access)).isNotEqualTo(jwtProvider.getJtiFromToken(jwtProvider.createAccessToken(1L, "USER")));
+        assertThat(jwtProvider.getRemainingMillis(access)).isBetween(1L, 60_000L);
+    }
 }

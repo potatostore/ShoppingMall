@@ -53,6 +53,8 @@ public class JwtProvider {
                 .setSubject(String.valueOf(userId))
                 .claim("role", role)
                 .claim(TOKEN_TYPE_CLAIM, ACCESS_TYPE)
+                // 로그아웃 시 블랙리스트 키로 사용
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(curDate)
                 .setExpiration(expirationDate)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -98,6 +100,15 @@ public class JwtProvider {
         Claims claims = parseClaims(token);
 
         return claims.get("role", String.class);
+    }
+
+    public String getJtiFromToken(String token){
+        return parseClaims(token).getId();
+    }
+
+    // 토큰 만료까지 남은 시간(ms). 이미 만료됐으면 0 이하
+    public long getRemainingMillis(String token){
+        return parseClaims(token).getExpiration().getTime() - System.currentTimeMillis();
     }
 
     public boolean isRefreshToken(String token){
