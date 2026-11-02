@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { SERVER_API_URL } from "@/lib/api";
+import { redirect } from "next/navigation";
+import { SERVER_API_URL, reissuePagePath } from "@/lib/api";
 
 const orderApiUrl = `${SERVER_API_URL}/orders`;
 const productApiUrl = `${SERVER_API_URL}/products`;
@@ -25,7 +26,7 @@ type Product = {
     price: number;
 };
 
-async function getMyOrders(): Promise<Order[] | null> {
+async function getMyOrders(): Promise<{ status: number; orders: Order[] | null }> {
     const cookieStore = await cookies();
 
     const res = await fetch(`${orderApiUrl}/me`, {
@@ -34,11 +35,11 @@ async function getMyOrders(): Promise<Order[] | null> {
     });
 
     if (!res.ok) {
-        return null;
+        return { status: res.status, orders: null };
     }
 
     const { data } = await res.json();
-    return data;
+    return { status: res.status, orders: data };
 }
 
 async function getProducts(): Promise<Product[]> {
@@ -52,8 +53,18 @@ async function getProducts(): Promise<Product[]> {
     return data;
 }
 
-export default async function OrdersPage() {
-    const [orders, products] = await Promise.all([getMyOrders(), getProducts()]);
+export default async function OrdersPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ reissued?: string }>;
+}) {
+    const { reissued } = await searchParams;
+    const [{ status, orders }, products] = await Promise.all([getMyOrders(), getProducts()]);
+
+    // access token 만료(401)면 재발급 페이지를 거쳐 다시 돌아옴. 재발급 후에도 401이면 로그인 안내
+    if (status === 401 && !reissued) {
+        redirect(reissuePagePath("/orders"));
+    }
 
     if (!orders) {
         return (
