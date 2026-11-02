@@ -6,6 +6,7 @@ import com.shopping_mall_api.dto.user.UserCreateResponseDTO;
 import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.entity.user.User;
+import com.shopping_mall_api.global.exception.AlreadyExistException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.cart.CartService;
@@ -70,6 +71,46 @@ public class UserServiceTest {
         assertThat(userCaptor.getValue().getRole()).isEqualTo("USER");
 
         verify(cartService).createCart(any());
+    }
+
+    @Test
+    void userCreateDuplicateEmailTest(){
+        UserCreateDTO userCreateDTO = UserCreateDTO.builder()
+                .signUpName("김민준")
+                .signUpEmail("qwer1234@gmail.com")
+                .signUpPassword("qwer1234")
+                .signUpPhoneNumber("01011111111")
+                .signUpBirthday(LocalDate.of(2026, 8, 27))
+                .build();
+
+        when(userRepository.existsByEmail("qwer1234@gmail.com")).thenReturn(true);
+
+        assertThrows(AlreadyExistException.class, () -> userService.createUser(userCreateDTO));
+
+        verify(userRepository, never()).save(any(User.class));
+        verify(cartService, never()).createCart(any());
+    }
+
+    @Test
+    void patchUserDuplicateEmailTest(){
+        User existUser = User.builder()
+                .email("qwer1234@gmail.com")
+                .logInPassword("encodedPassword")
+                .name("김민준")
+                .role("USER")
+                .phoneNumber("01011111111")
+                .birthday(LocalDate.of(2026, 8, 27))
+                .build();
+
+        UserUpdateDTO updateUserDTO = UserUpdateDTO.builder()
+                .email("other@gmail.com")
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existUser));
+        when(userRepository.existsByEmail("other@gmail.com")).thenReturn(true);
+
+        assertThrows(AlreadyExistException.class, () -> userService.patchUserInfo(1L, updateUserDTO));
+        assertThat(existUser.getEmail()).isEqualTo("qwer1234@gmail.com");
     }
 
     @Test
