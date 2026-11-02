@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CLIENT_API_URL } from "@/lib/api";
 
 const productApiUrl = `${CLIENT_API_URL}/products`;
+const PAGE_SIZE = 20;
 
 type ProductDetail = {
     detail: string;
@@ -17,52 +18,66 @@ type Product = {
     productDetailResponseDTOList: ProductDetail[];
 };
 
+type ProductPage = {
+    content: Product[];
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    hasNext: boolean;
+};
+
 type SortOption = 'name' | 'priceAsc' | 'priceDesc';
 
+// 화면의 정렬 값 → API sort 파라미터
+const SORT_PARAM: Record<SortOption, string> = {
+    name: 'NAME',
+    priceAsc: 'PRICE_ASC',
+    priceDesc: 'PRICE_DESC',
+};
+
 export default function ProductPage() {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
     const [keyword, setKeyword] = useState<string>('');
     const [minPrice, setMinPrice] = useState<string>('');
     const [maxPrice, setMaxPrice] = useState<string>('');
     const [sort, setSort] = useState<SortOption>('name');
+    const [page, setPage] = useState<number>(0);
+    // 마지막으로 받은 결과와 그 요청 조건. 현재 조건과 다르면 로딩 중으로 표시
+    const [result, setResult] = useState<{ query: string; data: ProductPage | null } | null>(null);
+
+    // 검색·가격·정렬·페이지는 서버에서 처리 (상품이 많아져도 전체 목록을 받지 않음)
+    const query = useMemo(() => {
+        const params = new URLSearchParams({ sort: SORT_PARAM[sort], page: String(page), size: String(PAGE_SIZE) });
+        if (keyword.trim() !== '') params.set('keyword', keyword.trim());
+        if (minPrice !== '') params.set('minPrice', minPrice);
+        if (maxPrice !== '') params.set('maxPrice', maxPrice);
+        return params.toString();
+    }, [keyword, minPrice, maxPrice, sort, page]);
 
     useEffect(() => {
-        const loadProducts = async () => {
+        // 입력 중 매 글자마다 요청하지 않도록 300ms 디바운스
+        const timer = setTimeout(async () => {
             try {
-                const res = await fetch(productApiUrl);
+                const res = await fetch(`${productApiUrl}?${query}`);
                 const { data } = await res.json();
-                setProducts(data ?? []);
-            } finally {
-                setLoading(false);
+                setResult({ query, data: res.ok ? data : null });
+            } catch {
+                setResult({ query, data: null });
             }
-        };
+        }, 300);
 
-        loadProducts();
-    }, []);
+        return () => clearTimeout(timer);
+    }, [query]);
 
-    const filteredProducts = useMemo(() => {
-        const min = minPrice === '' ? null : Number(minPrice);
-        const max = maxPrice === '' ? null : Number(maxPrice);
+    const loading = result?.query !== query;
+    const productPage = result?.data ?? null;
+    const products = productPage?.content ?? [];
 
-        const filtered = products.filter((product) => {
-            const matchesKeyword = product.name.toLowerCase().includes(keyword.trim().toLowerCase());
-            const matchesMin = min === null || product.price >= min;
-            const matchesMax = max === null || product.price <= max;
-            return matchesKeyword && matchesMin && matchesMax;
-        });
-
-        const sorted = [...filtered];
-        if (sort === 'name') {
-            sorted.sort((a, b) => a.name.localeCompare(b.name));
-        } else if (sort === 'priceAsc') {
-            sorted.sort((a, b) => a.price - b.price);
-        } else {
-            sorted.sort((a, b) => b.price - a.price);
-        }
-
-        return sorted;
-    }, [products, keyword, minPrice, maxPrice, sort]);
+    // 조건이 바뀌면 첫 페이지부터
+    const onFilterChange = <T,>(setter: (value: T) => void) => (value: T) => {
+        setter(value);
+        setPage(0);
+    };
 
     return (
         <div className="mx-auto max-w-6xl px-6 py-10">
@@ -75,7 +90,7 @@ export default function ProductPage() {
                         type="text"
                         placeholder="상품명으로 검색"
                         value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
+                        onChange={(e) => onFilterChange(setKeyword)(e.target.value)}
                         className="w-56 rounded border border-zinc-300 px-3 py-2 text-sm"
                     />
                 </div>
@@ -86,7 +101,7 @@ export default function ProductPage() {
                         type="number"
                         placeholder="0"
                         value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
+                        onChange={(e) => onFilterChange(setMinPrice)(e.target.value)}
                         className="w-28 rounded border border-zinc-300 px-3 py-2 text-sm"
                     />
                 </div>
@@ -97,7 +112,7 @@ export default function ProductPage() {
                         type="number"
                         placeholder="제한 없음"
                         value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
+                        onChange={(e) => onFilterChange(setMaxPrice)(e.target.value)}
                         className="w-28 rounded border border-zinc-300 px-3 py-2 text-sm"
                     />
                 </div>
@@ -106,7 +121,7 @@ export default function ProductPage() {
                     <label className="text-xs text-zinc-500">정렬</label>
                     <select
                         value={sort}
-                        onChange={(e) => setSort(e.target.value as SortOption)}
+                        onChange={(e) => onFilterChange(setSort)(e.target.value as SortOption)}
                         className="rounded border border-zinc-300 px-3 py-2 text-sm"
                     >
                         <option value="name">이름순</option>
@@ -118,11 +133,11 @@ export default function ProductPage() {
 
             {loading ? (
                 <p className="text-zinc-500">불러오는 중...</p>
-            ) : filteredProducts.length === 0 ? (
+            ) : products.length === 0 ? (
                 <p className="text-zinc-500">조건에 맞는 상품이 없습니다.</p>
             ) : (
                 <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-                    {filteredProducts.map((product) => (
+                    {products.map((product) => (
                         <Link key={product.productId} href={`/products/${product.productId}`} className="group">
                             <div className="flex aspect-square items-center justify-center rounded-lg bg-zinc-100 text-3xl font-bold text-zinc-300 transition group-hover:bg-zinc-200">
                                 {product.name.slice(0, 1)}
@@ -131,6 +146,30 @@ export default function ProductPage() {
                             <p className="text-sm text-zinc-500">{product.price.toLocaleString('ko-KR')}원</p>
                         </Link>
                     ))}
+                </div>
+            )}
+
+            {productPage && productPage.totalPages > 1 && (
+                <div className="mt-10 flex items-center justify-center gap-4 text-sm">
+                    <button
+                        type="button"
+                        onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+                        disabled={page === 0 || loading}
+                        className="rounded border border-zinc-300 px-3 py-1 disabled:opacity-40"
+                    >
+                        이전
+                    </button>
+                    <span className="text-zinc-500">
+                        {page + 1} / {productPage.totalPages}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setPage((prev) => prev + 1)}
+                        disabled={!productPage.hasNext || loading}
+                        className="rounded border border-zinc-300 px-3 py-1 disabled:opacity-40"
+                    >
+                        다음
+                    </button>
                 </div>
             )}
         </div>

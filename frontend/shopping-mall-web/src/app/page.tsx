@@ -9,15 +9,16 @@ type Product = {
   price: number;
 };
 
+// 메인에는 최신 상품 8개만 노출 (전체는 /products 페이지에서 페이지 단위로 조회)
 async function getProducts(): Promise<Product[]> {
-  const res = await fetch(productApiUrl, { cache: "no-store" });
+  const res = await fetch(`${productApiUrl}?sort=LATEST&size=8`, { cache: "no-store" });
 
   if (!res.ok) {
     return [];
   }
 
   const { data } = await res.json();
-  return data;
+  return data?.content ?? [];
 }
 
 export default async function Home() {
@@ -42,7 +43,10 @@ export default async function Home() {
 
       {/* 상품 그리드 */}
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="text-2xl font-bold text-zinc-900">전체 상품</h2>
+        <div className="flex items-end justify-between">
+          <h2 className="text-2xl font-bold text-zinc-900">새로 들어온 상품</h2>
+          <Link href="/products" className="text-sm text-zinc-500 hover:text-zinc-900">전체 보기 →</Link>
+        </div>
 
         {products.length === 0 ? (
           <p className="mt-6 text-zinc-500">아직 등록된 상품이 없어요.</p>

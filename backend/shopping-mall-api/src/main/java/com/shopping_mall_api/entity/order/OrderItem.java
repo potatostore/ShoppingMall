@@ -28,6 +28,10 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false)
     private Long productId;
 
+    // 주문 시점 상품명 스냅샷 (상품명이 바뀌거나 상품이 삭제돼도 주문 내역은 그대로 보이도록). 이 컬럼 추가 전 주문은 null
+    @Column(length = 255)
+    private String productName;
+
     @NotNull(message = "curOrderItemPrice must not be null")
     @Column(nullable = false)
     @Min(value = 0, message = "curOrderItemPrice must not be negative")
@@ -42,13 +46,18 @@ public class OrderItem extends BaseEntity {
     @Min(value = 0, message = "totalOrderItemPrice must not be negative")
     private Long totalOrderItemPrice;
 
-    @Builder
     public OrderItem(Long productId, Long curOrderItemPrice, Long quantity){
+        this(productId, null, curOrderItemPrice, quantity);
+    }
+
+    @Builder
+    public OrderItem(Long productId, String productName, Long curOrderItemPrice, Long quantity){
         CheckConfig.npeCheck(productId, "productId");
         CheckConfig.npeAndNegativeCheck(curOrderItemPrice, "curOrderItemPrice");
         CheckConfig.npeAndNegativeCheck(quantity, "quantity");
 
         this.productId = productId;
+        this.productName = productName;
         this.curOrderItemPrice = curOrderItemPrice;
         this.quantity = quantity;
         this.totalOrderItemPrice = this.quantity * this.curOrderItemPrice;

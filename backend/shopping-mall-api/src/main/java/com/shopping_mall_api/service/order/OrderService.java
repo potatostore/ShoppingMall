@@ -84,6 +84,7 @@ public class OrderService {
 
             orderItemList.add(OrderItem.builder()
                     .productId(product.getProductId())
+                    .productName(product.getName())
                     .curOrderItemPrice(product.getPrice())
                     .quantity(entry.getValue())
                     .build());

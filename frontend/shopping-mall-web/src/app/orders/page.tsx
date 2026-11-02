@@ -9,6 +9,7 @@ const productApiUrl = `${SERVER_API_URL}/products`;
 
 type OrderItem = {
     productId: number;
+    productName: string | null;
     curOrderItemPrice: number;
     quantity: number;
     totalOrderItemPrice: number;
@@ -54,15 +55,19 @@ async function getMyOrders(): Promise<{ status: number; orders: Order[] | null }
     return { status: res.status, orders: data };
 }
 
-async function getProducts(): Promise<Product[]> {
-    const res = await fetch(productApiUrl, { cache: "no-store" });
-
-    if (!res.ok) {
-        return [];
-    }
-
-    const { data } = await res.json();
-    return data;
+// 상품명 스냅샷이 없는 예전 주문(productName null)만 상품을 단건 조회해 이름을 채움
+async function getProductsByIds(productIds: number[]): Promise<Product[]> {
+    const products = await Promise.all(
+        productIds.map(async (productId) => {
+            const res = await fetch(`${productApiUrl}/${productId}`, { cache: "no-store" });
+            if (!res.ok) {
+                return null;
+            }
+            const { data } = await res.json();
+            return data as Product;
+        })
+    );
+    return products.filter((product): product is Product => product !== null);
 }
 
 export default async function OrdersPage({
@@ -71,7 +76,7 @@ export default async function OrdersPage({
     searchParams: Promise<{ reissued?: string }>;
 }) {
     const { reissued } = await searchParams;
-    const [{ status, orders }, products] = await Promise.all([getMyOrders(), getProducts()]);
+    const { status, orders } = await getMyOrders();
 
     // access token 만료(401)면 재발급 페이지를 거쳐 다시 돌아옴. 재발급 후에도 401이면 로그인 안내
     if (status === 401 && !reissued) {
@@ -89,6 +94,9 @@ export default async function OrdersPage({
         );
     }
 
+    const missingNameIds = [...new Set(orders.flatMap((order) =>
+        order.orderItemResponseDTOList.filter((item) => !item.productName).map((item) => item.productId)))];
+    const products = await getProductsByIds(missingNameIds);
     const productMap = new Map(products.map((p) => [p.productId, p]));
 
     return (
@@ -119,7 +127,7 @@ export default async function OrdersPage({
                                     return (
                                         <li key={item.productId} className="flex items-center justify-between py-2">
                                             <div>
-                                                <p className="font-medium">{product?.name ?? `상품 #${item.productId}`}</p>
+                                                <p className="font-medium">{item.productName ?? product?.name ?? `상품 #${item.productId}`}</p>
                                                 <p className="text-sm text-zinc-500">
                                                     {item.curOrderItemPrice.toLocaleString()}원 x {item.quantity}개
                                                 </p>

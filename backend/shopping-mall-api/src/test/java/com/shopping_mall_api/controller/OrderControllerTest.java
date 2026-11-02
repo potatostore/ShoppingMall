@@ -62,7 +62,8 @@ public class OrderControllerTest {
                 productId,
                 20260908L,
                 1L,
-                20260908L
+                20260908L,
+                "water"
         );
 
         OrderResponseDTO orderResponseDTO = new OrderResponseDTO(
@@ -117,7 +118,8 @@ public class OrderControllerTest {
                 productId,
                 20260908L,
                 1L,
-                20260908L
+                20260908L,
+                "water"
         );
 
         OrderResponseDTO orderResponseDTO = new OrderResponseDTO(
@@ -174,7 +176,8 @@ public class OrderControllerTest {
                 productId,
                 20260908L,
                 1L,
-                20260908L
+                20260908L,
+                "water"
         );
 
         OrderResponseDTO orderResponseDTO = new OrderResponseDTO(
@@ -210,7 +213,8 @@ public class OrderControllerTest {
                 productId,
                 20260908L,
                 1L,
-                20260908L
+                20260908L,
+                "water"
         );
 
         OrderResponseDTO orderResponseDTO = new OrderResponseDTO(
@@ -249,7 +253,8 @@ public class OrderControllerTest {
                 productId,
                 20260908L,
                 1L,
-                20260908L
+                20260908L,
+                "water"
         );
 
         OrderResponseDTO orderResponseDTO = new OrderResponseDTO(
@@ -288,7 +293,8 @@ public class OrderControllerTest {
                 productId,
                 20260908L,
                 1L,
-                20260908L
+                20260908L,
+                "water"
         );
 
         OrderResponseDTO orderResponseDTO = new OrderResponseDTO(

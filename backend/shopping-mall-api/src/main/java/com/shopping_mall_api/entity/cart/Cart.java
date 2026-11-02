@@ -10,6 +10,7 @@ import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -34,6 +35,8 @@ public class Cart extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
 
+    // 목록 조회 시 컬렉션을 엔티티마다 따로 조회하지 않고 IN 쿼리로 묶음 (N+1 → 1+1)
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> cartItemList;
 
