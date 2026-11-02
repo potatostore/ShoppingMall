@@ -396,7 +396,7 @@ public class OrderServiceTest {
 
         ReflectionTestUtils.setField(existOrder, "orderId", 1L);
 
-        when(orderRepository.findByUser_UserId(1L)).thenReturn(List.of(existOrder));
+        when(orderRepository.findByOrderIdAndUser_UserId(1L, 1L)).thenReturn(Optional.of(existOrder));
 
         OrderResponseDTO result = orderService.getOrderWithUserId(1L, 1L);
 
@@ -408,32 +408,10 @@ public class OrderServiceTest {
     
     @Test
     void getOrderWithUserId_orderNotFoundExceptionTest(){
-        User existUser = User.builder()
-                .email("qwer1234@gmail.com")
-                .logInPassword("encodedPassword")
-                .name("김민준")
-                .role("USER")
-                .phoneNumber("01011111111")
-                .birthday(LocalDate.of(2026, 8, 27))
-                .build();
+        // 다른 사용자(999)가 1번 주문을 조회하면 404
+        when(orderRepository.findByOrderIdAndUser_UserId(1L, 999L)).thenReturn(Optional.empty());
 
-        OrderItem orderItem = new OrderItem(
-                1L,
-                20260901L,
-                1L
-        );
-
-        Order existOrder = Order.builder()
-                .user(existUser)
-                .orderItemList(List.of(orderItem))
-                .orderStatus(OrderStatus.PENDING)
-                .build();
-
-        ReflectionTestUtils.setField(existOrder, "orderId", 1L);
-
-        when(orderRepository.findByUser_UserId(999L)).thenReturn(List.of(existOrder));
-
-        assertThrows(NotFoundException.class, () -> orderService.getOrderWithUserId(999L, 999L));
+        assertThrows(NotFoundException.class, () -> orderService.getOrderWithUserId(999L, 1L));
     }
 
     @Test

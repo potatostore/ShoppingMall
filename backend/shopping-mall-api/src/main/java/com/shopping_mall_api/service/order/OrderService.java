@@ -150,11 +150,8 @@ public class OrderService {
         CheckConfig.npeCheck(userId, "userId");
         CheckConfig.npeCheck(orderId, "orderId");
 
-        List<Order> orderList = orderRepository.findByUser_UserId(userId);
-
-        return orderList.stream()
-                .filter(order -> order.getOrderId()
-                .equals(orderId)).findFirst()
+        // 본인 주문만 조회 (남의 주문이면 존재 여부를 숨기기 위해 404)
+        return orderRepository.findByOrderIdAndUser_UserId(orderId, userId)
                 .map(OrderResponseDTO::new)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
     }
