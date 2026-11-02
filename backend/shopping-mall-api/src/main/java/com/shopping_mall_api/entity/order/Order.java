@@ -45,6 +45,10 @@ public class Order extends BaseEntity {
     @Column(nullable = false, length = 20)
     private OrderStatus orderStatus;
 
+    // 토스 승인 시 받은 결제 키. 결제 취소(환불) API 호출에 필요
+    @Column(length = 200)
+    private String paymentKey;
+
     @NotNull(message = "totalOrderPrice must not be null")
     @Column(nullable = false)
     @Min(value = 0, message = "totalOrderPrice must not be negative")
@@ -114,9 +118,20 @@ public class Order extends BaseEntity {
         updateTotalOrderPrice();
     }
 
-    public void completePayment(){
+    public void completePayment(String paymentKey){
         checkPending();
+        CheckConfig.npeAndBlankCheck(paymentKey, "paymentKey");
+        this.paymentKey = paymentKey;
         this.orderStatus = OrderStatus.PAID;
+    }
+
+    // 결제 전(PENDING) 또는 결제 완료(PAID) 주문만 취소 가능. PAID는 토스 결제 취소가 성공한 뒤에 호출
+    public void cancel(){
+        if(this.orderStatus != OrderStatus.PENDING && this.orderStatus != OrderStatus.PAID){
+            throw new InvalidOrderStatusException(ErrorCode.ORDER_STATUS_INVALID,
+                    "Order cannot be canceled (current : " + this.orderStatus + ")");
+        }
+        this.orderStatus = OrderStatus.CANCELED;
     }
 
     public void failPayment(){

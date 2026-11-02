@@ -19,4 +19,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from Order o where o.orderUid = :orderUid")
     public Optional<Order> findByOrderUidForUpdate(@Param("orderUid") Long orderUid);
+
+    // 주문 취소용: 본인 주문만, 승인·만료 처리와 동시에 일어나지 않도록 행 잠금
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.orderId = :orderId and o.user.userId = :userId")
+    public Optional<Order> findByOrderIdAndUserIdForUpdate(@Param("orderId") Long orderId, @Param("userId") Long userId);
 }

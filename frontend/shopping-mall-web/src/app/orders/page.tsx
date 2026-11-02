@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SERVER_API_URL, reissuePagePath } from "@/lib/api";
+import CancelOrderButton from "./CancelOrderButton";
 
 const orderApiUrl = `${SERVER_API_URL}/orders`;
 const productApiUrl = `${SERVER_API_URL}/products`;
@@ -13,11 +14,21 @@ type OrderItem = {
     totalOrderItemPrice: number;
 };
 
+type OrderStatus = "PENDING" | "PAID" | "FAILED" | "CANCELED";
+
 type Order = {
     orderId: number;
     orderUid: number;
     orderItemResponseDTOList: OrderItem[];
     totalOrderPrice: number;
+    orderStatus: OrderStatus;
+};
+
+const STATUS_LABEL: Record<OrderStatus, string> = {
+    PENDING: "결제 대기",
+    PAID: "결제 완료",
+    FAILED: "결제 실패",
+    CANCELED: "취소됨",
 };
 
 type Product = {
@@ -89,7 +100,17 @@ export default async function OrdersPage({
                 <ul className="space-y-6">
                     {orders.map((order) => (
                         <li key={order.orderId} className="rounded border border-zinc-200 p-5">
-                            <p className="mb-3 text-sm text-zinc-500">주문번호 {order.orderUid}</p>
+                            <div className="mb-3 flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-sm text-zinc-500">주문번호 {order.orderUid}</p>
+                                    <p className="mt-1 text-sm font-semibold text-zinc-900">
+                                        {STATUS_LABEL[order.orderStatus] ?? order.orderStatus}
+                                    </p>
+                                </div>
+                                {(order.orderStatus === "PENDING" || order.orderStatus === "PAID") && (
+                                    <CancelOrderButton orderId={order.orderId} paid={order.orderStatus === "PAID"} />
+                                )}
+                            </div>
 
                             <ul className="divide-y divide-zinc-100">
                                 {order.orderItemResponseDTOList.map((item) => {

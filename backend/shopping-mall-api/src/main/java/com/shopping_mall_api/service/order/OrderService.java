@@ -133,7 +133,7 @@ public class OrderService {
         }
 
         switch(tossResponse){
-            case Payment payment -> completePayment(tossOrder);
+            case Payment payment -> completePayment(tossOrder, tossPaymentRequestDTO.paymentKey());
             case TossError tossError -> {
                 failPaymentAndRestoreStock(tossOrder);
                 // noRollbackFor = PaymentException이라 FAILED 상태와 재고 복구가 함께 커밋됨
@@ -157,7 +157,7 @@ public class OrderService {
 
         if(lookup instanceof Payment payment){
             if("DONE".equals(payment.status())){
-                completePayment(order);
+                completePayment(order, payment.paymentKey());
                 return;
             }
             if("ABORTED".equals(payment.status()) || "EXPIRED".equals(payment.status())){
@@ -169,8 +169,8 @@ public class OrderService {
         throw new PaymentException(ErrorCode.TOSS_SERVER_ERROR);
     }
 
-    private void completePayment(Order order){
-        order.completePayment();
+    private void completePayment(Order order, String paymentKey){
+        order.completePayment(paymentKey);
         removeOrderedItemsFromCart(order);
     }
 
@@ -240,6 +240,58 @@ public class OrderService {
         });
 
         return new OrderResponseDTO(order);
+    }
+
+    private static final String DEFAULT_CANCEL_REASON = "고객 요청에 의한 주문 취소";
+
+    // 본인 주문 취소. PENDING → 바로 취소, PAID → 토스 결제 취소 성공 후 취소, 둘 다 재고 복구
+    // 토스 취소 실패(에러 응답·네트워크 오류)면 주문은 PAID 그대로 두고 예외 → 다시 요청 가능
+    @Transactional
+    public OrderResponseDTO cancelOrder(Long userId, Long orderId, String cancelReason){
+        CheckConfig.npeCheck(userId, "userId");
+        CheckConfig.npeCheck(orderId, "orderId");
+
+        Order order = orderRepository.findByOrderIdAndUserIdForUpdate(orderId, userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
+
+        if(order.getOrderStatus() == OrderStatus.PAID){
+            refundWithToss(order, (cancelReason == null || cancelReason.isBlank()) ? DEFAULT_CANCEL_REASON : cancelReason);
+        }
+
+        // PENDING·PAID 외 상태(FAILED, CANCELED)는 엔티티에서 400
+        order.cancel();
+        restoreStock(order);
+
+        return new OrderResponseDTO(order);
+    }
+
+    private void refundWithToss(Order order, String cancelReason){
+        if(order.getPaymentKey() == null){
+            // paymentKey 저장 이전에 결제된 주문은 API로 환불할 수 없음 → 토스 개발자센터에서 수동 처리
+            throw new PaymentException(ErrorCode.PAYMENT_CANCEL_FAILED, "Payment key not found for order (" + order.getOrderId() + ")");
+        }
+
+        TossResponse response;
+        try {
+            response = tossClient.cancel(order.getPaymentKey(), cancelReason, "cancel-" + order.getOrderUid());
+        } catch (ResourceAccessException e) {
+            log.warn("Toss cancel I/O error (orderUid={})", order.getOrderUid(), e);
+            throw new PaymentException(ErrorCode.TOSS_SERVER_ERROR);
+        }
+
+        switch(response){
+            case TossError tossError -> {
+                log.warn("Toss cancel rejected (orderUid={}, code={})", order.getOrderUid(), tossError.code());
+                throw new PaymentException(ErrorCode.PAYMENT_CANCEL_FAILED, "Payment cancel failed : " + tossError.message());
+            }
+            // 전액 취소 성공 시 토스 결제 상태는 CANCELED. 그 외 상태면 환불이 끝났다고 볼 수 없으므로 주문을 취소하지 않음
+            case Payment payment -> {
+                if(!"CANCELED".equals(payment.status())){
+                    throw new PaymentException(ErrorCode.PAYMENT_CANCEL_FAILED,
+                            "Unexpected payment status after cancel : " + payment.status());
+                }
+            }
+        }
     }
 
     @Transactional

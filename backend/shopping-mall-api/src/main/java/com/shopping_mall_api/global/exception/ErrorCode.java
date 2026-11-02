@@ -45,6 +45,7 @@ public enum ErrorCode {
 
     //Payment
     PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "PA001", "Payment Failed"),
+    PAYMENT_CANCEL_FAILED(HttpStatus.BAD_REQUEST, "PA002", "Payment cancel failed"),
 
     //Toss Client
     TOSS_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "TS001", "Cannot confirm payment status with Toss. Please try again");

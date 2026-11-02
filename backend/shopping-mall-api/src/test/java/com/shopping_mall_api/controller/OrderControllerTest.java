@@ -8,7 +8,10 @@ import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
 import com.shopping_mall_api.dto.order.orderItem.OrderItemResponseDTO;
 import com.shopping_mall_api.dto.order.orderItem.OrderItemUpdateDTO;
 import com.shopping_mall_api.dto.payment.toss.TossPaymentRequestDTO;
+import com.shopping_mall_api.entity.order.OrderStatus;
 import com.shopping_mall_api.global.constant.ApiURLNames;
+import com.shopping_mall_api.global.exception.ErrorCode;
+import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.service.order.OrderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +69,8 @@ public class OrderControllerTest {
                 orderId,
                 orderId,
                 List.of(orderItemResponseDTO),
-                20260908L
+                20260908L,
+                OrderStatus.PENDING
         );
 
         when(orderService.createOrder(any(Long.class), any(OrderCreateDTO.class))).thenReturn(orderResponseDTO);
@@ -91,7 +95,8 @@ public class OrderControllerTest {
                 1L,
                 1L,
                 List.of(),
-                20260908L
+                20260908L,
+                OrderStatus.PENDING
         );
 
         mockMvc.perform(post(ApiURLNames.orderURL + ApiURLNames.createOrderURL)
@@ -119,7 +124,8 @@ public class OrderControllerTest {
                 orderId,
                 orderId,
                 List.of(orderItemResponseDTO),
-                20260908L
+                20260908L,
+                OrderStatus.PENDING
         );
 
         TossPaymentRequestDTO tossPaymentRequestDTO = TossPaymentRequestDTO.builder()
@@ -175,7 +181,8 @@ public class OrderControllerTest {
                 orderId,
                 orderId,
                 List.of(orderItemResponseDTO),
-                20260908L
+                20260908L,
+                OrderStatus.PENDING
         );
 
         when(orderService.getOrders()).thenReturn(List.of(orderResponseDTO));
@@ -210,7 +217,8 @@ public class OrderControllerTest {
                 orderId,
                 orderId,
                 List.of(orderItemResponseDTO),
-                20260908L
+                20260908L,
+                OrderStatus.PENDING
         );
 
         when(orderService.getOrdersWithUserId(any(Long.class))).thenReturn(List.of(orderResponseDTO));
@@ -248,7 +256,8 @@ public class OrderControllerTest {
                 orderId,
                 orderId,
                 List.of(orderItemResponseDTO),
-                20260908L
+                20260908L,
+                OrderStatus.PENDING
         );
 
         when(orderService.getOrderWithUserId(userId, orderId)).thenReturn(orderResponseDTO);
@@ -286,7 +295,8 @@ public class OrderControllerTest {
                 orderId,
                 orderId,
                 List.of(orderItemResponseDTO),
-                20260908L
+                20260908L,
+                OrderStatus.PENDING
         );
 
         OrderItemUpdateDTO orderItemUpdateDTO = OrderItemUpdateDTO.builder()
@@ -347,4 +357,70 @@ public class OrderControllerTest {
         verify(orderService).deleteOrder(orderId);
     }
 
+    @Test
+    void cancelOrder_successTest() throws Exception{
+        Long userId = 1L;
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userId, null, List.of(new SimpleGrantedAuthority("USER"))
+        );
+
+        OrderResponseDTO canceled = new OrderResponseDTO(1L, 1L, List.of(), 20260908L, OrderStatus.CANCELED);
+
+        when(orderService.cancelOrder(1L, 1L, "단순 변심")).thenReturn(canceled);
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        try {
+            mockMvc.perform(post(ApiURLNames.orderURL + ApiURLNames.cancelOrderURL, 1L)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"cancelReason": "단순 변심"}
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.orderStatus").value("CANCELED"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void cancelOrder_withoutBodyTest() throws Exception{
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                1L, null, List.of(new SimpleGrantedAuthority("USER"))
+        );
+
+        when(orderService.cancelOrder(1L, 1L, null))
+                .thenReturn(new OrderResponseDTO(1L, 1L, List.of(), 20260908L, OrderStatus.CANCELED));
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        try {
+            // 바디 없이 호출하면 기본 취소 사유 사용 (서비스에 null 전달)
+            mockMvc.perform(post(ApiURLNames.orderURL + ApiURLNames.cancelOrderURL, 1L))
+                    .andExpect(status().isOk());
+
+            verify(orderService).cancelOrder(1L, 1L, null);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void cancelOrder_cancelFailedTest() throws Exception{
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                1L, null, List.of(new SimpleGrantedAuthority("USER"))
+        );
+
+        when(orderService.cancelOrder(1L, 1L, null)).thenThrow(new PaymentException(ErrorCode.PAYMENT_CANCEL_FAILED));
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        try {
+            mockMvc.perform(post(ApiURLNames.orderURL + ApiURLNames.cancelOrderURL, 1L))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Payment cancel failed"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
 }

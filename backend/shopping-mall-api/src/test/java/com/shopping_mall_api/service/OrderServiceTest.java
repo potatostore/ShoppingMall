@@ -265,6 +265,7 @@ public class OrderServiceTest {
         Order existOrder = pendingOrder();
         TossPaymentRequestDTO request = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 1000L);
         Payment done = tossPayment("DONE");
+        when(done.paymentKey()).thenReturn("pk-1");
 
         when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
         when(tossClient.confirm(request)).thenThrow(new ResourceAccessException("Read timed out"));
@@ -272,8 +273,9 @@ public class OrderServiceTest {
 
         orderService.authTossPayment(request);
 
-        // 응답은 유실됐지만 토스에서 승인 완료(DONE) → 결제 완료 처리, 재고는 그대로
+        // 응답은 유실됐지만 토스에서 승인 완료(DONE) → 결제 완료 처리(조회 결과의 paymentKey 저장), 재고는 그대로
         assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(existOrder.getPaymentKey()).isEqualTo("pk-1");
         verify(productRepository, never()).increaseStock(anyLong(), anyLong());
     }
 
@@ -335,7 +337,7 @@ public class OrderServiceTest {
                 .orderItemList(List.of(new OrderItem(1L, 20260901L, 1L)))
                 .orderStatus(OrderStatus.PENDING)
                 .build();
-        existOrder.completePayment();
+        existOrder.completePayment("test-payment-key");
 
         TossPaymentRequestDTO tossPaymentRequestDTO = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 20260901L);
 
@@ -677,6 +679,114 @@ public class OrderServiceTest {
         assertThrows(NotFoundException.class, () -> orderService.patchOrder(999L, 999L, orderUpdateDTO));
     }
 
+    private Order paidOrder(){
+        Order order = pendingOrder();
+        order.completePayment("pk-1");
+        return order;
+    }
+
+    @Test
+    void cancelOrder_pendingCancelsAndRestoresStockTest(){
+        Order existOrder = pendingOrder();
+
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 1L)).thenReturn(Optional.of(existOrder));
+
+        OrderResponseDTO result = orderService.cancelOrder(1L, 1L, null);
+
+        assertThat(result.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+        verify(productRepository).increaseStock(1L, 1L);
+        // 결제 전이라 토스 호출 없음
+        verifyNoInteractions(tossClient);
+    }
+
+    @Test
+    void cancelOrder_paidRefundsWithTossTest(){
+        Order existOrder = paidOrder();
+
+        Payment canceled = tossPayment("CANCELED");
+
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.cancel(eq("pk-1"), eq("단순 변심"), eq("cancel-" + existOrder.getOrderUid())))
+                .thenReturn(canceled);
+
+        OrderResponseDTO result = orderService.cancelOrder(1L, 1L, "단순 변심");
+
+        assertThat(result.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+        verify(productRepository).increaseStock(1L, 1L);
+    }
+
+    @Test
+    void cancelOrder_paidWithoutReasonUsesDefaultTest(){
+        Order existOrder = paidOrder();
+
+        Payment canceled = tossPayment("CANCELED");
+
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.cancel(eq("pk-1"), eq("고객 요청에 의한 주문 취소"), any())).thenReturn(canceled);
+
+        orderService.cancelOrder(1L, 1L, " ");
+
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+    }
+
+    @Test
+    void cancelOrder_tossRejected_keepsPaidTest(){
+        Order existOrder = paidOrder();
+
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.cancel(any(), any(), any())).thenReturn(new TossError("NOT_CANCELABLE_PAYMENT", "취소 할 수 없는 결제 입니다."));
+
+        PaymentException e = assertThrows(PaymentException.class, () -> orderService.cancelOrder(1L, 1L, null));
+
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_CANCEL_FAILED);
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void cancelOrder_unexpectedTossStatus_keepsPaidTest(){
+        Order existOrder = paidOrder();
+        Payment partial = tossPayment("PARTIAL_CANCELED");
+
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.cancel(any(), any(), any())).thenReturn(partial);
+
+        assertThrows(PaymentException.class, () -> orderService.cancelOrder(1L, 1L, null));
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+    }
+
+    @Test
+    void cancelOrder_tossNetworkError_keepsPaidTest(){
+        Order existOrder = paidOrder();
+
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.cancel(any(), any(), any())).thenThrow(new ResourceAccessException("Read timed out"));
+
+        PaymentException e = assertThrows(PaymentException.class, () -> orderService.cancelOrder(1L, 1L, null));
+
+        // 같은 Idempotency-Key로 재시도할 수 있도록 PAID 유지
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.TOSS_SERVER_ERROR);
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+    }
+
+    @Test
+    void cancelOrder_alreadyCanceledTest(){
+        Order existOrder = pendingOrder();
+        existOrder.cancel();
+
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 1L)).thenReturn(Optional.of(existOrder));
+
+        assertThrows(InvalidOrderStatusException.class, () -> orderService.cancelOrder(1L, 1L, null));
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void cancelOrder_otherUsersOrderTest(){
+        when(orderRepository.findByOrderIdAndUserIdForUpdate(1L, 999L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> orderService.cancelOrder(999L, 1L, null));
+    }
+
     @Test
     void deleteOrder_successTest(){
         User existUser = User.builder()
@@ -716,7 +826,7 @@ public class OrderServiceTest {
                 .orderItemList(List.of(new OrderItem(1L, 1000L, 1L)))
                 .orderStatus(OrderStatus.PENDING)
                 .build();
-        existOrder.completePayment();
+        existOrder.completePayment("test-payment-key");
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(existOrder));
 

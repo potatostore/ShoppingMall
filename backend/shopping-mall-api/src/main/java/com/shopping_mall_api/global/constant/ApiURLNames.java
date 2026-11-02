@@ -35,6 +35,7 @@ public class ApiURLNames {
     public static final String findOrderURL = "/{orderId}";
     public static final String updateOrderURL = "/{orderId}";
     public static final String deleteOrderURL = "/{orderId}";
+    public static final String cancelOrderURL = "/{orderId}/cancel";
 
     // auth api
     public static final String loginURL = "/users/login";

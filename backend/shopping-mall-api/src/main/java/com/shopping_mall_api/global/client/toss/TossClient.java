@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.util.Map;
 
 // 네트워크 오류·타임아웃은 ResourceAccessException으로 그대로 던짐 → 호출하는 서비스가 결제 조회로 실제 상태를 확인
 @Getter
@@ -33,6 +34,16 @@ public class TossClient {
     public TossResponse getPaymentByOrderId(Long orderUid){
         return tossRestClient.get()
                 .uri("/orders/{orderId}", orderUid)
+                .exchange((req, res) -> toTossResponse(res));
+    }
+
+    // 결제 전액 취소: POST /v1/payments/{paymentKey}/cancel
+    // Idempotency-Key가 같으면 토스가 같은 요청으로 보고 한 번만 처리 → 네트워크 오류 후 재시도해도 이중 환불 없음
+    public TossResponse cancel(String paymentKey, String cancelReason, String idempotencyKey){
+        return tossRestClient.post()
+                .uri("/{paymentKey}/cancel", paymentKey)
+                .header("Idempotency-Key", idempotencyKey)
+                .body(Map.of("cancelReason", cancelReason))
                 .exchange((req, res) -> toTossResponse(res));
     }
 

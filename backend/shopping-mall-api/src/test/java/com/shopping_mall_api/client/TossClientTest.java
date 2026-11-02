@@ -74,4 +74,20 @@ class TossClientTest {
         assertThat(((Payment) response).paymentKey()).isEqualTo("pk");
         server.verify();
     }
+
+    @Test
+    void cancel_sendsReasonAndIdempotencyKey(){
+        server.expect(requestTo(BASE + "/pk/cancel"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Idempotency-Key", "cancel-123456"))
+                .andExpect(jsonPath("$.cancelReason").value("단순 변심"))
+                .andRespond(withSuccess("""
+                        {"paymentKey":"pk","orderId":"123456","status":"CANCELED","totalAmount":1000}
+                        """, MediaType.APPLICATION_JSON));
+
+        TossResponse response = tossClient.cancel("pk", "단순 변심", "cancel-123456");
+
+        assertThat(((Payment) response).status()).isEqualTo("CANCELED");
+        server.verify();
+    }
 }

@@ -1,5 +1,6 @@
 package com.shopping_mall_api.controller;
 
+import com.shopping_mall_api.dto.order.OrderCancelDTO;
 import com.shopping_mall_api.dto.order.OrderCreateDTO;
 import com.shopping_mall_api.dto.order.OrderResponseDTO;
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
@@ -73,6 +74,20 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch order (" + orderId + ")",
                 orderService.patchOrder(userId, orderId, orderUpdateDTO)
+        ));
+    }
+
+    // 본인 주문 취소: PENDING은 바로 취소, PAID는 토스 결제 취소(환불) 후 취소. 둘 다 재고 복구
+    @PostMapping(ApiURLNames.cancelOrderURL)
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> cancelOrder(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long orderId,
+            @RequestBody(required = false) @Valid OrderCancelDTO orderCancelDTO){
+        String cancelReason = (orderCancelDTO != null) ? orderCancelDTO.getCancelReason() : null;
+
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : cancel order (" + orderId + ")",
+                orderService.cancelOrder(userId, orderId, cancelReason)
         ));
     }
 

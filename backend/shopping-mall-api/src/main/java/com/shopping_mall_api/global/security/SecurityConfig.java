@@ -60,7 +60,8 @@ public class SecurityConfig {
 
                         // Authenticated User
                         .requestMatchers(HttpMethod.POST, "/carts",
-                                                          "/orders", "/orders/toss/payment/auth").authenticated()
+                                                          "/orders", "/orders/toss/payment/auth",
+                                                          "/orders/{orderId}/cancel").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/me",
                                                          "/carts/me",
                                                          "/orders/me", "/orders/{orderId}").authenticated()
