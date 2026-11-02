@@ -39,8 +39,10 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<OrderItem> orderItemList;
 
+    // ORDINAL(기본값)은 enum 순서가 바뀌면 기존 데이터 의미가 바뀌므로 문자열로 저장
     @NotNull
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private OrderStatus orderStatus;
 
     @NotNull(message = "totalOrderPrice must not be null")
@@ -87,10 +89,7 @@ public class Order extends BaseEntity {
     public void patchOrder(OrderUpdateDTO orderUpdateDTO){
         CheckConfig.npeCheck(orderUpdateDTO, "orderUpdateDTO");
 
-        if(this.orderStatus != OrderStatus.PENDING){
-            throw new InvalidOrderStatusException(ErrorCode.ORDER_STATUS_INVALID,
-                    "Only PENDING order can be updated (current : " + this.orderStatus + ")");
-        }
+        checkPending();
 
         List<OrderItemUpdateDTO> patchOrderItem = orderUpdateDTO.getOrderItemResponseDTOList();
 
@@ -116,13 +115,22 @@ public class Order extends BaseEntity {
     }
 
     public void completePayment(){
+        checkPending();
         this.orderStatus = OrderStatus.PAID;
     }
 
     public void failPayment(){
+        checkPending();
         this.orderStatus = OrderStatus.FAILED;
         //주문 재고 복구
         //쿠폰 및 포인트 복구(미사용 처리)
         //실패 사유(로그 저장)
+    }
+
+    private void checkPending(){
+        if(this.orderStatus != OrderStatus.PENDING){
+            throw new InvalidOrderStatusException(ErrorCode.ORDER_STATUS_INVALID,
+                    "Order is not PENDING (current : " + this.orderStatus + ")");
+        }
     }
 }

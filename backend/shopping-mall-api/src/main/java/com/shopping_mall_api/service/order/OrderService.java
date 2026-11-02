@@ -16,6 +16,7 @@ import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.client.toss.TossClient;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
+import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.global.exception.UnmatchedPriceException;
@@ -93,11 +94,22 @@ public class OrderService {
     public OrderResponseDTO authTossPayment(TossPaymentRequestDTO tossPaymentRequestDTO){
         CheckConfig.npeCheck(tossPaymentRequestDTO, "tossPaymentRequestDTO");
 
-        Order tossOrder = orderRepository.findByOrderUid(tossPaymentRequestDTO.orderId())
+        Order tossOrder = orderRepository.findByOrderUidForUpdate(tossPaymentRequestDTO.orderId())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
         if(!tossPaymentRequestDTO.amount().equals(tossOrder.getTotalOrderPrice())){
             throw new UnmatchedPriceException(ErrorCode.ORDER_PRICE_UNMATCHED);
+        }
+
+        // 토스 API 호출 전에 상태 확인: 이미 결제된 주문의 재승인 요청(새로고침, 버튼 재클릭)이
+        // 토스 중복 승인 에러 → failPayment()로 PAID 주문을 FAILED로 덮어쓰던 문제 방지
+        switch(tossOrder.getOrderStatus()){
+            case PAID -> {
+                return new OrderResponseDTO(tossOrder);
+            }
+            case PENDING -> { }
+            default -> throw new InvalidOrderStatusException(ErrorCode.ORDER_STATUS_INVALID,
+                    "Order cannot be paid (current : " + tossOrder.getOrderStatus() + ")");
         }
 
         TossResponse tossResponse = tossClient.confirm(tossPaymentRequestDTO);

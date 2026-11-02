@@ -162,14 +162,52 @@ public class OrderServiceTest {
                 .orderItemList(List.of(orderItem))
                 .build();
 
-        when(orderRepository.findByOrderUid(1L)).thenReturn(Optional.of(existOrder));
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
         when(tossClient.confirm(tossPaymentRequestDTO)).thenReturn(tossResponse);
 
         OrderResponseDTO result = orderService.authTossPayment(tossPaymentRequestDTO);
-        
+
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getCurOrderItemPrice()).isEqualTo(20260901L);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getQuantity()).isEqualTo(1L);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getCurOrderItemPrice()).isEqualTo(20260901L);
+    }
+
+    @Test
+    void authTossPayment_alreadyPaidOrderTest(){
+        Order existOrder = Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 20260901L, 1L)))
+                .orderStatus(OrderStatus.PENDING)
+                .build();
+        existOrder.completePayment();
+
+        TossPaymentRequestDTO tossPaymentRequestDTO = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 20260901L);
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+
+        OrderResponseDTO result = orderService.authTossPayment(tossPaymentRequestDTO);
+
+        // 재승인 요청은 토스를 다시 호출하지 않고 PAID 상태를 유지한 채 현재 주문을 반환
+        assertThat(result.getTotalOrderPrice()).isEqualTo(20260901L);
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+        verify(tossClient, never()).confirm(any());
+    }
+
+    @Test
+    void authTossPayment_failedOrderExceptionTest(){
+        Order existOrder = Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 20260901L, 1L)))
+                .orderStatus(OrderStatus.FAILED)
+                .build();
+
+        TossPaymentRequestDTO tossPaymentRequestDTO = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 20260901L);
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+
+        assertThrows(InvalidOrderStatusException.class, () -> orderService.authTossPayment(tossPaymentRequestDTO));
+        verify(tossClient, never()).confirm(any());
     }
 
     @Test
@@ -180,7 +218,7 @@ public class OrderServiceTest {
                 20260901L
         );
 
-        when(orderRepository.findByOrderUid(999L)).thenReturn(Optional.empty());
+        when(orderRepository.findByOrderUidForUpdate(999L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> orderService.authTossPayment(tossPaymentRequestDTO));
     }
@@ -216,10 +254,11 @@ public class OrderServiceTest {
                         .orderItemList(List.of(orderItem))
                         .build();
 
-        when(orderRepository.findByOrderUid(1L)).thenReturn(Optional.of(existOrder));
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
         when(tossClient.confirm(tossPaymentRequestDTO)).thenReturn(tossResponse);
 
         assertThrows(PaymentException.class, () -> orderService.authTossPayment(tossPaymentRequestDTO));
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.FAILED);
     }
 
     @Test
@@ -251,7 +290,7 @@ public class OrderServiceTest {
                 .orderItemList(List.of(orderItem))
                 .build();
         
-        when(orderRepository.findByOrderUid(1L)).thenReturn(Optional.of(existOrder));
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
         
         assertThrows(UnmatchedPriceException.class, () -> orderService.authTossPayment(tossPaymentRequestDTO));
     }
