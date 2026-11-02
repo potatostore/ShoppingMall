@@ -11,6 +11,7 @@ import com.shopping_mall_api.global.constant.RoleNames;
 import com.shopping_mall_api.global.exception.AlreadyExistException;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.repository.likes.LikesRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.cart.CartService;
 import jakarta.validation.Valid;
@@ -30,6 +31,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final CartService cartService;
     private final PasswordEncoder passwordEncoder;
+    private final LikesRepository likesRepository;
 
     @Transactional
     public UserCreateResponseDTO createUser(@Valid UserCreateDTO userCreateDTO){
@@ -142,6 +144,8 @@ public class UserService {
         User deleteUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User  (" + userId + ")"));
 
+        // likes.user_id FK 때문에 찜이 있는 회원은 탈퇴가 실패하므로 찜을 먼저 지움 (주문 FK 문제는 탈퇴 정책 결정 후 처리)
+        likesRepository.deleteAllByUserId(userId);
         userRepository.deleteById(userId);
     }
 

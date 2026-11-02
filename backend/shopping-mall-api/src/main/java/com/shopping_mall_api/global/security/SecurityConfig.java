@@ -61,15 +61,18 @@ public class SecurityConfig {
                         // Authenticated User
                         .requestMatchers(HttpMethod.POST, "/carts",
                                                           "/orders", "/orders/toss/payment/auth",
-                                                          "/orders/{orderId}/cancel").authenticated()
+                                                          "/orders/{orderId}/cancel",
+                                                          "/products/{productId}/likes").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/me",
                                                          "/carts/me",
-                                                         "/orders/me", "/orders/{orderId}").authenticated()
+                                                         "/orders/me", "/orders/{orderId}",
+                                                         "/products/{productId}/likes/me", "/users/me/likes").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/me",
                                                            "/carts/me",
                                                            "/orders/{orderId}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/users/logout", "/users/me",
-                                                            "/carts/items/{productId}", "/carts/me").authenticated()
+                                                            "/carts/items/{productId}", "/carts/me",
+                                                            "/products/{productId}/likes").authenticated()
 
                         // Permit All
                         .requestMatchers("/error").permitAll()

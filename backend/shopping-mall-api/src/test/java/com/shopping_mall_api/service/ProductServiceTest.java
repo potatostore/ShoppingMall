@@ -9,6 +9,7 @@ import com.shopping_mall_api.dto.product.productDetail.ProductDetailCreateDTO;
 import com.shopping_mall_api.dto.product.productDetail.ProductDetailUpdateDTO;
 import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.repository.likes.LikesRepository;
 import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.service.product.ProductService;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.PageImpl;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
     @Mock private ProductRepository productRepository;
+    @Mock private LikesRepository likesRepository;
 
     @InjectMocks private ProductService productService;
 
@@ -246,7 +249,10 @@ public class ProductServiceTest {
 
         productService.deleteProduct(1L);
 
-        verify(productRepository).deleteById(1L);
+        // 찜(likes.product_id FK)을 먼저 지운 뒤 상품 삭제
+        InOrder inOrder = inOrder(likesRepository, productRepository);
+        inOrder.verify(likesRepository).deleteAllByProductId(1L);
+        inOrder.verify(productRepository).deleteById(1L);
     }
 
     @Test

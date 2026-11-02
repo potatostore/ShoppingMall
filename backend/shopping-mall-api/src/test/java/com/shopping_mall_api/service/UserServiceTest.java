@@ -8,6 +8,7 @@ import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.exception.AlreadyExistException;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.repository.likes.LikesRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.cart.CartService;
 import com.shopping_mall_api.service.user.UserService;
@@ -34,6 +35,7 @@ public class UserServiceTest {
     @Mock private CartService cartService;
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private LikesRepository likesRepository;
 
     @InjectMocks private UserService userService;
 
@@ -297,6 +299,7 @@ public class UserServiceTest {
 
         userService.deleteUser(1L);
 
+        verify(likesRepository).deleteAllByUserId(1L);
         verify(userRepository).deleteById(1L);
     }
 

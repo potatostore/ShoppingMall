@@ -42,6 +42,11 @@ public class ApiURLNames {
     public static final String logOutURL = "/users/logout";
     public static final String reissueURL = "/auth/reissue";
 
+    // likes api (컨트롤러에 공통 prefix 없이 전체 경로)
+    public static final String productLikesURL = "/products/{productId}/likes";
+    public static final String myProductLikeURL = "/products/{productId}/likes/me";
+    public static final String myLikesURL = "/users/me/likes";
+
     // toss payments api
     public static final String tossPaymentAuthURL = "/toss/payment/auth";
 }

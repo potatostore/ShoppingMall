@@ -59,9 +59,14 @@ export default async function ProfilePage({
         <div className="mx-auto max-w-xl p-6">
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">내 정보</h1>
-                <Link href="/orders" className="text-sm text-zinc-500 hover:text-zinc-900">
-                    주문 내역 보기 →
-                </Link>
+                <div className="flex gap-4">
+                    <Link href="/likes" className="text-sm text-zinc-500 hover:text-zinc-900">
+                        찜한 상품 →
+                    </Link>
+                    <Link href="/orders" className="text-sm text-zinc-500 hover:text-zinc-900">
+                        주문 내역 보기 →
+                    </Link>
+                </div>
             </div>
             <ProfileEditor profile={profile} />
         </div>

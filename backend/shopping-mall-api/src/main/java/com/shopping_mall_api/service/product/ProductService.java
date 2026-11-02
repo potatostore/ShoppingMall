@@ -9,6 +9,7 @@ import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.repository.likes.LikesRepository;
 import com.shopping_mall_api.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ProductService {
     private final ProductRepository productRepository;
+    private final LikesRepository likesRepository;
 
     @Transactional
     public ProductResponseDTO createProduct(ProductCreateDTO productCreateDTO){
@@ -102,6 +104,8 @@ public class ProductService {
         productRepository.findById(productId)
                         .orElseThrow(() -> new NotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        // likes.product_id FK 때문에 찜이 있는 상품은 삭제가 실패하므로 찜을 먼저 지움
+        likesRepository.deleteAllByProductId(productId);
         productRepository.deleteById(productId);
     }
 }
