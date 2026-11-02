@@ -21,7 +21,8 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping(ApiURLNames.createProductURL)
-    public ResponseEntity<ApiResponse<ProductResponseDTO>> createProduct(@RequestBody ProductCreateDTO productCreateDTO){
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> createProduct(
+            @RequestBody @Valid ProductCreateDTO productCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : product create",
                 productService.createProduct(productCreateDTO)
@@ -46,7 +47,7 @@ public class ProductController {
 
     @PatchMapping(ApiURLNames.updateProductURL)
     public ResponseEntity<ApiResponse<ProductResponseDTO>> patchProduct(
-            @PathVariable Long productId, @Valid @RequestBody ProductUpdateDTO productUpdateDTO){
+            @PathVariable Long productId, @RequestBody @Valid ProductUpdateDTO productUpdateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch product (" + productId + ")",
                 productService.patchProduct(productId, productUpdateDTO)

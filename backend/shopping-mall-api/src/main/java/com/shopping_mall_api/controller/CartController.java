@@ -25,7 +25,7 @@ public class CartController {
 
     @PostMapping(ApiURLNames.addCartItemInCartURL)
     public ResponseEntity<ApiResponse<CartResponseDTO>> addCartItemInCart(
-            @AuthenticationPrincipal Long userId, @RequestBody CartItemCreateDTO cartItemCreateDTO){
+            @AuthenticationPrincipal Long userId, @RequestBody @Valid CartItemCreateDTO cartItemCreateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : add cartItem in cart",
                 cartService.addCartItemInCart(userId, cartItemCreateDTO)
@@ -50,7 +50,7 @@ public class CartController {
 
     @PatchMapping(ApiURLNames.updateCartURL)
     public ResponseEntity<ApiResponse<CartResponseDTO>> patchCart(
-            @AuthenticationPrincipal Long userId, @Valid @RequestBody CartUpdateDTO cartUpdateDTO){
+            @AuthenticationPrincipal Long userId, @RequestBody @Valid CartUpdateDTO cartUpdateDTO){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch cart (" + userId + ")",
                 cartService.patchCart(userId, cartUpdateDTO)

@@ -12,14 +12,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class OrderItemUpdateDTO {
-    @NotNull
+    @NotNull(message = "productId must not be null")
     private Long productId;
 
-    @NotNull
-    @Min(value = 0)
+    @NotNull(message = "curOrderItemPrice must not be null")
+    @Min(value = 0, message = "curOrderItemPrice must be at least 0")
     private Long curOrderItemPrice;
 
-    @NotNull
-    @Min(value = 1)
+    @NotNull(message = "quantity must not be null")
+    @Min(value = 1, message = "quantity must be at least 1")
     private Long quantity;
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shopping_mall_api.dto.cart.CartResponseDTO;
 import com.shopping_mall_api.dto.cart.CartUpdateDTO;
 import com.shopping_mall_api.dto.cart.cartItem.CartItemCreateDTO;
+import com.shopping_mall_api.dto.cart.cartItem.CartItemUpdateDTO;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.service.cart.CartService;
 import org.junit.jupiter.api.Test;
@@ -23,8 +24,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -65,6 +65,23 @@ public class CartControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message").value("Success : add cartItem in cart"))
                 .andExpect(jsonPath("$.data.totalCartPrice").value(10000L));
+    }
+
+    @Test
+    void addCartItemInCart_InvalidQuantityTest() throws Exception{
+        CartItemCreateDTO cartItemCreateDTO = CartItemCreateDTO.builder()
+                .productId(1L)
+                .quantity(-1L)
+                .build();
+
+        mockMvc.perform(post(ApiURLNames.cartURL + ApiURLNames.addCartItemInCartURL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(cartItemCreateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("product quantity must be at least 1"));
+
+        verifyNoInteractions(cartService);
     }
 
     @Test
@@ -137,6 +154,27 @@ public class CartControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message").value("Success : patch cart (1)"))
                 .andExpect(jsonPath("$.data.totalCartPrice").value(10000L));
+    }
+
+    @Test
+    void patchCart_InvalidQuantityTest() throws Exception{
+        CartItemUpdateDTO cartItemUpdateDTO = CartItemUpdateDTO.builder()
+                .productId(1L)
+                .quantity(-1L)
+                .build();
+
+        CartUpdateDTO cartUpdateDTO = CartUpdateDTO.builder()
+                .cartItemUpdateDTOList(List.of(cartItemUpdateDTO))
+                .build();
+
+        mockMvc.perform(patch(ApiURLNames.cartURL + ApiURLNames.updateCartURL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(cartUpdateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("product quantity must be at least 1"));
+
+        verifyNoInteractions(cartService);
     }
 
     @Test

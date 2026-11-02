@@ -1,6 +1,7 @@
 package com.shopping_mall_api.dto.cart;
 
 import com.shopping_mall_api.dto.cart.cartItem.CartItemUpdateDTO;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,5 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CartUpdateDTO {
+    @Valid
     private List<CartItemUpdateDTO> cartItemUpdateDTOList;
 }

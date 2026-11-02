@@ -26,8 +26,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -49,7 +48,7 @@ public class UserControllerTest {
                 .signUpRole("USER")
                 .signUpPhoneNumber("01011111111")
                 .signUpBirthday(LocalDate.of(2026,9,7))
-                .build();;
+                .build();
 
         UserResponseDTO userResponseDTO = UserResponseDTO.builder()
                 .userId(1L)
@@ -90,8 +89,24 @@ public class UserControllerTest {
     }
 
     @Test
-    void createUser_inValidTest(){
-        String body = ""
+    void createUser_InvalidNameTest() throws Exception{
+        UserCreateDTO userCreateDTO =  UserCreateDTO.builder()
+                .signUpName("")
+                .signUpEmail("1111@gmail.com")
+                .signUpPassword("qwer1234")
+                .signUpRole("USER")
+                .signUpPhoneNumber("01011111111")
+                .signUpBirthday(LocalDate.of(2026,9,7))
+                .build();
+
+        mockMvc.perform(post(ApiURLNames.userURL + ApiURLNames.createUserURL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userCreateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("name must not be blank"));
+
+        verifyNoInteractions(userService);
     }
 
     @Test
@@ -186,6 +201,25 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.data.email").value("1234@gmail.com"))
                 .andExpect(jsonPath("$.data.phoneNumber").value("01022222222"))
                 .andExpect(jsonPath("$.data.birthday").value("2026-09-07"));
+    }
+
+    @Test
+    void patchUser_InvalidNameTest() throws Exception{
+        UserUpdateDTO userUpdateDTO = UserUpdateDTO.builder()
+                .name("qwerasdfqwer")
+                .email("1234@gmail.com")
+                .phoneNumber("01022222222")
+                .birthday(LocalDate.of(2026,9,7))
+                .build();
+
+        mockMvc.perform(patch(ApiURLNames.userURL + ApiURLNames.updateUserURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userUpdateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("Name must be 3~5 length with Korean"));
+
+        verifyNoInteractions(userService);
     }
 
     @Test

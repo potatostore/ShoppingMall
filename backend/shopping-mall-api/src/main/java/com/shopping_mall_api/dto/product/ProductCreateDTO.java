@@ -22,7 +22,7 @@ public class ProductCreateDTO {
     private String name;
 
     @NotNull(message = "product price must not be negative")
-    @Min(value = 0)
+    @Min(value = 0, message = "product price must be at least 1")
     private Long price;
 
     @Valid

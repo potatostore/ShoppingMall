@@ -69,13 +69,13 @@ public class User extends BaseEntity {
     public void patchUser(UserUpdateDTO userUpdateDTO){
         CheckConfig.npeCheck(userUpdateDTO, "userCreateDTO");
 
-        if(userUpdateDTO.getEmail() != null){
+        if(userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().isEmpty()){
             this.email = userUpdateDTO.getEmail();
         }
-        if(userUpdateDTO.getName() != null){
+        if(userUpdateDTO.getName() != null && !userUpdateDTO.getName().isEmpty()){
             this.name = userUpdateDTO.getName();
         }
-        if(userUpdateDTO.getPhoneNumber() != null){
+        if(userUpdateDTO.getPhoneNumber() != null && !userUpdateDTO.getPhoneNumber().isEmpty()){
             this.phoneNumber = userUpdateDTO.getPhoneNumber();;
         }
         if(userUpdateDTO.getBirthday() != null){

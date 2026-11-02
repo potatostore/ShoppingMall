@@ -23,8 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -67,6 +66,28 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.data.name").value("water"))
                 .andExpect(jsonPath("$.data.price").value(20260907L))
                 .andExpect(jsonPath("$.data.productDetailResponseDTOList[0].detail").value("product-test-detail"));
+    }
+
+    @Test
+    void createProduct_InvalidNameTest() throws Exception{
+        ProductDetailCreateDTO productDetailCreateDTO = ProductDetailCreateDTO.builder()
+                .detail("product-test-detail")
+                .build();
+
+        ProductCreateDTO productCreateDTO = ProductCreateDTO.builder()
+                .name("")
+                .price(20260907L)
+                .productDetailCreateDTOList(List.of(productDetailCreateDTO))
+                .build();
+
+        mockMvc.perform(post(ApiURLNames.productURL + ApiURLNames.createProductURL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(productCreateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("product name must not be blank"));
+
+        verifyNoInteractions(productService);
     }
 
     @Test
@@ -144,6 +165,24 @@ public class ProductControllerTest {
                 .andExpect(jsonPath("$.data.name").value("water"))
                 .andExpect(jsonPath("$.data.price").value(20260907L))
                 .andExpect(jsonPath("$.data.productDetailResponseDTOList[0].detail").value("product-test-detail"));
+    }
+
+    @Test
+    void patchProduct_InvalidNameTest() throws Exception{
+        ProductUpdateDTO productUpdateDTO = ProductUpdateDTO.builder()
+                .name("1029387412093784")
+                .price(20260907L)
+                .productDetailUpdateDTOList(List.of(new ProductDetailUpdateDTO("product-test-detail")))
+                .build();
+
+        mockMvc.perform(post(ApiURLNames.productURL + ApiURLNames.updateProductURL, 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(productUpdateDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("Product name must be 3~20 length"));
+
+        verifyNoInteractions(productService);
     }
 
     @Test
