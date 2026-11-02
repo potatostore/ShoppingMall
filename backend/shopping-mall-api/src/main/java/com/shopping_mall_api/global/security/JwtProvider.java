@@ -92,12 +92,16 @@ public class JwtProvider {
         try{
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch(SecurityException | MalformedJwtException e){
-            log.info("Wrong JWT Signature");
         } catch(ExpiredJwtException e){
             log.info("JWT has been expired");
+        } catch(io.jsonwebtoken.security.SecurityException | MalformedJwtException e){
+            // 기존 SecurityException은 import io.jsonwebtoken.* 상황에서 java.lang.SecurityException으로 해석되어
+            // 서명 위조 토큰(io.jsonwebtoken.security.SignatureException)을 잡지 못하고 필터에서 500이 발생했음
+            log.info("Wrong JWT Signature");
         } catch(UnsupportedJwtException e){
             log.info("Unsupported JWT");
+        } catch(JwtException | IllegalArgumentException e){
+            log.info("Invalid JWT");
         }
         return false;
     }
