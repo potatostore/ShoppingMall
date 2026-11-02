@@ -175,7 +175,7 @@ public class ProductControllerTest {
                 .productDetailUpdateDTOList(List.of(new ProductDetailUpdateDTO("product-test-detail")))
                 .build();
 
-        mockMvc.perform(post(ApiURLNames.productURL + ApiURLNames.updateProductURL, 1L)
+        mockMvc.perform(patch(ApiURLNames.productURL + ApiURLNames.updateProductURL, 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productUpdateDTO)))
                 .andExpect(status().isBadRequest())

@@ -329,12 +329,12 @@ public class OrderControllerTest {
                 .orderItemResponseDTOList(List.of(orderItemUpdateDTO))
                 .build();
 
-        mockMvc.perform(post(ApiURLNames.orderURL + ApiURLNames.tossPaymentAuthURL, 1L)
+        mockMvc.perform(patch(ApiURLNames.orderURL + ApiURLNames.updateOrderURL, 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderUpdateDTO)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.message").value("amount must be at least 0"));
+                .andExpect(jsonPath("$.message").value("quantity must be at least 1"));
 
         verifyNoInteractions(orderService);
     }
