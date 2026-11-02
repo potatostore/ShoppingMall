@@ -70,7 +70,7 @@ public class SecurityConfig {
 
                         // Permit All
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/users/login", "/users/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/login", "/users/signup", "/auth/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products", "/products/{productId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/find-id").permitAll()
 

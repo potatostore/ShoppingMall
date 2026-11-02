@@ -54,4 +54,20 @@ class JwtProviderTest {
 
         assertThat(jwtProvider.checkValidationToken(expired)).isFalse();
     }
+
+    @Test
+    void tokenTypeClaim(){
+        String access = jwtProvider.createAccessToken(1L, "USER");
+        String refresh = jwtProvider.createRefreshToken(1L, "USER");
+
+        assertThat(jwtProvider.isRefreshToken(access)).isFalse();
+        assertThat(jwtProvider.isRefreshToken(refresh)).isTrue();
+    }
+
+    @Test
+    void refreshTokensAreUnique(){
+        // 같은 밀리초에 연속 발급해도 jti 덕분에 달라야 rotation 비교가 의미 있음
+        assertThat(jwtProvider.createRefreshToken(1L, "USER"))
+                .isNotEqualTo(jwtProvider.createRefreshToken(1L, "USER"));
+    }
 }

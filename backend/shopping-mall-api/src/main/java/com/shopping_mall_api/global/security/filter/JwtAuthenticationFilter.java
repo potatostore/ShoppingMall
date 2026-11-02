@@ -34,7 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = extractToken(request);
 
-        if (StringUtils.hasText(token) && jwtProvider.checkValidationToken(token)) {
+        // refresh 토큰은 인증에 사용하지 않음 (재발급 API에서만 사용)
+        if (StringUtils.hasText(token) && jwtProvider.checkValidationToken(token) && !jwtProvider.isRefreshToken(token)) {
             Long userId = jwtProvider.getUserIdFromToken(token);
             String role = jwtProvider.getRoleFromToken(token);
 
@@ -56,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String cookieToken = null;
         if(request.getCookies() != null){
             cookieToken = Arrays.stream(request.getCookies())
-                    .filter(c -> c.getName().equals("accessToken"))
+                    .filter(c -> c.getName().equals(JwtProvider.ACCESS_TOKEN_COOKIE))
                     .findFirst()
                     .map(Cookie::getValue)
                     .orElse(null);

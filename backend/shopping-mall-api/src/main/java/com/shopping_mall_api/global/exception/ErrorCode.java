@@ -36,6 +36,9 @@ public enum ErrorCode {
     ORDER_PRICE_UNMATCHED(HttpStatus.BAD_REQUEST, "O002", "Unmatched Price Info"),
     ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "O003", "Order status does not allow this request"),
 
+    //Auth
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A001", "Invalid or expired refresh token"),
+
     //Redis
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "RD001", "Cannot found refresh token"),
 

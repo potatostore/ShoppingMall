@@ -39,6 +39,7 @@ public class ApiURLNames {
     // auth api
     public static final String loginURL = "/users/login";
     public static final String logOutURL = "/users/logout";
+    public static final String reissueURL = "/auth/reissue";
 
     // toss payments api
     public static final String tossPaymentAuthURL = "/toss/payment/auth";

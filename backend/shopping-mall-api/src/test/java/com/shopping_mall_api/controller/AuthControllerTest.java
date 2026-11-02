@@ -5,9 +5,11 @@ import com.shopping_mall_api.dto.auth.LogInRequestDTO;
 import com.shopping_mall_api.dto.auth.LogInResponseDTO;
 import com.shopping_mall_api.global.constant.ApiURLNames;
 import com.shopping_mall_api.global.exception.ErrorCode;
+import com.shopping_mall_api.global.exception.InvalidTokenException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.service.auth.AuthService;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -139,12 +141,19 @@ public class AuthControllerTest {
                 userId, null, List.of(new SimpleGrantedAuthority("USER"))
         );
 
+        when(authService.logOut(userId)).thenReturn(new LogInResponseDTO(
+                ResponseCookie.from("accessToken", "").path("/").maxAge(Duration.ZERO).build(),
+                ResponseCookie.from("refreshToken", "").path("/").maxAge(Duration.ZERO).build()
+        ));
+
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         try {
             mockMvc.perform(delete(ApiURLNames.logOutURL))
                     .andExpect(status().isOk())
-                    .andExpect(content().string(""));
+                    .andExpect(content().string(""))
+                    .andExpect(cookie().maxAge("accessToken", 0))
+                    .andExpect(cookie().maxAge("refreshToken", 0));
 
             verify(authService).logOut(userId);
         } finally {
@@ -153,17 +162,27 @@ public class AuthControllerTest {
     }
 
     @Test
-    void logOut_notFoundTest() throws Exception{
-        Authentication auth = new UsernamePasswordAuthenticationToken(
-                1L, null, List.of(new SimpleGrantedAuthority("USER"))
-        );
+    void reissue_successTest() throws Exception{
+        when(authService.reissue("oldRefresh")).thenReturn(new LogInResponseDTO(
+                ResponseCookie.from("accessToken", "newAccess").path("/").maxAge(Duration.ofMinutes(30)).build(),
+                ResponseCookie.from("refreshToken", "newRefresh").path("/").maxAge(Duration.ofDays(7)).build()
+        ));
 
-        doThrow(new NotFoundException(ErrorCode.REFRESH_TOKEN_NOT_FOUND)).when(authService).logOut(1L);
+        mockMvc.perform(post(ApiURLNames.reissueURL)
+                        .cookie(new Cookie("refreshToken", "oldRefresh")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(cookie().value("accessToken", "newAccess"))
+                .andExpect(cookie().value("refreshToken", "newRefresh"));
+    }
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
+    @Test
+    void reissue_invalidTokenTest() throws Exception{
+        when(authService.reissue(null)).thenThrow(new InvalidTokenException(ErrorCode.INVALID_REFRESH_TOKEN));
 
-        mockMvc.perform(delete(ApiURLNames.logOutURL))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value("error"));
+        mockMvc.perform(post(ApiURLNames.reissueURL))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("Invalid or expired refresh token"));
     }
 }
