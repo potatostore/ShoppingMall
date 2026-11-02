@@ -69,11 +69,7 @@ public class Product extends BaseEntity {
             this.price = productUpdateDTO.getPrice();
         }
         if(productUpdateDTO.getProductDetailUpdateDTOList() != null){
-            this.productDetailList.clear();
-
-            for(ProductDetailUpdateDTO dto : productUpdateDTO.getProductDetailUpdateDTOList()){
-                this.productDetailList.add(new ProductDetail(dto));
-            }
+            replaceProductDetails(productUpdateDTO.getProductDetailUpdateDTOList());
         }
     }
 
@@ -85,7 +81,19 @@ public class Product extends BaseEntity {
 
         this.name = productUpdateDTO.getName();
         this.price = productUpdateDTO.getPrice();
-        this.productDetailList = productUpdateDTO.getProductDetailUpdateDTOList().stream()
-                .map(ProductDetail::new).toList();
+        replaceProductDetails(productUpdateDTO.getProductDetailUpdateDTOList());
+    }
+
+    // orphanRemoval 컬렉션은 참조를 바꾸지 않고 내용만 교체해야 함 (새 리스트 대입 시 HibernateException)
+    // 새 상세에는 assignProduct로 연관관계 주인(ProductDetail.product)을 채워야 product_id FK가 저장됨
+    private void replaceProductDetails(List<ProductDetailUpdateDTO> productDetailUpdateDTOList){
+        this.productDetailList.clear();
+
+        for(ProductDetailUpdateDTO dto : productDetailUpdateDTOList){
+            ProductDetail productDetail = new ProductDetail(dto);
+
+            productDetail.assignProduct(this);
+            this.productDetailList.add(productDetail);
+        }
     }
 }
