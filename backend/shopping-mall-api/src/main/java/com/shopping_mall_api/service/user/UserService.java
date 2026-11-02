@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,6 +73,36 @@ public class UserService {
         return userRepository.findById(userId)
                 .map(UserResponseDTO::new)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
+    }
+
+    // 아이디(이메일) 찾기: 이름 + 전화번호가 일치하는 계정의 이메일을 마스킹해서 반환 (전체 이메일 노출 방지)
+    public String findMaskedEmail(String name, String phoneNumber){
+        CheckConfig.npeAndBlankCheck(name, "name");
+        CheckConfig.npeAndBlankCheck(phoneNumber, "phoneNumber");
+
+        List<User> userList = userRepository.findByNameAndPhoneNumber(name, phoneNumber);
+
+        if(userList.isEmpty()){
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return userList.stream()
+                .map(User::getEmail)
+                .map(UserService::maskEmail)
+                .collect(Collectors.joining(", "));
+    }
+
+    // qwer1234@gmail.com → qw******@gmail.com (로컬 파트 앞 2글자만 노출, 2글자 이하면 1글자)
+    private static String maskEmail(String email){
+        int at = email.indexOf('@');
+        if(at <= 0){
+            return "***";
+        }
+
+        String local = email.substring(0, at);
+        int visible = local.length() <= 2 ? 1 : 2;
+
+        return local.substring(0, visible) + "*".repeat(Math.max(3, local.length() - visible)) + email.substring(at);
     }
 
     @Transactional

@@ -224,4 +224,26 @@ public class UserControllerTest {
             SecurityContextHolder.clearContext();
         }
     }
+
+    @Test
+    void findId_successTest() throws Exception{
+        when(userService.findMaskedEmail("김민준", "01011111111")).thenReturn("11***@gmail.com");
+
+        mockMvc.perform(get(ApiURLNames.userURL + ApiURLNames.findIdURL)
+                        .param("name", "김민준")
+                        .param("phoneNumber", "01011111111"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data").value("11***@gmail.com"));
+    }
+
+    @Test
+    void findId_inValidTest() throws Exception{
+        mockMvc.perform(get(ApiURLNames.userURL + ApiURLNames.findIdURL)
+                        .param("name", "김민준"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("phoneNumber must not be blank"));
+
+        verify(userService, never()).findMaskedEmail(any(), any());
+    }
 }

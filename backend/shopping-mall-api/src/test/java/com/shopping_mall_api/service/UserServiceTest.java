@@ -114,6 +114,45 @@ public class UserServiceTest {
     }
 
     @Test
+    void findMaskedEmailTest(){
+        User existUser = User.builder()
+                .email("qwer1234@gmail.com")
+                .logInPassword("encodedPassword")
+                .name("김민준")
+                .role("USER")
+                .phoneNumber("01011111111")
+                .birthday(LocalDate.of(2026, 8, 27))
+                .build();
+
+        when(userRepository.findByNameAndPhoneNumber("김민준", "01011111111")).thenReturn(List.of(existUser));
+
+        assertThat(userService.findMaskedEmail("김민준", "01011111111")).isEqualTo("qw******@gmail.com");
+    }
+
+    @Test
+    void findMaskedEmailNotFoundTest(){
+        when(userRepository.findByNameAndPhoneNumber("김민준", "01099999999")).thenReturn(List.of());
+
+        assertThrows(NotFoundException.class, () -> userService.findMaskedEmail("김민준", "01099999999"));
+    }
+
+    @Test
+    void findMaskedEmail_multipleAccountsAndShortLocalPartTest(){
+        User shortUser = User.builder()
+                .email("ab@gmail.com").logInPassword("pw").name("김민준").role("USER")
+                .phoneNumber("01011111111").birthday(LocalDate.of(2026, 8, 27)).build();
+        User threeUser = User.builder()
+                .email("abc@naver.com").logInPassword("pw").name("김민준").role("USER")
+                .phoneNumber("01011111111").birthday(LocalDate.of(2026, 8, 27)).build();
+
+        when(userRepository.findByNameAndPhoneNumber("김민준", "01011111111")).thenReturn(List.of(shortUser, threeUser));
+
+        // 로컬 파트가 2글자 이하면 1글자만 노출, 별표는 최소 3개 (길이 추측 방지)
+        assertThat(userService.findMaskedEmail("김민준", "01011111111"))
+                .isEqualTo("a***@gmail.com, ab***@naver.com");
+    }
+
+    @Test
     void getUserTest(){
         User existUser = User.builder()
                 .email("qwer1234@gmail.com")

@@ -72,6 +72,7 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/login", "/users/signup").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products", "/products/{productId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/find-id").permitAll()
 
                         .anyRequest().hasRole("ADMIN")
                 )

@@ -8,6 +8,7 @@ public class ApiURLNames {
     public static final String findUserURL = "/me";
     public static final String updateUserURL = "/me";
     public static final String deleteUserURL = "/me";
+    public static final String findIdURL = "/find-id";
 
     // carts api
     public static final String cartURL = "/carts";

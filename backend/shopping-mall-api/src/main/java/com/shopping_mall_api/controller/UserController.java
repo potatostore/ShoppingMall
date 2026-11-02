@@ -1,5 +1,6 @@
 package com.shopping_mall_api.controller;
 
+import com.shopping_mall_api.dto.user.FindIdRequestDTO;
 import com.shopping_mall_api.dto.user.UserCreateDTO;
 import com.shopping_mall_api.dto.user.UserCreateResponseDTO;
 import com.shopping_mall_api.dto.user.UserResponseDTO;
@@ -28,6 +29,14 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : create user & cart",
                 userService.createUser(userCreateDTO)
+        ));
+    }
+
+    @GetMapping(ApiURLNames.findIdURL)
+    public ResponseEntity<ApiResponse<String>> findId(@Valid @ModelAttribute FindIdRequestDTO findIdRequestDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : find id",
+                userService.findMaskedEmail(findIdRequestDTO.getName(), findIdRequestDTO.getPhoneNumber())
         ));
     }
 
