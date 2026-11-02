@@ -17,6 +17,7 @@ import com.shopping_mall_api.entity.order.OrderStatus;
 import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.client.toss.TossClient;
+import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.OutOfStockException;
@@ -34,6 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -242,6 +244,88 @@ public class OrderServiceTest {
 
         assertThrows(PaymentException.class, () -> orderService.authTossPayment(tossPaymentRequestDTO));
         verify(cartRepository, never()).findByUserId(any());
+    }
+
+    private Order pendingOrder(){
+        return Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 1000L, 1L)))
+                .orderStatus(OrderStatus.PENDING)
+                .build();
+    }
+
+    private Payment tossPayment(String status){
+        Payment payment = mock(Payment.class);
+        when(payment.status()).thenReturn(status);
+        return payment;
+    }
+
+    @Test
+    void authTossPayment_networkErrorButTossApproved_completesTest(){
+        Order existOrder = pendingOrder();
+        TossPaymentRequestDTO request = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 1000L);
+        Payment done = tossPayment("DONE");
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.confirm(request)).thenThrow(new ResourceAccessException("Read timed out"));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid())).thenReturn(done);
+
+        orderService.authTossPayment(request);
+
+        // 응답은 유실됐지만 토스에서 승인 완료(DONE) → 결제 완료 처리, 재고는 그대로
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void authTossPayment_networkErrorAndLookupFails_keepsPendingTest(){
+        Order existOrder = pendingOrder();
+        TossPaymentRequestDTO request = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 1000L);
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.confirm(request)).thenThrow(new ResourceAccessException("Read timed out"));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid())).thenThrow(new ResourceAccessException("Connect timed out"));
+
+        PaymentException e = assertThrows(PaymentException.class, () -> orderService.authTossPayment(request));
+
+        // 실제 상태를 모르므로 실패로 단정하지 않음: PENDING 유지, 재고 유지, 502
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.TOSS_SERVER_ERROR);
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void authTossPayment_networkErrorAndPaymentNotFound_keepsPendingTest(){
+        Order existOrder = pendingOrder();
+        TossPaymentRequestDTO request = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 1000L);
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.confirm(request)).thenThrow(new ResourceAccessException("Connect timed out"));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid()))
+                .thenReturn(new TossError("NOT_FOUND_PAYMENT", "존재하지 않는 결제 정보 입니다."));
+
+        PaymentException e = assertThrows(PaymentException.class, () -> orderService.authTossPayment(request));
+
+        // 승인 요청이 토스에 닿지 않음 → 다시 승인 요청할 수 있도록 PENDING 유지
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.TOSS_SERVER_ERROR);
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
+    }
+
+    @Test
+    void authTossPayment_networkErrorAndPaymentAborted_failsAndRestoresStockTest(){
+        Order existOrder = pendingOrder();
+        TossPaymentRequestDTO request = new TossPaymentRequestDTO("toss-test-payment-key", 1L, 1000L);
+        Payment aborted = tossPayment("ABORTED");
+
+        when(orderRepository.findByOrderUidForUpdate(1L)).thenReturn(Optional.of(existOrder));
+        when(tossClient.confirm(request)).thenThrow(new ResourceAccessException("Read timed out"));
+        when(tossClient.getPaymentByOrderId(existOrder.getOrderUid())).thenReturn(aborted);
+
+        PaymentException e = assertThrows(PaymentException.class, () -> orderService.authTossPayment(request));
+
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.PAYMENT_FAILED);
+        assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.FAILED);
+        verify(productRepository).increaseStock(1L, 1L);
     }
 
     @Test

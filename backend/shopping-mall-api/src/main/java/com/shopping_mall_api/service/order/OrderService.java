@@ -26,8 +26,10 @@ import com.shopping_mall_api.repository.order.OrderRepository;
 import com.shopping_mall_api.repository.product.ProductRepository;
 import com.shopping_mall_api.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +38,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -119,22 +122,61 @@ public class OrderService {
                     "Order cannot be paid (current : " + tossOrder.getOrderStatus() + ")");
         }
 
-        TossResponse tossResponse = tossClient.confirm(tossPaymentRequestDTO);
+        TossResponse tossResponse;
+        try {
+            tossResponse = tossClient.confirm(tossPaymentRequestDTO);
+        } catch (ResourceAccessException e) {
+            // 타임아웃·연결 끊김: 토스는 승인했는데 응답만 못 받았을 수 있으므로 실패로 단정하지 않고 결제 조회로 확인
+            log.warn("Toss confirm I/O error, look up payment status (orderUid={})", tossOrder.getOrderUid(), e);
+            reconcileWithToss(tossOrder);
+            return new OrderResponseDTO(tossOrder);
+        }
 
         switch(tossResponse){
-            case Payment payment ->{
-                tossOrder.completePayment();
-                removeOrderedItemsFromCart(tossOrder);
-            }
-            case TossError tossError ->{
-                tossOrder.failPayment();
+            case Payment payment -> completePayment(tossOrder);
+            case TossError tossError -> {
+                failPaymentAndRestoreStock(tossOrder);
                 // noRollbackFor = PaymentException이라 FAILED 상태와 재고 복구가 함께 커밋됨
-                restoreStock(tossOrder);
                 throw new PaymentException(ErrorCode.PAYMENT_FAILED);
             }
         }
 
         return new OrderResponseDTO(tossOrder);
+    }
+
+    // 토스 결제 조회 결과로 PENDING 주문을 맞춤
+    // DONE → 결제 완료 처리, ABORTED·EXPIRED → 실패 + 재고 복구, 그 외(조회 실패, 결제 없음, 진행 중) → PENDING 유지 후 502
+    // PENDING 유지 시 사용자는 같은 paymentKey로 다시 승인 요청 가능
+    private void reconcileWithToss(Order order){
+        TossResponse lookup;
+        try {
+            lookup = tossClient.getPaymentByOrderId(order.getOrderUid());
+        } catch (ResourceAccessException e) {
+            throw new PaymentException(ErrorCode.TOSS_SERVER_ERROR);
+        }
+
+        if(lookup instanceof Payment payment){
+            if("DONE".equals(payment.status())){
+                completePayment(order);
+                return;
+            }
+            if("ABORTED".equals(payment.status()) || "EXPIRED".equals(payment.status())){
+                failPaymentAndRestoreStock(order);
+                throw new PaymentException(ErrorCode.PAYMENT_FAILED);
+            }
+        }
+
+        throw new PaymentException(ErrorCode.TOSS_SERVER_ERROR);
+    }
+
+    private void completePayment(Order order){
+        order.completePayment();
+        removeOrderedItemsFromCart(order);
+    }
+
+    private void failPaymentAndRestoreStock(Order order){
+        order.failPayment();
+        restoreStock(order);
     }
 
     public List<OrderResponseDTO> getOrders(){
