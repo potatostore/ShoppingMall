@@ -18,6 +18,7 @@ import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.client.toss.TossClient;
 import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.global.exception.OutOfStockException;
 import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.global.exception.UnmatchedPriceException;
 import com.shopping_mall_api.repository.order.OrderRepository;
@@ -26,6 +27,7 @@ import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.order.OrderService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 
@@ -70,6 +73,7 @@ public class OrderServiceTest {
         Product product = Product.builder()
                 .name("상품" + productId)
                 .price(price)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(new ProductDetailCreateDTO("detail")))
                 .build();
 
@@ -90,6 +94,7 @@ public class OrderServiceTest {
                 createProduct(1L, 1000L),
                 createProduct(2L, 3000L)
         ));
+        when(productRepository.decreaseStock(anyLong(), anyLong())).thenReturn(1);
 
         OrderResponseDTO result = orderService.createOrder(1L, orderCreateDTO);
 
@@ -99,6 +104,24 @@ public class OrderServiceTest {
                 .extracting("productId", "curOrderItemPrice", "quantity")
                 .containsExactly(tuple(1L, 1000L, 2L), tuple(2L, 3000L, 1L));
         verify(orderRepository).save(any(Order.class));
+        // productId 오름차순으로 재고 차감
+        InOrder inOrder = inOrder(productRepository);
+        inOrder.verify(productRepository).decreaseStock(1L, 2L);
+        inOrder.verify(productRepository).decreaseStock(2L, 1L);
+    }
+
+    @Test
+    void createOrder_outOfStockExceptionTest(){
+        OrderCreateDTO orderCreateDTO = new OrderCreateDTO(List.of(
+                OrderItemCreateDTO.builder().productId(1L).quantity(5L).build()
+        ));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(createUser()));
+        when(productRepository.findAllById(any())).thenReturn(List.of(createProduct(1L, 1000L)));
+        when(productRepository.decreaseStock(1L, 5L)).thenReturn(0);
+
+        assertThrows(OutOfStockException.class, () -> orderService.createOrder(1L, orderCreateDTO));
+        verify(orderRepository, never()).save(any(Order.class));
     }
 
     @Test
@@ -110,6 +133,7 @@ public class OrderServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(createUser()));
         when(productRepository.findAllById(any())).thenReturn(List.of(createProduct(1L, 1000L)));
+        when(productRepository.decreaseStock(1L, 3L)).thenReturn(1);
 
         OrderResponseDTO result = orderService.createOrder(1L, orderCreateDTO);
 
@@ -259,6 +283,7 @@ public class OrderServiceTest {
 
         assertThrows(PaymentException.class, () -> orderService.authTossPayment(tossPaymentRequestDTO));
         assertThat(existOrder.getOrderStatus()).isEqualTo(OrderStatus.FAILED);
+        verify(productRepository).increaseStock(1L, 1L);
     }
 
     @Test
@@ -447,14 +472,48 @@ public class OrderServiceTest {
         OrderUpdateDTO orderUpdateDTO = new OrderUpdateDTO(List.of(orderItemUpdateDTO));
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(existOrder));
+        when(productRepository.decreaseStock(1L, 2L)).thenReturn(1);
 
         OrderResponseDTO result = orderService.patchOrder(1L, 1L, orderUpdateDTO);
 
+        // 늘어난 수량(1 → 3)만큼만 재고 차감
+        verify(productRepository).decreaseStock(1L, 2L);
         // 가격은 주문 시점 가격 유지, 수량만 변경
         assertThat(result.getTotalOrderPrice()).isEqualTo(20260901L * 3L);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getCurOrderItemPrice()).isEqualTo(20260901L);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getTotalOrderItemPrice()).isEqualTo(20260901L * 3L);
         assertThat(result.getOrderItemResponseDTOList().getFirst().getQuantity()).isEqualTo(3L);
+    }
+
+    @Test
+    void patchOrder_decreaseQuantityRestoresStockTest(){
+        Order existOrder = Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 1000L, 5L)))
+                .orderStatus(OrderStatus.PENDING)
+                .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(existOrder));
+
+        orderService.patchOrder(1L, 1L, new OrderUpdateDTO(List.of(new OrderItemUpdateDTO(1L, 2L))));
+
+        verify(productRepository).increaseStock(1L, 3L);
+        verify(productRepository, never()).decreaseStock(anyLong(), anyLong());
+    }
+
+    @Test
+    void patchOrder_increaseQuantityOutOfStockTest(){
+        Order existOrder = Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 1000L, 1L)))
+                .orderStatus(OrderStatus.PENDING)
+                .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(existOrder));
+        when(productRepository.decreaseStock(1L, 9L)).thenReturn(0);
+
+        assertThrows(OutOfStockException.class,
+                () -> orderService.patchOrder(1L, 1L, new OrderUpdateDTO(List.of(new OrderItemUpdateDTO(1L, 10L)))));
     }
 
     @Test
@@ -515,6 +574,25 @@ public class OrderServiceTest {
         orderService.deleteOrder(1L);
 
         verify(orderRepository).deleteById(1L);
+        // 결제 전(PENDING) 주문 삭제 시 재고 복구
+        verify(productRepository).increaseStock(1L, 1L);
+    }
+
+    @Test
+    void deleteOrder_paidOrderKeepsStockTest(){
+        Order existOrder = Order.builder()
+                .user(createUser())
+                .orderItemList(List.of(new OrderItem(1L, 1000L, 1L)))
+                .orderStatus(OrderStatus.PENDING)
+                .build();
+        existOrder.completePayment();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(existOrder));
+
+        orderService.deleteOrder(1L);
+
+        verify(orderRepository).deleteById(1L);
+        verify(productRepository, never()).increaseStock(anyLong(), anyLong());
     }
 
     @Test

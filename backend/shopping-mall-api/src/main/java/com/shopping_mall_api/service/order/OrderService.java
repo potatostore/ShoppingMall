@@ -18,6 +18,7 @@ import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.global.exception.OutOfStockException;
 import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.global.exception.UnmatchedPriceException;
 import com.shopping_mall_api.repository.order.OrderRepository;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -76,7 +78,10 @@ public class OrderService {
                     .build());
         }
 
-        // 재고 차감 로직 추가
+        // 재고 차감: quantityByProductId가 TreeMap이라 productId 오름차순으로 잠금 → 동시 주문 간 교착 방지
+        // 하나라도 부족하면 예외 → 트랜잭션 롤백으로 앞서 차감한 재고도 원복
+        quantityByProductId.forEach(this::decreaseStock);
+
         // 쿠폰 및 포인트 차감 로직
 
         Order createOrder = Order.builder()
@@ -120,6 +125,8 @@ public class OrderService {
             }
             case TossError tossError ->{
                 tossOrder.failPayment();
+                // noRollbackFor = PaymentException이라 FAILED 상태와 재고 복구가 함께 커밋됨
+                restoreStock(tossOrder);
                 throw new PaymentException(ErrorCode.PAYMENT_FAILED);
             }
         }
@@ -169,7 +176,23 @@ public class OrderService {
             throw new NotFoundException(ErrorCode.ORDER_NOT_FOUND);
         }
 
+        Map<Long, Long> beforeQuantity = order.getOrderItemList().stream()
+                .collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getQuantity));
+
         order.patchOrder(orderUpdateDTO);
+
+        // 수량 변경분만큼 재고 조정 (늘면 차감, 줄면 복구). 부족하면 예외 → 롤백으로 수정 내용도 취소
+        new TreeMap<>(beforeQuantity).forEach((productId, before) -> {
+            Long after = order.getOrderItemList().stream()
+                    .filter(item -> item.getProductId().equals(productId))
+                    .findFirst().orElseThrow().getQuantity();
+
+            if(after > before){
+                decreaseStock(productId, after - before);
+            } else if(after < before){
+                productRepository.increaseStock(productId, before - after);
+            }
+        });
 
         return new OrderResponseDTO(order);
     }
@@ -178,9 +201,26 @@ public class OrderService {
     public void deleteOrder(Long orderId){
         CheckConfig.npeCheck(orderId, "orderId");
 
-        orderRepository.findById(orderId)
+        Order order = orderRepository.findById(orderId)
                         .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
+        // 결제 전 주문을 지우면 잡아둔 재고를 돌려줌 (PAID는 판매 완료, FAILED는 이미 복구됨)
+        if(order.getOrderStatus() == OrderStatus.PENDING){
+            restoreStock(order);
+        }
+
         orderRepository.deleteById(orderId);
+    }
+
+    private void decreaseStock(Long productId, Long quantity){
+        if(productRepository.decreaseStock(productId, quantity) == 0){
+            throw new OutOfStockException(ErrorCode.PRODUCT_OUT_OF_STOCK, "Product is out of stock (" + productId + ")");
+        }
+    }
+
+    private void restoreStock(Order order){
+        order.getOrderItemList().stream()
+                .sorted(Comparator.comparing(OrderItem::getProductId))
+                .forEach(item -> productRepository.increaseStock(item.getProductId(), item.getQuantity()));
     }
 }

@@ -29,4 +29,8 @@ public class ProductCreateDTO {
     @Valid
     @NotEmpty(message = "productDetailCreateDTOList must have 1 productDetailCreateDTO at least")
     private List<ProductDetailCreateDTO> productDetailCreateDTOList;
+
+    @NotNull(message = "product stock must not be null")
+    @Min(value = 0, message = "product stock must not be negative")
+    private Long stock;
 }

@@ -27,6 +27,7 @@ class ProductRepositoryTest {
         Product product = Product.builder()
                 .name("감자")
                 .price(1000L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(new ProductDetailCreateDTO("old detail")))
                 .build();
 
@@ -72,6 +73,7 @@ class ProductRepositoryTest {
         product.putProduct(ProductUpdateDTO.builder()
                 .name("고구마")
                 .price(2000L)
+                .stock(30L)
                 .productDetailUpdateDTOList(List.of(new ProductDetailUpdateDTO("put detail")))
                 .build());
         em.flush();
@@ -81,5 +83,34 @@ class ProductRepositoryTest {
         Product result = productRepository.findById(productId).orElseThrow();
         assertThat(result.getName()).isEqualTo("고구마");
         assertThat(result.getProductDetailList()).extracting("detail").containsExactly("put detail");
+    }
+
+    private Long stockOf(Long productId){
+        return em.createQuery("select p.stock from Product p where p.productId = :id", Long.class)
+                .setParameter("id", productId)
+                .getSingleResult();
+    }
+
+    @Test
+    void decreaseStock_onlyWhenEnough(){
+        Long productId = saveProduct();
+
+        assertThat(productRepository.decreaseStock(productId, 60L)).isEqualTo(1);
+        assertThat(productRepository.decreaseStock(productId, 60L)).isEqualTo(0);
+        em.clear();
+
+        // 재고 100 → 60 차감 성공(40) → 60 차감은 조건 불충족으로 0행, 음수가 되지 않음
+        assertThat(stockOf(productId)).isEqualTo(40L);
+    }
+
+    @Test
+    void increaseStock_restores(){
+        Long productId = saveProduct();
+
+        productRepository.decreaseStock(productId, 30L);
+        productRepository.increaseStock(productId, 30L);
+        em.clear();
+
+        assertThat(stockOf(productId)).isEqualTo(100L);
     }
 }

@@ -27,7 +27,7 @@ class SecurityErrorResponseTest {
     @MockBean private JwtProvider jwtProvider;
 
     private static final String BODY = """
-            {"name": "감자", "price": 1000, "productDetailCreateDTOList": [{"detail": "detail"}]}
+            {"name": "감자", "price": 1000, "stock": 10, "productDetailCreateDTOList": [{"detail": "detail"}]}
             """;
 
     @Test

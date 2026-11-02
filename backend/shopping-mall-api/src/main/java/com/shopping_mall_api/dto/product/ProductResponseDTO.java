@@ -18,6 +18,7 @@ public class ProductResponseDTO {
     private String name;
     private Long price;
     private List<ProductDetailResponseDTO> productDetailResponseDTOList;
+    private Long stock;
 
     @Builder
     public ProductResponseDTO(Product product){
@@ -28,5 +29,6 @@ public class ProductResponseDTO {
         this.price = product.getPrice();
         this.productDetailResponseDTOList = product.getProductDetailList().stream()
                 .map(ProductDetailResponseDTO::new).toList();
+        this.stock = product.getStock();
     }
 }

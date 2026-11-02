@@ -13,6 +13,7 @@ type Product = {
     productId: number;
     name: string;
     price: number;
+    stock: number;
     productDetailResponseDTOList: ProductDetail[];
 };
 
@@ -53,6 +54,9 @@ export default async function ProductDetailPage({
                     <p className="mt-2 text-xl font-semibold text-zinc-900">
                         {product.price.toLocaleString("ko-KR")}원
                     </p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                        {product.stock > 0 ? `재고 ${product.stock.toLocaleString("ko-KR")}개` : "품절"}
+                    </p>
 
                     {product.productDetailResponseDTOList.length > 0 && (
                         <ul className="mt-6 space-y-1 text-sm text-zinc-600">
@@ -62,7 +66,7 @@ export default async function ProductDetailPage({
                         </ul>
                     )}
 
-                    <AddToCartForm productId={product.productId} />
+                    {product.stock > 0 && <AddToCartForm productId={product.productId} />}
                 </div>
             </div>
         </div>

@@ -76,6 +76,7 @@ public class CartServiceTest {
         Product existProduct = Product.builder()
                         .name("Test")
                         .price(20260828L)
+                        .stock(100L)
                         .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                         .build();
 
@@ -145,6 +146,7 @@ public class CartServiceTest {
         Product existProduct = Product.builder()
                 .name("Test")
                 .price(20260828L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 
@@ -178,6 +180,7 @@ public class CartServiceTest {
         Product existProduct = Product.builder()
                 .name("Test")
                 .price(20260828L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 
@@ -240,6 +243,7 @@ public class CartServiceTest {
         Product existProduct = Product.builder()
                 .name("Test")
                 .price(20260828L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 

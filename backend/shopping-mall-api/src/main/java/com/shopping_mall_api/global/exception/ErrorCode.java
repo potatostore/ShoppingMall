@@ -21,7 +21,7 @@ public enum ErrorCode {
     //Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Cannot found product"),
     PRODUCT_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "P002", "Product Already Exist"),
-    PRODUCT_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "P003", "Product quantity is less than 1"),
+    PRODUCT_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "P003", "Product is out of stock"),
 
     //Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "C001", "Cannot found cart"),

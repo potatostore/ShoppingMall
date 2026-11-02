@@ -21,4 +21,7 @@ public class ProductUpdateDTO {
 
     @Valid
     private List<ProductDetailUpdateDTO> productDetailUpdateDTOList;
+
+    @Min(value = 0, message = "product stock must not be negative")
+    private Long stock;
 }

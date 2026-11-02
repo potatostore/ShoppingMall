@@ -27,6 +27,7 @@ public class ProductService {
         Product createProduct = Product.builder()
                 .name(productCreateDTO.getName())
                 .price(productCreateDTO.getPrice())
+                .stock(productCreateDTO.getStock())
                 .productDetailCreateDTOList(productCreateDTO.getProductDetailCreateDTOList())
                 .build();
 

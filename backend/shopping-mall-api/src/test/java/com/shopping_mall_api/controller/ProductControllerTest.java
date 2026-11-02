@@ -47,6 +47,7 @@ public class ProductControllerTest {
         ProductCreateDTO productCreateDTO = ProductCreateDTO.builder()
                 .name("water")
                 .price(20260907L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 
@@ -54,7 +55,8 @@ public class ProductControllerTest {
                 productId,
                 "water",
                 20260907L,
-                List.of(new ProductDetailResponseDTO("product-test-detail"))
+                List.of(new ProductDetailResponseDTO("product-test-detail")),
+                100L
         );
 
         when(productService.createProduct(any(ProductCreateDTO.class))).thenReturn(productResponseDTO);
@@ -77,7 +79,8 @@ public class ProductControllerTest {
                 productId,
                 "water",
                 20260907L,
-                List.of(new ProductDetailResponseDTO("product-test-detail"))
+                List.of(new ProductDetailResponseDTO("product-test-detail")),
+                100L
         );
 
         when(productService.getProducts()).thenReturn(List.of(productResponseDTO));
@@ -98,7 +101,8 @@ public class ProductControllerTest {
                 productId,
                 "water",
                 20260907L,
-                List.of(new ProductDetailResponseDTO("product-test-detail"))
+                List.of(new ProductDetailResponseDTO("product-test-detail")),
+                100L
         );
 
         Authentication auth = new UsernamePasswordAuthenticationToken(
@@ -125,7 +129,8 @@ public class ProductControllerTest {
                 productId,
                 "water",
                 20260907L,
-                List.of(new ProductDetailResponseDTO("product-test-detail"))
+                List.of(new ProductDetailResponseDTO("product-test-detail")),
+                100L
         );
 
         ProductUpdateDTO productUpdateDTO = ProductUpdateDTO.builder()
@@ -161,7 +166,7 @@ public class ProductControllerTest {
     @Test
     void createProduct_inValidTest() throws Exception{
         String body = """
-                {"name": " ", "price": 1000, "productDetailCreateDTOList": [{"detail": "detail"}]}
+                {"name": " ", "price": 1000, "stock": 10, "productDetailCreateDTOList": [{"detail": "detail"}]}
                 """;
 
         mockMvc.perform(post(ApiURLNames.productURL + ApiURLNames.createProductURL)
@@ -177,7 +182,7 @@ public class ProductControllerTest {
     @Test
     void createProduct_emptyDetailListTest() throws Exception{
         String body = """
-                {"name": "감자", "price": 1000, "productDetailCreateDTOList": []}
+                {"name": "감자", "price": 1000, "stock": 10, "productDetailCreateDTOList": []}
                 """;
 
         mockMvc.perform(post(ApiURLNames.productURL + ApiURLNames.createProductURL)
