@@ -1,6 +1,5 @@
 package com.shopping_mall_api.entity.order;
 
-import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
@@ -55,12 +54,6 @@ public class OrderItem extends BaseEntity {
         this.totalOrderItemPrice = this.quantity * this.curOrderItemPrice;
     }
 
-    public OrderItem(OrderItemCreateDTO orderItemCreateDTO){
-        this(orderItemCreateDTO.getProductId(),
-             orderItemCreateDTO.getCurOrderItemPrice(),
-             orderItemCreateDTO.getQuantity());
-    }
-
     public void assignOrder(Order order){
         CheckConfig.npeCheck(order, "order");
 
@@ -71,14 +64,6 @@ public class OrderItem extends BaseEntity {
         CheckConfig.npeAndNegativeCheck(quantity, "quantity");
 
         this.quantity = quantity;
-
-        updateTotalItemPrice();
-    }
-
-    public void updateCurOrderItemPrice(Long curOrderItemPrice){
-        CheckConfig.npeAndNegativeCheck(curOrderItemPrice, "curOrderItemPrice");
-
-        this.curOrderItemPrice = curOrderItemPrice;
 
         updateTotalItemPrice();
     }

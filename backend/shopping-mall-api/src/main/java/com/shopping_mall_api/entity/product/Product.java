@@ -37,13 +37,20 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private Long price;
 
+    // 재고. 주문 생성 시 ProductRepository.decreaseStock(조건부 UPDATE)으로 차감, 결제 실패·주문 삭제 시 복구
+    @NotNull(message = "stock must not be null")
+    @Min(value = 0)
+    @Column(nullable = false)
+    private Long stock;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "product")
     private List<ProductDetail> productDetailList;
 
     @Builder
-    public Product(String name, Long price, List<ProductDetailCreateDTO> productDetailCreateDTOList) {
+    public Product(String name, Long price, Long stock, List<ProductDetailCreateDTO> productDetailCreateDTOList) {
         CheckConfig.npeAndBlankCheck(name, "name");
         CheckConfig.npeAndNegativeCheck(price, "price");
+        CheckConfig.npeAndNegativeCheck(stock, "stock");
         CheckConfig.npeAndEmptyCheck(productDetailCreateDTOList, "productDetailCreateDTOList");
 
         this.productDetailList = new ArrayList<>();
@@ -57,6 +64,7 @@ public class Product extends BaseEntity {
 
         this.name = name;
         this.price = price;
+        this.stock = stock;
     }
 
     public void patchProduct(ProductUpdateDTO productUpdateDTO){
@@ -68,12 +76,11 @@ public class Product extends BaseEntity {
         if(productUpdateDTO.getPrice() != null && productUpdateDTO.getPrice() >= 0){
             this.price = productUpdateDTO.getPrice();
         }
+        if(productUpdateDTO.getStock() != null && productUpdateDTO.getStock() >= 0){
+            this.stock = productUpdateDTO.getStock();
+        }
         if(productUpdateDTO.getProductDetailUpdateDTOList() != null){
-            this.productDetailList.clear();
-
-            for(ProductDetailUpdateDTO dto : productUpdateDTO.getProductDetailUpdateDTOList()){
-                this.productDetailList.add(new ProductDetail(dto));
-            }
+            replaceProductDetails(productUpdateDTO.getProductDetailUpdateDTOList());
         }
     }
 
@@ -81,11 +88,25 @@ public class Product extends BaseEntity {
         CheckConfig.npeCheck(productUpdateDTO, "productUpdateDTO");
         CheckConfig.npeCheck(productUpdateDTO.getName(), "name");
         CheckConfig.npeCheck(productUpdateDTO.getPrice(), "price");
+        CheckConfig.npeAndNegativeCheck(productUpdateDTO.getStock(), "stock");
         CheckConfig.npeCheck(productUpdateDTO.getProductDetailUpdateDTOList(), "productDetailUpdateDTOList");
 
         this.name = productUpdateDTO.getName();
         this.price = productUpdateDTO.getPrice();
-        this.productDetailList = productUpdateDTO.getProductDetailUpdateDTOList().stream()
-                .map(ProductDetail::new).toList();
+        this.stock = productUpdateDTO.getStock();
+        replaceProductDetails(productUpdateDTO.getProductDetailUpdateDTOList());
+    }
+
+    // orphanRemoval 컬렉션은 참조를 바꾸지 않고 내용만 교체해야 함 (새 리스트 대입 시 HibernateException)
+    // 새 상세에는 assignProduct로 연관관계 주인(ProductDetail.product)을 채워야 product_id FK가 저장됨
+    private void replaceProductDetails(List<ProductDetailUpdateDTO> productDetailUpdateDTOList){
+        this.productDetailList.clear();
+
+        for(ProductDetailUpdateDTO dto : productDetailUpdateDTOList){
+            ProductDetail productDetail = new ProductDetail(dto);
+
+            productDetail.assignProduct(this);
+            this.productDetailList.add(productDetail);
+        }
     }
 }

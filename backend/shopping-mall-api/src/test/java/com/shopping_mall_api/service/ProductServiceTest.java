@@ -37,7 +37,7 @@ public class ProductServiceTest {
         );
 
         ProductCreateDTO productCreateDTO = new ProductCreateDTO(
-            "Test Product", 20260828L, List.of(productDetailCreateDTO)
+            "Test Product", 20260828L, List.of(productDetailCreateDTO), 100L
         );
 
         when(productRepository.save(any(Product.class)))
@@ -59,6 +59,7 @@ public class ProductServiceTest {
         Product existProduct = Product.builder()
                         .name("Test Product")
                         .price(20260828L)
+                        .stock(100L)
                         .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                         .build();
 
@@ -81,6 +82,7 @@ public class ProductServiceTest {
         Product existProduct = Product.builder()
                 .name("Test Product")
                 .price(20260828L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 
@@ -107,7 +109,7 @@ public class ProductServiceTest {
         );
 
         ProductUpdateDTO productUpdateDTO = new ProductUpdateDTO(
-                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO)
+                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO), 50L
         );
 
         ProductDetailCreateDTO productDetailCreateDTO = new ProductDetailCreateDTO(
@@ -117,6 +119,7 @@ public class ProductServiceTest {
         Product existProduct = Product.builder()
                 .name("Test Product")
                 .price(20260828L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 
@@ -138,7 +141,7 @@ public class ProductServiceTest {
         );
 
         ProductUpdateDTO productUpdateDTO = new ProductUpdateDTO(
-                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO)
+                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO), 50L
         );
 
         assertThrows(NotFoundException.class, () -> productService.patchProduct(999L, productUpdateDTO));
@@ -151,7 +154,7 @@ public class ProductServiceTest {
         );
 
         ProductUpdateDTO productUpdateDTO = new ProductUpdateDTO(
-                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO)
+                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO), 50L
         );
 
         ProductDetailCreateDTO productDetailCreateDTO = new ProductDetailCreateDTO(
@@ -161,6 +164,7 @@ public class ProductServiceTest {
         Product existProduct = Product.builder()
                 .name("Test Product")
                 .price(20260828L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 
@@ -182,7 +186,7 @@ public class ProductServiceTest {
         );
 
         ProductUpdateDTO productUpdateDTO = new ProductUpdateDTO(
-                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO)
+                "Test Product Update", 2026082801L, List.of(productDetailUpdateDTO), 50L
         );
 
         assertThrows(NotFoundException.class, () -> productService.putProduct(999L, productUpdateDTO));
@@ -197,6 +201,7 @@ public class ProductServiceTest {
         Product existProduct = Product.builder()
                 .name("Test Product")
                 .price(20260828L)
+                .stock(100L)
                 .productDetailCreateDTOList(List.of(productDetailCreateDTO))
                 .build();
 

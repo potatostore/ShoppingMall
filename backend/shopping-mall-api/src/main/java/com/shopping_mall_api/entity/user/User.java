@@ -69,14 +69,15 @@ public class User extends BaseEntity {
     public void patchUser(UserUpdateDTO userUpdateDTO){
         CheckConfig.npeCheck(userUpdateDTO, "userCreateDTO");
 
-        if(userUpdateDTO.getEmail() != null){
+        // 빈 문자열은 "변경 안 함"으로 처리 (빈 이메일로 바뀌면 로그인 불가)
+        if(hasText(userUpdateDTO.getEmail())){
             this.email = userUpdateDTO.getEmail();
         }
-        if(userUpdateDTO.getName() != null){
+        if(hasText(userUpdateDTO.getName())){
             this.name = userUpdateDTO.getName();
         }
-        if(userUpdateDTO.getPhoneNumber() != null){
-            this.phoneNumber = userUpdateDTO.getPhoneNumber();;
+        if(hasText(userUpdateDTO.getPhoneNumber())){
+            this.phoneNumber = userUpdateDTO.getPhoneNumber();
         }
         if(userUpdateDTO.getBirthday() != null){
             this.birthday = userUpdateDTO.getBirthday();
@@ -94,5 +95,9 @@ public class User extends BaseEntity {
         this.name = userUpdateDTO.getName();
         this.phoneNumber = userUpdateDTO.getPhoneNumber();
         this.birthday = userUpdateDTO.getBirthday();
+    }
+
+    private static boolean hasText(String value){
+        return value != null && !value.isBlank();
     }
 }

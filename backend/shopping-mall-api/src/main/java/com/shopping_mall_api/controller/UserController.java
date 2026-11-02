@@ -1,5 +1,6 @@
 package com.shopping_mall_api.controller;
 
+import com.shopping_mall_api.dto.user.FindIdRequestDTO;
 import com.shopping_mall_api.dto.user.UserCreateDTO;
 import com.shopping_mall_api.dto.user.UserCreateResponseDTO;
 import com.shopping_mall_api.dto.user.UserResponseDTO;
@@ -31,6 +32,14 @@ public class UserController {
         ));
     }
 
+    @GetMapping(ApiURLNames.findIdURL)
+    public ResponseEntity<ApiResponse<String>> findId(@Valid @ModelAttribute FindIdRequestDTO findIdRequestDTO){
+        return ResponseEntity.ok(ApiResponse.success(
+                "Success : find id",
+                userService.findMaskedEmail(findIdRequestDTO.getName(), findIdRequestDTO.getPhoneNumber())
+        ));
+    }
+
     // user정보 조회 시 관리자 권한만 조회 가능하도록 기능 추가
     @GetMapping(ApiURLNames.findUsersURL)
     public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getUsers(){
@@ -51,7 +60,7 @@ public class UserController {
 
     @PatchMapping(ApiURLNames.updateUserURL)
     public ResponseEntity<ApiResponse<UserResponseDTO>> patchUser(
-            @AuthenticationPrincipal Long userId, @Valid @RequestBody UserUpdateDTO userUpdateDTO
+            @AuthenticationPrincipal Long userId, @RequestBody @Valid UserUpdateDTO userUpdateDTO
     ){
         return ResponseEntity.ok(ApiResponse.success(
                 "Success : patch user info (" + userId + ")",

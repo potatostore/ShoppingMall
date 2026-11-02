@@ -9,13 +9,16 @@ import com.shopping_mall_api.dto.payment.toss.response.Payment;
 import com.shopping_mall_api.dto.payment.toss.response.TossError;
 import com.shopping_mall_api.dto.payment.toss.response.TossResponse;
 import com.shopping_mall_api.entity.order.Order;
+import com.shopping_mall_api.entity.order.OrderItem;
 import com.shopping_mall_api.entity.order.OrderStatus;
 import com.shopping_mall_api.entity.product.Product;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.client.toss.TossClient;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.exception.ErrorCode;
+import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
+import com.shopping_mall_api.global.exception.OutOfStockException;
 import com.shopping_mall_api.global.exception.PaymentException;
 import com.shopping_mall_api.global.exception.UnmatchedPriceException;
 import com.shopping_mall_api.repository.cart.CartRepository;
@@ -26,7 +29,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +43,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final CartRepository cartRepository;
 
     private final TossClient tossClient;
 
@@ -46,18 +55,42 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
 
-        // 주문 생성 전 재고 확인
-        // orderCreateDTO curItemPrice필드를 제거하고, 상품 가격은 조회 후 기입
+        // 같은 상품이 여러 줄로 오면 수량을 합침 (OrderItem은 productId 기준으로 수정되므로 중복 불가)
+        Map<Long, Long> quantityByProductId = new TreeMap<>();
+        for(OrderItemCreateDTO dto : orderCreateDTO.getOrderItemCreateDTOList()){
+            quantityByProductId.merge(dto.getProductId(), dto.getQuantity(), Long::sum);
+        }
+
+        Map<Long, Product> productMap = productRepository.findAllById(quantityByProductId.keySet()).stream()
+                .collect(Collectors.toMap(Product::getProductId, product -> product));
+
+        // 가격은 클라이언트 값이 아니라 주문 시점의 Product.price로 기록 → 토스 승인 금액 대조의 기준
+        List<OrderItem> orderItemList = new ArrayList<>();
+        for(Map.Entry<Long, Long> entry : quantityByProductId.entrySet()){
+            Product product = productMap.get(entry.getKey());
+
+            if(product == null){
+                throw new NotFoundException(ErrorCode.PRODUCT_NOT_FOUND, "Cannot Found Product (" + entry.getKey() + ")");
+            }
+
+            orderItemList.add(OrderItem.builder()
+                    .productId(product.getProductId())
+                    .curOrderItemPrice(product.getPrice())
+                    .quantity(entry.getValue())
+                    .build());
+        }
+
+        // 재고 차감: quantityByProductId가 TreeMap이라 productId 오름차순으로 잠금 → 동시 주문 간 교착 방지
+        // 하나라도 부족하면 예외 → 트랜잭션 롤백으로 앞서 차감한 재고도 원복
+        quantityByProductId.forEach(this::decreaseStock);
+
+        // 쿠폰 및 포인트 차감 로직
 
         Order createOrder = Order.builder()
                 .user(user)
-                .orderItemCreateDTOList(orderCreateDTO.getOrderItemCreateDTOList())
+                .orderItemList(orderItemList)
                 .orderStatus(OrderStatus.PENDING)
                 .build();
-
-        // 주문 생성 시 장바구니에서 해당 상품 제거 로직
-        // 재고 차감 로직 추가
-        // 쿠폰 및 포인트 차감 로직
 
         orderRepository.save(createOrder);
 
@@ -68,11 +101,22 @@ public class OrderService {
     public OrderResponseDTO authTossPayment(TossPaymentRequestDTO tossPaymentRequestDTO){
         CheckConfig.npeCheck(tossPaymentRequestDTO, "tossPaymentRequestDTO");
 
-        Order tossOrder = orderRepository.findByOrderUid(tossPaymentRequestDTO.orderId())
+        Order tossOrder = orderRepository.findByOrderUidForUpdate(tossPaymentRequestDTO.orderId())
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
         if(!tossPaymentRequestDTO.amount().equals(tossOrder.getTotalOrderPrice())){
             throw new UnmatchedPriceException(ErrorCode.ORDER_PRICE_UNMATCHED);
+        }
+
+        // 토스 API 호출 전에 상태 확인: 이미 결제된 주문의 재승인 요청(새로고침, 버튼 재클릭)이
+        // 토스 중복 승인 에러 → failPayment()로 PAID 주문을 FAILED로 덮어쓰던 문제 방지
+        switch(tossOrder.getOrderStatus()){
+            case PAID -> {
+                return new OrderResponseDTO(tossOrder);
+            }
+            case PENDING -> { }
+            default -> throw new InvalidOrderStatusException(ErrorCode.ORDER_STATUS_INVALID,
+                    "Order cannot be paid (current : " + tossOrder.getOrderStatus() + ")");
         }
 
         TossResponse tossResponse = tossClient.confirm(tossPaymentRequestDTO);
@@ -80,9 +124,12 @@ public class OrderService {
         switch(tossResponse){
             case Payment payment ->{
                 tossOrder.completePayment();
+                removeOrderedItemsFromCart(tossOrder);
             }
             case TossError tossError ->{
                 tossOrder.failPayment();
+                // noRollbackFor = PaymentException이라 FAILED 상태와 재고 복구가 함께 커밋됨
+                restoreStock(tossOrder);
                 throw new PaymentException(ErrorCode.PAYMENT_FAILED);
             }
         }
@@ -113,11 +160,8 @@ public class OrderService {
         CheckConfig.npeCheck(userId, "userId");
         CheckConfig.npeCheck(orderId, "orderId");
 
-        List<Order> orderList = orderRepository.findByUser_UserId(userId);
-
-        return orderList.stream()
-                .filter(order -> order.getOrderId()
-                .equals(orderId)).findFirst()
+        // 본인 주문만 조회 (남의 주문이면 존재 여부를 숨기기 위해 404)
+        return orderRepository.findByOrderIdAndUser_UserId(orderId, userId)
                 .map(OrderResponseDTO::new)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
     }
@@ -135,7 +179,23 @@ public class OrderService {
             throw new NotFoundException(ErrorCode.ORDER_NOT_FOUND);
         }
 
+        Map<Long, Long> beforeQuantity = order.getOrderItemList().stream()
+                .collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getQuantity));
+
         order.patchOrder(orderUpdateDTO);
+
+        // 수량 변경분만큼 재고 조정 (늘면 차감, 줄면 복구). 부족하면 예외 → 롤백으로 수정 내용도 취소
+        new TreeMap<>(beforeQuantity).forEach((productId, before) -> {
+            Long after = order.getOrderItemList().stream()
+                    .filter(item -> item.getProductId().equals(productId))
+                    .findFirst().orElseThrow().getQuantity();
+
+            if(after > before){
+                decreaseStock(productId, after - before);
+            } else if(after < before){
+                productRepository.increaseStock(productId, before - after);
+            }
+        });
 
         return new OrderResponseDTO(order);
     }
@@ -144,9 +204,33 @@ public class OrderService {
     public void deleteOrder(Long orderId){
         CheckConfig.npeCheck(orderId, "orderId");
 
-        orderRepository.findById(orderId)
+        Order order = orderRepository.findById(orderId)
                         .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
+        // 결제 전 주문을 지우면 잡아둔 재고를 돌려줌 (PAID는 판매 완료, FAILED는 이미 복구됨)
+        if(order.getOrderStatus() == OrderStatus.PENDING){
+            restoreStock(order);
+        }
+
         orderRepository.deleteById(orderId);
+    }
+
+    // 결제가 끝난 상품만 장바구니에서 제거 (주문 생성 시점에 지우면 결제 실패·이탈 시 장바구니가 비어 버림)
+    private void removeOrderedItemsFromCart(Order order){
+        cartRepository.findByUserId(order.getUser().getUserId())
+                .ifPresent(cart -> order.getOrderItemList()
+                        .forEach(item -> cart.deleteCartItem(item.getProductId())));
+    }
+
+    private void decreaseStock(Long productId, Long quantity){
+        if(productRepository.decreaseStock(productId, quantity) == 0){
+            throw new OutOfStockException(ErrorCode.PRODUCT_OUT_OF_STOCK, "Product is out of stock (" + productId + ")");
+        }
+    }
+
+    private void restoreStock(Order order){
+        order.getOrderItemList().stream()
+                .sorted(Comparator.comparing(OrderItem::getProductId))
+                .forEach(item -> productRepository.increaseStock(item.getProductId(), item.getQuantity()));
     }
 }

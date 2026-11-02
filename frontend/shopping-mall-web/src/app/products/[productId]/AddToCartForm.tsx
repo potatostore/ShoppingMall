@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CLIENT_API_URL } from "@/lib/api";
+import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const cartApiUrl = `${CLIENT_API_URL}/carts`;
 
@@ -31,9 +31,8 @@ export default function AddToCartForm({ productId, price }: { productId: number;
         setStatus("idle");
 
         try {
-            const response = await fetch(cartApiUrl, {
+            const response = await authFetch(cartApiUrl, {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ productId, quantity }),
             });

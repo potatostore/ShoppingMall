@@ -11,10 +11,20 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
 public class JwtProvider {
+    public static final String ACCESS_TOKEN_COOKIE = "accessToken";
+    public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+
+    // access / refresh 토큰은 같은 키로 서명되므로 type 클레임으로 용도를 구분
+    // (refresh 토큰을 access 토큰처럼 쓰거나, access 토큰으로 재발급받는 것을 막음)
+    private static final String TOKEN_TYPE_CLAIM = "type";
+    private static final String ACCESS_TYPE = "access";
+    private static final String REFRESH_TYPE = "refresh";
+
     @Value("${jwt.secret-key}")
     private String jwtSecretKey;
 
@@ -42,6 +52,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role)
+                .claim(TOKEN_TYPE_CLAIM, ACCESS_TYPE)
                 .setIssuedAt(curDate)
                 .setExpiration(expirationDate)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -58,6 +69,9 @@ public class JwtProvider {
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role)
+                .claim(TOKEN_TYPE_CLAIM, REFRESH_TYPE)
+                // 같은 사용자가 같은 초에 두 번 재발급받아도 토큰 문자열이 달라지도록 고유 ID 부여 (rotation 비교용)
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(curDate)
                 .setExpiration(expirationDate)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -86,18 +100,26 @@ public class JwtProvider {
         return claims.get("role", String.class);
     }
 
+    public boolean isRefreshToken(String token){
+        return REFRESH_TYPE.equals(parseClaims(token).get(TOKEN_TYPE_CLAIM, String.class));
+    }
+
     public boolean checkValidationToken(String token){
         CheckConfig.npeAndBlankCheck(token, "token");
 
         try{
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch(SecurityException | MalformedJwtException e){
-            log.info("Wrong JWT Signature");
         } catch(ExpiredJwtException e){
             log.info("JWT has been expired");
+        } catch(io.jsonwebtoken.security.SecurityException | MalformedJwtException e){
+            // 기존 SecurityException은 import io.jsonwebtoken.* 상황에서 java.lang.SecurityException으로 해석되어
+            // 서명 위조 토큰(io.jsonwebtoken.security.SignatureException)을 잡지 못하고 필터에서 500이 발생했음
+            log.info("Wrong JWT Signature");
         } catch(UnsupportedJwtException e){
             log.info("Unsupported JWT");
+        } catch(JwtException | IllegalArgumentException e){
+            log.info("Invalid JWT");
         }
         return false;
     }

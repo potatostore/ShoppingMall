@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { CLIENT_API_URL } from "@/lib/api";
+import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const userApiUrl = `${CLIENT_API_URL}/users`;
 
@@ -35,9 +35,8 @@ export default function ProfileEditor({ profile }: { profile: UserProfile }) {
 
         setSaving(true);
         try {
-            const response = await fetch(`${userApiUrl}/me`, {
+            const response = await authFetch(`${userApiUrl}/me`, {
                 method: "PATCH",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: form.name,

@@ -1,20 +1,18 @@
 package com.shopping_mall_api.entity.order;
 
 import com.shopping_mall_api.dto.order.OrderUpdateDTO;
-import com.shopping_mall_api.dto.order.orderItem.OrderItemCreateDTO;
 import com.shopping_mall_api.dto.order.orderItem.OrderItemUpdateDTO;
 import com.shopping_mall_api.entity.BaseEntity;
-import com.shopping_mall_api.entity.cart.Cart;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.config.CheckConfig;
 import com.shopping_mall_api.global.constant.TableNames;
 import com.shopping_mall_api.global.exception.ErrorCode;
+import com.shopping_mall_api.global.exception.InvalidOrderStatusException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.springframework.security.core.parameters.P;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +39,10 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<OrderItem> orderItemList;
 
+    // ORDINAL(기본값)은 enum 순서가 바뀌면 기존 데이터 의미가 바뀌므로 문자열로 저장
     @NotNull
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private OrderStatus orderStatus;
 
     @NotNull(message = "totalOrderPrice must not be null")
@@ -50,14 +50,15 @@ public class Order extends BaseEntity {
     @Min(value = 0, message = "totalOrderPrice must not be negative")
     private Long totalOrderPrice;
 
+    // OrderItem은 서비스가 Product 가격을 조회해 만든 뒤 전달 (클라이언트 가격 입력 금지)
     @Builder
-    public Order(User user, List<OrderItemCreateDTO> orderItemCreateDTOList, OrderStatus orderStatus) {
+    public Order(User user, List<OrderItem> orderItemList, OrderStatus orderStatus) {
         CheckConfig.npeCheck(user, "user");
-        CheckConfig.npeAndEmptyCheck(orderItemCreateDTOList, "orderItemCreateDTOList");
+        CheckConfig.npeAndEmptyCheck(orderItemList, "orderItemList");
         CheckConfig.npeCheck(orderStatus, "orderStatus");
 
         this.orderItemList = new ArrayList<>();
-        orderItemCreateDTOList.forEach(this::addOrderItem);
+        orderItemList.forEach(this::addOrderItem);
         this.user = user;
         this.orderUid = generateOrderUid();
         this.orderStatus = orderStatus;
@@ -67,18 +68,12 @@ public class Order extends BaseEntity {
         return ThreadLocalRandom.current().nextLong(100_000L, 1_000_000_000_000L);
     }
 
-    public void addOrderItem(OrderItemCreateDTO orderItemCreateDTO){
-        CheckConfig.npeCheck(orderItemCreateDTO, "orderItemCreateDTO");
+    public void addOrderItem(OrderItem orderItem){
+        CheckConfig.npeCheck(orderItem, "orderItem");
 
-        OrderItem addOrderItem = OrderItem.builder()
-                                    .productId(orderItemCreateDTO.getProductId())
-                                    .quantity(orderItemCreateDTO.getQuantity())
-                                    .curOrderItemPrice(orderItemCreateDTO.getCurOrderItemPrice())
-                                    .build();
+        orderItem.assignOrder(this);
 
-        addOrderItem.assignOrder(this);
-
-        orderItemList.add(addOrderItem);
+        orderItemList.add(orderItem);
 
         updateTotalOrderPrice();
     }
@@ -90,8 +85,11 @@ public class Order extends BaseEntity {
                 .mapToLong(OrderItem::getTotalOrderItemPrice).sum();
     }
 
+    // 결제 전(PENDING) 주문의 수량만 수정. 가격은 주문 시점 가격 유지
     public void patchOrder(OrderUpdateDTO orderUpdateDTO){
         CheckConfig.npeCheck(orderUpdateDTO, "orderUpdateDTO");
+
+        checkPending();
 
         List<OrderItemUpdateDTO> patchOrderItem = orderUpdateDTO.getOrderItemResponseDTOList();
 
@@ -111,20 +109,28 @@ public class Order extends BaseEntity {
             }
 
             orderItem.updateQuantity(dto.getQuantity());
-            orderItem.updateCurOrderItemPrice(dto.getCurOrderItemPrice());
         }
 
         updateTotalOrderPrice();
     }
 
     public void completePayment(){
+        checkPending();
         this.orderStatus = OrderStatus.PAID;
     }
 
     public void failPayment(){
+        checkPending();
         this.orderStatus = OrderStatus.FAILED;
         //주문 재고 복구
         //쿠폰 및 포인트 복구(미사용 처리)
         //실패 사유(로그 저장)
+    }
+
+    private void checkPending(){
+        if(this.orderStatus != OrderStatus.PENDING){
+            throw new InvalidOrderStatusException(ErrorCode.ORDER_STATUS_INVALID,
+                    "Order is not PENDING (current : " + this.orderStatus + ")");
+        }
     }
 }

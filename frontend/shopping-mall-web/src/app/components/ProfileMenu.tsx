@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { CLIENT_API_URL } from "@/lib/api";
+import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const logoutApiUrl = `${CLIENT_API_URL}/users/logout`;
 
@@ -27,9 +27,8 @@ export default function ProfileMenu() {
     const handleLogout = async () => {
         setLoggingOut(true);
         try {
-            await fetch(logoutApiUrl, {
+            await authFetch(logoutApiUrl, {
                 method: "DELETE",
-                credentials: "include",
             });
         } catch {
             // 통신 실패해도 일단 로그인 페이지로 보냄

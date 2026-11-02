@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CLIENT_API_URL } from "@/lib/api";
+import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const cartApiUrl = `${CLIENT_API_URL}/carts`;
 const productApiUrl = `${CLIENT_API_URL}/products`;
@@ -48,7 +48,7 @@ export default function CartPage() {
         const loadCart = async () => {
             try {
                 const [cartRes, productRes] = await Promise.all([
-                    fetch(`${cartApiUrl}/me`, { credentials: "include" }),
+                    authFetch(`${cartApiUrl}/me`),
                     fetch(productApiUrl),
                 ]);
 
@@ -103,9 +103,8 @@ export default function CartPage() {
 
     const handleDeleteItem = async (cartItemId: number, productItemId: number) => {
         try {
-            const response = await fetch(`${cartApiUrl}/items/${productItemId}`, {
+            const response = await authFetch(`${cartApiUrl}/items/${productItemId}`, {
                 method: "DELETE",
-                credentials: "include",
             });
 
             if (!response.ok) {
@@ -143,9 +142,8 @@ export default function CartPage() {
             );
 
             if (changedItems.length > 0) {
-                const patchRes = await fetch(`${cartApiUrl}/me`, {
+                const patchRes = await authFetch(`${cartApiUrl}/me`, {
                     method: "PATCH",
-                    credentials: "include",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         cartItemUpdateDTOList: changedItems.map((item) => ({

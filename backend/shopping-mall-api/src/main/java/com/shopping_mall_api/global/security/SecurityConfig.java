@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import java.io.IOException;
 
@@ -69,14 +70,16 @@ public class SecurityConfig {
 
                         // Permit All
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/users/login", "/users/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/login", "/users/signup", "/auth/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products", "/products/{productId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/find-id").permitAll()
 
                         .anyRequest().hasRole("ADMIN")
                 )
 
-                .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint(this::handleAuthenticationFailure))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(this::handleAuthenticationFailure)
+                        .accessDeniedHandler(this::handleAccessDenied))
 
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
         return httpSec.build();
@@ -92,6 +95,21 @@ public class SecurityConfig {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ApiResponse<Object> errorBody = ApiResponse.error("Invalid or missing access token");
+        response.getWriter().write(objectMapper.writeValueAsString(errorBody));
+    }
+
+    // 로그인했지만 권한이 부족한 경우(USER가 ADMIN API 호출): 기본 핸들러는 sendError(403) → /error로
+    // Spring Boot 기본 에러 JSON이 나가므로, 401과 같은 ApiResponse 형식으로 직접 작성
+    private void handleAccessDenied(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AccessDeniedException accessDeniedException
+    ) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+
+        ApiResponse<Object> errorBody = ApiResponse.error("Access denied");
         response.getWriter().write(objectMapper.writeValueAsString(errorBody));
     }
 }

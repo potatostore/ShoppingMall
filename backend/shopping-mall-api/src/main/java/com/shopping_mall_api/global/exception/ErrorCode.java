@@ -21,7 +21,7 @@ public enum ErrorCode {
     //Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Cannot found product"),
     PRODUCT_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "P002", "Product Already Exist"),
-    PRODUCT_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "P003", "Product quantity is less than 1"),
+    PRODUCT_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "P003", "Product is out of stock"),
 
     //Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "C001", "Cannot found cart"),
@@ -34,6 +34,10 @@ public enum ErrorCode {
     //Order
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "Cannot found Order"),
     ORDER_PRICE_UNMATCHED(HttpStatus.BAD_REQUEST, "O002", "Unmatched Price Info"),
+    ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "O003", "Order status does not allow this request"),
+
+    //Auth
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A001", "Invalid or expired refresh token"),
 
     //Redis
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "RD001", "Cannot found refresh token"),

@@ -7,17 +7,21 @@ import com.shopping_mall_api.dto.user.UserResponseDTO;
 import com.shopping_mall_api.dto.user.UserUpdateDTO;
 import com.shopping_mall_api.entity.user.User;
 import com.shopping_mall_api.global.config.CheckConfig;
+import com.shopping_mall_api.global.constant.RoleNames;
+import com.shopping_mall_api.global.exception.AlreadyExistException;
 import com.shopping_mall_api.global.exception.ErrorCode;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.repository.user.UserRepository;
 import com.shopping_mall_api.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,17 +34,25 @@ public class UserService {
     @Transactional
     public UserCreateResponseDTO createUser(@Valid UserCreateDTO userCreateDTO){
         CheckConfig.npeCheck(userCreateDTO, "userCreateDTO");
-        
+
+        checkDuplicateEmail(userCreateDTO.getSignUpEmail());
+
         User createUser = User.builder()
                 .email(userCreateDTO.getSignUpEmail())
                 .logInPassword(passwordEncoder.encode(userCreateDTO.getSignUpPassword()))
                 .name(userCreateDTO.getSignUpName())
-                .role(userCreateDTO.getSignUpRole())
+                .role(RoleNames.USER)
                 .phoneNumber(userCreateDTO.getSignUpPhoneNumber())
                 .birthday(userCreateDTO.getSignUpBirthday())
                 .build();
 
-        UserResponseDTO userResponseDTO = new UserResponseDTO(userRepository.save(createUser));
+        UserResponseDTO userResponseDTO;
+        try {
+            userResponseDTO = new UserResponseDTO(userRepository.save(createUser));
+        } catch (DataIntegrityViolationException e) {
+            // existsByEmail 확인과 insert 사이에 같은 이메일 가입이 끼어든 경우 (users.email unique 제약)
+            throw new AlreadyExistException(ErrorCode.USER_ALREADY_EXIST);
+        }
 
         CartResponseDTO cartResponseDTO = cartService.createCart(userResponseDTO.getUserId());
         
@@ -63,11 +75,34 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
     }
 
-    protected User getUserEntity(Long userId){
-        CheckConfig.npeCheck(userId, "userId");
+    // 아이디(이메일) 찾기: 이름 + 전화번호가 일치하는 계정의 이메일을 마스킹해서 반환 (전체 이메일 노출 방지)
+    public String findMaskedEmail(String name, String phoneNumber){
+        CheckConfig.npeAndBlankCheck(name, "name");
+        CheckConfig.npeAndBlankCheck(phoneNumber, "phoneNumber");
 
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
+        List<User> userList = userRepository.findByNameAndPhoneNumber(name, phoneNumber);
+
+        if(userList.isEmpty()){
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return userList.stream()
+                .map(User::getEmail)
+                .map(UserService::maskEmail)
+                .collect(Collectors.joining(", "));
+    }
+
+    // qwer1234@gmail.com → qw******@gmail.com (로컬 파트 앞 2글자만 노출, 2글자 이하면 1글자)
+    private static String maskEmail(String email){
+        int at = email.indexOf('@');
+        if(at <= 0){
+            return "***";
+        }
+
+        String local = email.substring(0, at);
+        int visible = local.length() <= 2 ? 1 : 2;
+
+        return local.substring(0, visible) + "*".repeat(Math.max(3, local.length() - visible)) + email.substring(at);
     }
 
     @Transactional
@@ -77,6 +112,8 @@ public class UserService {
 
         User patchUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        checkEmailChangeable(patchUser, userUpdateDTO.getEmail());
 
         patchUser.patchUser(userUpdateDTO);
 
@@ -91,6 +128,8 @@ public class UserService {
         User putUser = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User (" + userId + ")"));
 
+        checkEmailChangeable(putUser, userUpdateDTO.getEmail());
+
         putUser.putUser(userUpdateDTO);
 
         return new UserResponseDTO(putUser);
@@ -104,5 +143,17 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, "Cannot Found User  (" + userId + ")"));
 
         userRepository.deleteById(userId);
+    }
+
+    private void checkDuplicateEmail(String email){
+        if(userRepository.existsByEmail(email)){
+            throw new AlreadyExistException(ErrorCode.USER_ALREADY_EXIST);
+        }
+    }
+
+    private void checkEmailChangeable(User user, String newEmail){
+        if(newEmail != null && !newEmail.isBlank() && !newEmail.equals(user.getEmail())){
+            checkDuplicateEmail(newEmail);
+        }
     }
 }

@@ -91,6 +91,8 @@ public class CartService {
         return new CartResponseDTO(patchCart);
     }
 
+    // 클래스 레벨 readOnly를 따르면 flush가 일어나지 않아 DELETE가 반영되지 않음 (CartServiceTransactionTest)
+    @Transactional
     public void deleteCart(Long userId){
         CheckConfig.npeCheck(userId, "userId");
 

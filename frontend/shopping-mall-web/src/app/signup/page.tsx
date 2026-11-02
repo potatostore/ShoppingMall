@@ -23,7 +23,6 @@ export default function SignUpPage() {
     const [signUpName, setSignUpName] = useState<string>('');
     const [signUpEmail, setSignUpEmail] = useState<string>('');
     const [signUpPassword, setSignUpPassword] = useState<string>('');
-    const [signUpRole, setSignUpRole] = useState<string>('USER');
     const [signUpPhoneNumber, setSignUpPhoneNumber] = useState<string>('');
     const [signUpBirthday, setSignUpBirthday] = useState<string>('');
     const [submitting, setSubmitting] = useState<boolean>(false);
@@ -38,7 +37,6 @@ export default function SignUpPage() {
             signUpName,
             signUpEmail,
             signUpPassword,
-            signUpRole,
             signUpPhoneNumber,
             signUpBirthday,
         };
@@ -151,22 +149,6 @@ export default function SignUpPage() {
                         value={signUpBirthday}
                         onChange={(e) => setSignUpBirthday(e.target.value)}
                     />
-
-                    {/* TODO: 권한은 서버에서 결정해야 함 — 현재는 백엔드가 signUpRole을 그대로 저장하므로 개발용으로만 노출 */}
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="signUpRole" className="text-sm font-medium text-zinc-900">
-                            회원 유형 <span className="font-normal text-zinc-400">(개발용)</span>
-                        </label>
-                        <select
-                            id="signUpRole"
-                            value={signUpRole}
-                            onChange={(e) => setSignUpRole(e.target.value)}
-                            className="h-12 rounded-md border border-zinc-300 bg-white px-4 text-sm text-zinc-900 transition focus:border-zinc-900 focus:outline-none"
-                        >
-                            <option value="USER">일반 회원</option>
-                            <option value="ADMIN">관리자</option>
-                        </select>
-                    </div>
 
                     {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 

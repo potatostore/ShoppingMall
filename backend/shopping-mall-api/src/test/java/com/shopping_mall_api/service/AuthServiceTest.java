@@ -3,6 +3,7 @@ package com.shopping_mall_api.service;
 import com.shopping_mall_api.dto.auth.LogInRequestDTO;
 import com.shopping_mall_api.dto.auth.LogInResponseDTO;
 import com.shopping_mall_api.entity.user.User;
+import com.shopping_mall_api.global.exception.InvalidTokenException;
 import com.shopping_mall_api.global.exception.NotFoundException;
 import com.shopping_mall_api.global.exception.UnmatchedPasswordException;
 import com.shopping_mall_api.global.security.JwtProvider;
@@ -116,17 +117,89 @@ public class AuthServiceTest {
 
     @Test
     void logOut_successTest(){
-        when(refreshTokenRepository.findByUserId(1L)).thenReturn(Optional.of("NotEmpty"));
-
-        authService.logOut(1L);
+        LogInResponseDTO result = authService.logOut(1L);
 
         verify(refreshTokenRepository).delete(1L);
+        assertThat(result.accessTokenCookie().getMaxAge()).isEqualTo(Duration.ZERO);
+        assertThat(result.refreshTokenCookie().getMaxAge()).isEqualTo(Duration.ZERO);
+    }
+
+    private User reissueUser(){
+        User user = User.builder()
+                .email("qwer1234@gmail.com")
+                .logInPassword("encodedPassword")
+                .name("김민준")
+                .role("USER")
+                .phoneNumber("01011111111")
+                .birthday(LocalDate.of(2026, 8, 27))
+                .build();
+        ReflectionTestUtils.setField(user, "userId", 1L);
+        return user;
     }
 
     @Test
-    void logOut_userNotFoundExceptionTest(){
-        when(refreshTokenRepository.findByUserId(999L)).thenReturn(Optional.empty());
+    void reissue_successRotatesRefreshTokenTest(){
+        when(jwtProvider.checkValidationToken("oldRefresh")).thenReturn(true);
+        when(jwtProvider.isRefreshToken("oldRefresh")).thenReturn(true);
+        when(jwtProvider.getUserIdFromToken("oldRefresh")).thenReturn(1L);
+        when(refreshTokenRepository.findByUserId(1L)).thenReturn(Optional.of("oldRefresh"));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(reissueUser()));
+        when(jwtProvider.createAccessToken(1L, "USER")).thenReturn("newAccess");
+        when(jwtProvider.createRefreshToken(1L, "USER")).thenReturn("newRefresh");
+        when(jwtProvider.getAccessTokenExpiration()).thenReturn(1800000L);
+        when(jwtProvider.getRefreshTokenExpiration()).thenReturn(604800000L);
 
-        assertThrows(NotFoundException.class, () -> authService.logOut(999L));
+        LogInResponseDTO result = authService.reissue("oldRefresh");
+
+        assertThat(result.accessTokenCookie().getValue()).isEqualTo("newAccess");
+        assertThat(result.refreshTokenCookie().getValue()).isEqualTo("newRefresh");
+        // rotation: Redis의 refresh token을 새 값으로 교체
+        verify(refreshTokenRepository).save(1L, "newRefresh", 604800000L);
+    }
+
+    @Test
+    void reissue_missingCookieTest(){
+        assertThrows(InvalidTokenException.class, () -> authService.reissue(null));
+        verifyNoInteractions(refreshTokenRepository);
+    }
+
+    @Test
+    void reissue_invalidOrExpiredTokenTest(){
+        when(jwtProvider.checkValidationToken("expired")).thenReturn(false);
+
+        assertThrows(InvalidTokenException.class, () -> authService.reissue("expired"));
+        verifyNoInteractions(refreshTokenRepository);
+    }
+
+    @Test
+    void reissue_accessTokenRejectedTest(){
+        when(jwtProvider.checkValidationToken("access")).thenReturn(true);
+        when(jwtProvider.isRefreshToken("access")).thenReturn(false);
+
+        assertThrows(InvalidTokenException.class, () -> authService.reissue("access"));
+        verifyNoInteractions(refreshTokenRepository);
+    }
+
+    @Test
+    void reissue_notStoredTest(){
+        when(jwtProvider.checkValidationToken("loggedOut")).thenReturn(true);
+        when(jwtProvider.isRefreshToken("loggedOut")).thenReturn(true);
+        when(jwtProvider.getUserIdFromToken("loggedOut")).thenReturn(1L);
+        when(refreshTokenRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(InvalidTokenException.class, () -> authService.reissue("loggedOut"));
+    }
+
+    @Test
+    void reissue_rotatedOrOverwrittenTokenRejectedTest(){
+        when(jwtProvider.checkValidationToken("usedRefresh")).thenReturn(true);
+        when(jwtProvider.isRefreshToken("usedRefresh")).thenReturn(true);
+        when(jwtProvider.getUserIdFromToken("usedRefresh")).thenReturn(1L);
+        when(refreshTokenRepository.findByUserId(1L)).thenReturn(Optional.of("latestRefresh"));
+
+        assertThrows(InvalidTokenException.class, () -> authService.reissue("usedRefresh"));
+        // 저장된 최신 토큰(다른 기기일 수 있음)은 지우지 않고, 새 토큰도 발급하지 않음
+        verify(refreshTokenRepository, never()).delete(anyLong());
+        verify(refreshTokenRepository, never()).save(anyLong(), any(), anyLong());
     }
 }

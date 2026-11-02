@@ -56,15 +56,23 @@ public class Cart extends BaseEntity {
                 .mapToLong(CartItem::getTotalCartItemPrice).sum();
     }
 
+    // 이미 담긴 상품이면 수량만 늘림 (같은 상품의 CartItem이 여러 개면 patchCart의 toMap에서 Duplicate key 500)
     public CartItem addCartItemInCart(Product product, Long quantity){
         CheckConfig.npeCheck(product, "product");
         CheckConfig.npeCheck(quantity, "quantity");
 
-        CartItem cartItem = new CartItem(product, quantity);
+        CartItem cartItem = this.cartItemList.stream()
+                .filter(item -> item.getProduct().getProductId().equals(product.getProductId()))
+                .findFirst()
+                .orElse(null);
 
-        this.cartItemList.add(cartItem);
-
-        cartItem.assignCart(this);
+        if(cartItem != null){
+            cartItem.updateQuantity(cartItem.getQuantity() + quantity);
+        } else {
+            cartItem = new CartItem(product, quantity);
+            this.cartItemList.add(cartItem);
+            cartItem.assignCart(this);
+        }
 
         updateTotalCartPrice();
 
@@ -101,5 +109,7 @@ public class Cart extends BaseEntity {
         CheckConfig.npeCheck(productId, "productId");
 
         this.cartItemList.removeIf(cartItem -> cartItem.getProduct().getProductId().equals(productId));
+
+        updateTotalCartPrice();
     }
 }

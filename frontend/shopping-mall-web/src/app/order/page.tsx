@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CLIENT_API_URL } from "@/lib/api";
+import { CLIENT_API_URL, authFetch } from "@/lib/api";
 
 const productApiUrl = `${CLIENT_API_URL}/products`;
 const orderApiUrl = `${CLIENT_API_URL}/orders`;
@@ -94,18 +94,14 @@ export default function OrderPage() {
 
         setProcessing(true);
         try {
-            const orderItemCreateDTOList = checkoutItems.map((item) => {
-                const product = productMap.get(item.productId);
-                return {
-                    productId: item.productId,
-                    curOrderItemPrice: product?.price ?? 0,
-                    quantity: item.quantity,
-                };
-            });
+            // 가격은 서버가 상품 정보에서 조회해 결정 (클라이언트는 상품과 수량만 전달)
+            const orderItemCreateDTOList = checkoutItems.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+            }));
 
-            const response = await fetch(orderApiUrl, {
+            const response = await authFetch(orderApiUrl, {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ orderItemCreateDTOList }),
             });
