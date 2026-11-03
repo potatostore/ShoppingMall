@@ -1,6 +1,7 @@
 package com.shopping_mall_api.service.user;
 
 import com.shopping_mall_api.dto.cart.CartResponseDTO;
+import com.shopping_mall_api.dto.user.PasswordChangeDTO;
 import com.shopping_mall_api.dto.user.UserCreateDTO;
 import com.shopping_mall_api.dto.user.UserCreateResponseDTO;
 import com.shopping_mall_api.dto.user.UserResponseDTO;
@@ -135,6 +136,14 @@ public class UserService {
         putUser.putUser(userUpdateDTO);
 
         return new UserResponseDTO(putUser);
+    }
+
+    // [뼈대] 비밀번호 변경 (로그인 상태)
+    // 구현 시: @Transactional, 현재 비밀번호 BCrypt 확인(불일치 401), 새 비밀번호 encode 후 저장(User에 changePassword 메서드 추가)
+    //         변경 후 refresh token 삭제(RefreshTokenRepository.delete) → 다른 기기 로그인 무효화
+    //         컨트롤러: PATCH /users/me/password, SecurityConfig 로그인 필요
+    public void changePassword(Long userId, PasswordChangeDTO passwordChangeDTO){
+        throw new UnsupportedOperationException("TODO");
     }
 
     @Transactional
