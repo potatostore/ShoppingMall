@@ -10,6 +10,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-song-myung);
+  --font-batang: var(--font-gowun-batang);
+  --font-label: var(--font-ibm-plex-kr);
+  --color-ink: #1d1b18;
+  --color-ink-soft: #6d685f;
+  --color-paper: #f6f3ec;
+  --color-fold: #d8d3c7;
 }
 
 body {
@@ -34,4 +41,17 @@ table td {
 .total { 
   font-weight: bold; 
   font-size: 1.1em; 
+}
+
+.magazine-page {
+  animation: magazine-fade 0.35s ease-out;
+}
+
+@keyframes magazine-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .magazine-page { animation: none; }
 }
