@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* 펼침면이 읽히는 가로 화면. Magazine.tsx의 BOOK_QUERY와 값을 맞춘다 */
-@custom-variant book (@media (min-width: 1024px) and (min-aspect-ratio: 5/4));
+@custom-variant book (@media (min-aspect-ratio: 1/1));
 
 :root {
   --background: #ffffff;
@@ -13,7 +13,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-song-myung);
   --font-batang: var(--font-gowun-batang);
   --font-label: var(--font-ibm-plex-kr);
   --color-ink: #1d1b18;
@@ -52,16 +51,6 @@ html:has(.magazine-root) body {
   overflow: hidden;
   overscroll-behavior: none;
   background: var(--color-paper);
-}
-
-.memo-intro { display: none; }
-
-@media (min-height: 900px) {
-  .memo-intro { display: block; }
-}
-
-@media (orientation: portrait) and (max-height: 700px), (max-height: 420px) {
-  .memo-detail { display: none; }
 }
 
 /* 책장 넘김 */

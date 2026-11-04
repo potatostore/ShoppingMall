@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Gowun_Batang, IBM_Plex_Sans_KR, Song_Myung } from "next/font/google";
+import { Geist, Geist_Mono, Gowun_Batang, IBM_Plex_Sans_KR } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import HeaderGate from "./components/HeaderGate";
@@ -14,11 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// 잡지 제목용 옛 인쇄체, 본문용 바탕체, 작은 안내 글자용 고딕
-const songMyung = Song_Myung({
-  variable: "--font-song-myung",
-  weight: "400",
-});
+// 메모의 제품명용 바탕체, 가격 등 작은 글자용 고딕
 
 const gowunBatang = Gowun_Batang({
   variable: "--font-gowun-batang",
@@ -45,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${songMyung.variable} ${gowunBatang.variable} ${ibmPlexSansKr.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${gowunBatang.variable} ${ibmPlexSansKr.variable} antialiased`}
       >
         <HeaderGate>
           <Header />

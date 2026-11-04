@@ -2,9 +2,10 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 
 // 사진은 8:5 비율로, 가운데 4:5 영역에 모델이 있고 양옆은 배경이다.
-// 칸을 항상 꽉 채우고(110%는 위아래 여백을 줄이는 값), 옷 위치(%)는 가운데 4:5 영역을 기준으로 둔다.
+// 칸을 항상 꽉 채우고, 옷 위치(%)는 가운데 4:5 영역을 기준으로 둔다.
+// 높이에 맞출 때 모델 양옆 배경이 남아야 메모를 둘 수 있으므로 더 확대하지 않는다.
 // 실금 측정이 책장을 넘기는 중에도 맞도록 transform 없이 calc로 배치한다.
-const WIDTH = "max(100cqw, 176cqh)";
+const WIDTH = "max(100cqw, 160cqh)";
 
 export default function Photo({
     src,
@@ -28,7 +29,7 @@ export default function Photo({
         <div data-photo className="relative h-full w-full overflow-hidden bg-zinc-200 [container-type:size]">
             <div className="absolute aspect-[8/5]" style={box}>
                 <Image src={src} alt={alt} fill unoptimized priority />
-                <div className="absolute inset-y-0 left-1/4 w-1/2">{children}</div>
+                <div data-region className="absolute inset-y-0 left-1/4 w-1/2">{children}</div>
             </div>
         </div>
     );

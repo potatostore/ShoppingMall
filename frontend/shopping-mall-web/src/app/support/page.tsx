@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BACK_COVER } from "../components/magazine/content";
+import { COMPANY } from "../components/magazine/content";
 
 const HELP_LINKS = [
     { href: "/orders", label: "주문 내역 보기" },
@@ -8,7 +8,7 @@ const HELP_LINKS = [
 ];
 
 export default function SupportPage() {
-    const contacts = BACK_COVER.contacts.filter((contact) => contact.label !== "회사명");
+    const contacts = COMPANY.contacts.filter((contact) => contact.label !== "회사명");
 
     return (
         <div className="mx-auto w-full max-w-md px-6 py-20">
