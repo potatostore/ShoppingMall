@@ -16,12 +16,10 @@
   --font-display: var(--font-song-myung);
   --font-batang: var(--font-gowun-batang);
   --font-label: var(--font-ibm-plex-kr);
-  --font-pen: var(--font-nanum-pen);
   --color-ink: #1d1b18;
   --color-ink-soft: #6d685f;
   --color-paper: #f6f3ec;
   --color-fold: #d8d3c7;
-  --color-note: #f5e89b;
 }
 
 body {
@@ -56,19 +54,14 @@ html:has(.magazine-root) body {
   background: var(--color-paper);
 }
 
-.note {
-  box-shadow: 1px 2px 3px rgb(0 0 0 / 0.2);
-  background-image: linear-gradient(to bottom, rgb(0 0 0 / 0.05), transparent 22%);
-}
-
-.note-intro { display: none; }
+.memo-intro { display: none; }
 
 @media (min-height: 900px) {
-  .note-intro { display: block; }
+  .memo-intro { display: block; }
 }
 
 @media (orientation: portrait) and (max-height: 700px), (max-height: 420px) {
-  .note-detail { display: none; }
+  .memo-detail { display: none; }
 }
 
 /* 책장 넘김 */

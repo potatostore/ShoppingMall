@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Gowun_Batang, IBM_Plex_Sans_KR, Nanum_Pen_Script, Song_Myung } from "next/font/google";
+import { Geist, Geist_Mono, Gowun_Batang, IBM_Plex_Sans_KR, Song_Myung } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import HeaderGate from "./components/HeaderGate";
@@ -32,13 +32,6 @@ const ibmPlexSansKr = IBM_Plex_Sans_KR({
   preload: false,
 });
 
-// 세로 화면의 포스트잇 메모용 손글씨
-const nanumPen = Nanum_Pen_Script({
-  variable: "--font-nanum-pen",
-  weight: "400",
-  preload: false,
-});
-
 export const metadata: Metadata = {
   title: "감자몰",
   description: "옷을 잡지처럼 읽고 고르는 쇼핑몰",
@@ -52,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${songMyung.variable} ${gowunBatang.variable} ${ibmPlexSansKr.variable} ${nanumPen.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${songMyung.variable} ${gowunBatang.variable} ${ibmPlexSansKr.variable} antialiased`}
       >
         <HeaderGate>
           <Header />

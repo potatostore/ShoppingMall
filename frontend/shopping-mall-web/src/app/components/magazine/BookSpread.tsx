@@ -101,15 +101,8 @@ function LookSpread({ look, page }: { look: Look; page: number }) {
     return (
         <div ref={rootRef} className="absolute inset-0 grid grid-cols-2">
             <section className="relative min-h-0">
-                <Photo
-                    src={look.image}
-                    alt={look.alt}
-                    overlay={
-                        <h2 className="pointer-events-none absolute left-14 top-10 font-display text-[clamp(1.75rem,6cqh,3.75rem)] leading-[1.15] text-ink [writing-mode:vertical-rl]">
-                            {look.title}
-                        </h2>
-                    }
-                >
+                <h2 className="sr-only">{look.title}</h2>
+                <Photo src={look.image} alt={look.alt}>
                     {look.items.map((item) => (
                         <Link
                             key={item.id}
