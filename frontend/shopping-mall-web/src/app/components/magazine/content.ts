@@ -31,6 +31,7 @@ export const BACK_COVER = {
     company: "감자몰",
     purpose: "감자몰은 옷을 잡지처럼 파는 가게입니다. 사진을 보다가 마음에 드는 옷이 있으면 그 옷을 눌러보세요.",
     guide: "스크롤을 내리거나 화면 가장자리를 누르면 쪽이 넘어갑니다.",
+    guideSheet: "스크롤을 내리거나 화면을 밀거나 아래 모서리를 누르면 쪽이 넘어갑니다.",
     note: "사진의 색은 화면에 따라 실제 옷과 조금 다를 수 있습니다.",
     // 실제 사업자 정보로 교체해야 하는 임시 값
     contacts: [
@@ -78,11 +79,43 @@ export const LOOKS: Look[] = [
             { id: "sneakers", productId: 12, name: "로우 스니커즈", description: "캔버스, 화이트", price: 59000, x: 55, y: 87 },
         ],
     },
+    {
+        image: "/magazine/look-4.svg",
+        alt: "베이지 트렌치코트와 줄무늬 티셔츠, 검정 와이드 팬츠, 갈색 더비 슈즈를 입은 모델",
+        title: "비 예보가 있는 아침",
+        intro: "우산은 챙겼고 코트 깃은 세웠다. 바지 밑단은 조금 젖어도 괜찮다.",
+        items: [
+            { id: "stripe", productId: 13, name: "스트라이프 티셔츠", description: "면 100%, 화이트 블랙", price: 35000, x: 50, y: 33 },
+            { id: "trench", productId: 14, name: "더블 트렌치코트", description: "면 혼방, 베이지", price: 219000, x: 41, y: 47 },
+            { id: "wide", productId: 15, name: "와이드 치노 팬츠", description: "면 100%, 차콜", price: 79000, x: 56, y: 76 },
+            { id: "derby", productId: 16, name: "더비 슈즈", description: "소가죽, 다크 브라운", price: 139000, x: 55, y: 88 },
+        ],
+    },
 ];
 
-export const LAST_PAGE = LOOKS.length;
+// 주소의 page 값: 0은 표지, 1부터는 LOOKS 순서, 마지막은 뒤표지. 화면 방향이 바뀌어도 같은 사진이 이어진다
+export const BACK_PAGE = LOOKS.length + 1;
+
+// 가로 화면은 펼침면 한 쌍씩 넘긴다. 뒤표지는 표지 펼침면의 왼쪽에 있다
+export const BOOK_PAGES = [0, ...LOOKS.map((_, index) => index + 1)];
+
+// 세로 화면은 사진 두 장을 한 장으로 묶어 넘긴다. LOOKS를 짝수로 두어야 마지막 장이 비지 않는다
+export const SHEET_PAGES = [
+    0,
+    ...LOOKS.map((_, index) => index + 1).filter((page) => page % 2 === 1),
+    BACK_PAGE,
+];
 
 export function clampPage(page: number): number {
     if (!Number.isInteger(page)) return 0;
-    return Math.min(Math.max(page, 0), LAST_PAGE);
+    return Math.min(Math.max(page, 0), BACK_PAGE);
+}
+
+export function toBookPage(page: number): number {
+    return page === BACK_PAGE ? 0 : page;
+}
+
+export function toSheetPage(page: number): number {
+    if (page === 0 || page === BACK_PAGE) return page;
+    return page % 2 === 1 ? page : page - 1;
 }
