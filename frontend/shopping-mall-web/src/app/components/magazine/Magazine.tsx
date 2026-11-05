@@ -3,13 +3,14 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import BookSpread from "./BookSpread";
-import { BOOK_PAGES, COVER, LOOKS, SHEET_PAGES, clampPage, toBookPage, toSheetPage } from "./content";
+import { BOOK_PAGES, LOOKS, SHEET_PAGES, clampPage, toBookPage } from "./content";
 import MagazineMenu from "./MagazineMenu";
 import { BookTurn, SheetTurn, TURN_MS, type Turn } from "./PageTurn";
 import Sheet from "./Sheet";
 
 // globals.css의 book 변형과 값을 맞춘다
-const BOOK_QUERY = "(min-width: 1024px) and (min-aspect-ratio: 5/4)";
+// 세로가 가로보다 긴 화면(휴대폰 등)은 한 쪽씩, 그 밖에는 두 쪽을 펼쳐 보여준다
+const BOOK_QUERY = "(min-aspect-ratio: 1/1)";
 const WHEEL_THRESHOLD = 20;
 // 트랙패드 관성 스크롤 한 번에 여러 쪽이 넘어가지 않도록, 휠 입력이 이만큼 멈춘 뒤에만 다음 입력을 받는다
 const WHEEL_IDLE_MS = 180;
@@ -42,7 +43,7 @@ function EdgeButton({ side, wide, onClick }: { side: "left" | "right"; wide: boo
 }
 
 export default function Magazine({ isLoggedIn }: { isLoggedIn: boolean }) {
-    const page = clampPage(Number(useSearchParams().get("page") ?? 0));
+    const page = clampPage(Number(useSearchParams().get("page") ?? 1));
     // 서버에서는 화면 크기를 모르므로 null일 때 두 형태를 모두 그리고 CSS로 하나만 보인다
     const isBook = useSyncExternalStore(subscribeBook, () => window.matchMedia(BOOK_QUERY).matches, () => null);
     const [activeTurn, setActiveTurn] = useState<Turn | null>(null);
@@ -59,13 +60,13 @@ export default function Magazine({ isLoggedIn }: { isLoggedIn: boolean }) {
 
         const book = window.matchMedia(BOOK_QUERY).matches;
         const pages = book ? BOOK_PAGES : SHEET_PAGES;
-        const from = book ? toBookPage(pageRef.current) : toSheetPage(pageRef.current);
+        const from = book ? toBookPage(pageRef.current) : pageRef.current;
         const to = pages[pages.indexOf(from) + delta];
         if (to === undefined) return;
 
         pageRef.current = to;
         // 쪽 번호를 주소에 두어 상품 상세에서 뒤로 왔을 때 읽던 쪽으로 돌아온다
-        window.history.replaceState(null, "", to === 0 ? "/" : `/?page=${to}`);
+        window.history.replaceState(null, "", to === 1 ? "/" : `/?page=${to}`);
 
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -84,7 +85,7 @@ export default function Magazine({ isLoggedIn }: { isLoggedIn: boolean }) {
 
     // 첫 넘김에서 다음 쪽 사진이 비어 보이지 않도록 미리 받아 둔다
     useEffect(() => {
-        [COVER.image, ...LOOKS.map((look) => look.image)].forEach((src) => {
+        LOOKS.map((look) => look.image).forEach((src) => {
             new window.Image().src = src;
         });
     }, []);
@@ -141,9 +142,8 @@ export default function Magazine({ isLoggedIn }: { isLoggedIn: boolean }) {
     }, [turnPage]);
 
     const bookPage = toBookPage(page);
-    const sheetPage = toSheetPage(page);
     const bookIndex = BOOK_PAGES.indexOf(bookPage);
-    const sheetIndex = SHEET_PAGES.indexOf(sheetPage);
+    const sheetIndex = SHEET_PAGES.indexOf(page);
 
     return (
         <main className="magazine-root fixed inset-0 overflow-hidden break-keep bg-paper [touch-action:pinch-zoom]">
@@ -159,7 +159,7 @@ export default function Magazine({ isLoggedIn }: { isLoggedIn: boolean }) {
 
             {isBook !== true && (
                 <div className={`relative h-full ${isBook === null ? "book:hidden" : ""}`}>
-                    {activeTurn && !activeTurn.book ? <SheetTurn turn={activeTurn} /> : <Sheet page={sheetPage} />}
+                    {activeTurn && !activeTurn.book ? <SheetTurn turn={activeTurn} /> : <Sheet page={page} />}
                     {sheetIndex > 0 && <EdgeButton side="left" wide={false} onClick={() => turnPage(-1)} />}
                     {sheetIndex < SHEET_PAGES.length - 1 && <EdgeButton side="right" wide={false} onClick={() => turnPage(1)} />}
                 </div>
