@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FormField from "../components/FormField";
+import SocialLoginButtons from "../components/SocialLoginButtons";
 import { CLIENT_API_URL } from "@/lib/api";
 
 const userApiUrl = `${CLIENT_API_URL}/users`;
@@ -16,30 +17,6 @@ export default function SignInPage(){
     const [logInPassword, setLogInPassword] = useState<string>('');
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-
-    const handleSignIn_Kakao = async () => {
-        const signIn_KakaoData = {
-
-        };
-
-        try {
-
-        } catch(error){
-
-        }
-    }
-
-    const handleSignIn_Google = async () => {
-        const signIn_GoogleData = {
-
-        };
-
-        try {
-
-        } catch(error){
-
-        }
-    }
 
     const handleLogIn = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -127,27 +104,7 @@ export default function SignInPage(){
                 <span className="h-px flex-1 bg-zinc-200" />
             </div>
 
-            {/* 소셜 로그인 구현 전까지 비활성화 — 구현 후 disabled 제거 */}
-            <div className="flex flex-col gap-3">
-                <button
-                    type="button"
-                    onClick={handleSignIn_Kakao}
-                    disabled
-                    className="flex h-12 items-center justify-center gap-2 rounded-md border border-zinc-300 text-sm font-medium text-zinc-900 disabled:cursor-not-allowed disabled:text-zinc-400"
-                >
-                    카카오로 로그인
-                    <span className="text-xs text-zinc-400">(준비 중)</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={handleSignIn_Google}
-                    disabled
-                    className="flex h-12 items-center justify-center gap-2 rounded-md border border-zinc-300 text-sm font-medium text-zinc-900 disabled:cursor-not-allowed disabled:text-zinc-400"
-                >
-                    구글로 로그인
-                    <span className="text-xs text-zinc-400">(준비 중)</span>
-                </button>
-            </div>
+            <SocialLoginButtons />
         </div>
     );
 }
