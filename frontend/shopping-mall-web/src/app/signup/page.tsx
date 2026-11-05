@@ -4,20 +4,20 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FormField from "../components/FormField";
+import SocialLoginButtons from "../components/SocialLoginButtons";
 import { CLIENT_API_URL } from "@/lib/api";
 
 const userApiUrl = `${CLIENT_API_URL}/users`;
 
 const SIGN_UP_TABS = [
     { state: 'email', label: '이메일' },
-    { state: 'kakao', label: '카카오' },
-    { state: 'google', label: '구글' },
+    { state: 'social', label: '간편 가입' },
 ] as const;
 
 export default function SignUpPage() {
     const router = useRouter();
 
-    // signUpState : email, kakao, google
+    // signUpState : email, social
     const [signUpState, setSignUpState] = useState<string>('email');
 
     const [signUpName, setSignUpName] = useState<string>('');
@@ -64,20 +64,12 @@ export default function SignUpPage() {
         }
     };
 
-    const handleSignUp_Kakao = async () => {
-
-    };
-
-    const handleSignUP_Google = async () => {
-
-    };
-
     return (
         <div className="mx-auto w-full max-w-md px-6 py-20">
             <h1 className="text-center text-2xl font-bold tracking-tight text-zinc-900">회원가입</h1>
             <p className="mt-2 text-center text-sm text-zinc-500">가입 방법을 선택하세요.</p>
 
-            <div role="tablist" className="mt-10 grid grid-cols-3 border-b border-zinc-200">
+            <div role="tablist" className="mt-10 grid grid-cols-2 border-b border-zinc-200">
                 {SIGN_UP_TABS.map((tab) => {
                     const active = signUpState === tab.state;
                     return (
@@ -162,32 +154,12 @@ export default function SignUpPage() {
                 </form>
             )}
 
-            {/* 소셜 회원가입 구현 전까지 비활성화 — 구현 후 disabled 제거 */}
-            {signUpState === 'kakao' && (
-                <div className="mt-8 flex flex-col items-center gap-4 py-6 text-center">
-                    <p className="text-sm text-zinc-500">카카오 회원가입은 준비 중입니다.</p>
-                    <button
-                        type="button"
-                        onClick={handleSignUp_Kakao}
-                        disabled
-                        className="h-12 w-full rounded-md border border-zinc-300 text-sm font-medium text-zinc-900 disabled:cursor-not-allowed disabled:text-zinc-400"
-                    >
-                        카카오로 회원가입
-                    </button>
-                </div>
-            )}
-
-            {signUpState === 'google' && (
-                <div className="mt-8 flex flex-col items-center gap-4 py-6 text-center">
-                    <p className="text-sm text-zinc-500">구글 회원가입은 준비 중입니다.</p>
-                    <button
-                        type="button"
-                        onClick={handleSignUP_Google}
-                        disabled
-                        className="h-12 w-full rounded-md border border-zinc-300 text-sm font-medium text-zinc-900 disabled:cursor-not-allowed disabled:text-zinc-400"
-                    >
-                        구글로 회원가입
-                    </button>
+            {signUpState === 'social' && (
+                <div className="mt-8 flex flex-col gap-5">
+                    <p className="text-center text-sm text-zinc-500">
+                        선택한 서비스의 로그인 화면에서 동의하면 감자몰 계정이 만들어집니다.
+                    </p>
+                    <SocialLoginButtons action="시작하기" />
                 </div>
             )}
 
