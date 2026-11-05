@@ -16,6 +16,7 @@ export default async function Header() {
                 <div className="hidden gap-8 text-sm font-medium text-zinc-600 sm:flex">
                     <Link href="/products" className="hover:text-zinc-900">전체 상품</Link>
                     <Link href="/cart" className="hover:text-zinc-900">장바구니</Link>
+                    <Link href="/support" className="hover:text-zinc-900">고객센터</Link>
                 </div>
 
                 <div className="flex items-center text-sm font-medium">
